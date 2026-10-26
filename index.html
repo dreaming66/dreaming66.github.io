@@ -3,99 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0a0b0a">
-  <title>DRM-66 · dreaming66</title>
+  <meta name="theme-color" content="#f1ede3">
+  <title>dreaming66 · 从焊锡到张量</title>
   <meta name="description" content="dreaming66 的个人主页：手搓 Linux 开发板、AI Infra 与大模型推理、双足机器人、SDR、吉他与钢琴。">
   <meta property="og:title" content="DRM-66 · dreaming66">
   <meta property="og:description" content="Datasheet of a human: silicon, inference, robots, radio and strings.">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230a0b0a'/%3E%3Crect x='16' y='16' width='32' height='32' fill='none' stroke='%23ffb21a' stroke-width='4'/%3E%3Cpath d='M24 8v8M32 8v8M40 8v8M24 48v8M32 48v8M40 48v8M8 24h8M8 32h8M8 40h8M48 24h8M48 32h8M48 40h8' stroke='%23ffb21a' stroke-width='3'/%3E%3Crect x='26' y='26' width='12' height='12' fill='%2336e2ff'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23141412'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-size='34' text-anchor='middle' fill='%23ff4f1f'%3E66%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;500;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&family=Noto+Serif+SC:wght@500;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="gated">
   <a class="skip" href="#main">跳到正文</a>
 
-  <!-- ===== POWER-ON GATE ===== -->
+  <!-- ===== LOADER / GATE ===== -->
   <div class="gate" id="gate">
-    <div class="gate-in">
-      <div class="gate-top mono"><span>DRM-66</span><span>POWER-ON SELF TEST</span><span id="gateClock">--</span></div>
-      <pre class="post mono" id="post"></pre>
-      <div class="gate-choice" id="gateChoice">
-        <button class="gbtn" id="enterSound"><span class="mono">[ ENTER ]</span><b>带声音启动</b><i class="mono">推荐 · 所有声音由 WebAudio 实时合成，零音频文件</i></button>
-        <button class="gbtn ghost" id="enterMute"><span class="mono">[ M ]</span><b>静音启动</b><i class="mono">随时按 S 打开</i></button>
-      </div>
+    <pre class="post mono" id="post"></pre>
+    <div class="gate-choice" id="gateChoice">
+      <button class="pill ink-pill big" id="enterSound"><span>带声音进入</span><span>♪</span></button>
+      <button class="pill big" id="enterMute"><span>静音进入</span><span>→</span></button>
+      <span class="gate-hint mono">ENTER = 带声音 · M = 静音 · 所有声音由 WebAudio 实时合成</span>
     </div>
+    <div class="gate-word">READY&nbsp;TO&nbsp;<em>build</em></div>
+    <span id="gateClock" hidden></span>
   </div>
   <div class="crt" id="crt" aria-hidden="true"></div>
 
-  <div class="scan" aria-hidden="true"></div>
-  <div class="probe" aria-hidden="true"><i class="ph"></i><i class="pv"></i><span class="pbr"></span><span class="pread mono" id="pread">x0000 y0000</span></div>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="progress" aria-hidden="true"><i id="progress"></i></div>
+  <div class="cursor" aria-hidden="true"><i class="c-dot"></i><i class="c-ring"><span class="c-label"></span></i></div>
 
-  <!-- ===== TOP BAR ===== -->
-  <header class="bar mono">
-    <a class="logo" href="#top" aria-label="回到顶部">
-      <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="10" y="10" width="20" height="20"/><path d="M15 4v6M20 4v6M25 4v6M15 30v6M20 30v6M25 30v6M4 15h6M4 20h6M4 25h6M30 15h6M30 20h6M30 25h6"/><rect class="core" x="16" y="16" width="8" height="8"/></svg>
-      <span>DRM-66</span>
-    </a>
-    <div class="bar-mid"><span>REV 2026.10</span><span class="d">·</span><span id="clock">UTC+8 --:--:--</span><span class="d">·</span><span id="fps">--FPS</span></div>
-    <nav class="bar-act" aria-label="控制">
-      <button id="sndBtn" aria-pressed="false" title="声音 (S)">SND <b>OFF</b></button>
-      <button id="xrayBtn" aria-pressed="false" title="X 光模式 (X)">X-RAY</button>
-      <button id="motBtn" aria-pressed="false" title="暂停动效">MOT <b>ON</b></button>
-      <button id="termBtn" title="终端 (`)">&gt;_</button>
-    </nav>
+  <!-- ===== HEADER ===== -->
+  <header class="hdr">
+    <a class="brand magnetic" href="#top" data-cursor="home"><span class="brand-mark">66</span><span>dreaming<b>.</b></span></a>
+    <div class="hdr-mid mono"><span class="pulse"></span><span id="clock">UTC+8 --:--:--</span><span class="sep">/</span><span id="fps">— fps</span><span class="sep">/</span><span>DE BH3FWY</span></div>
+    <div class="hdr-act">
+      <button class="chip mono magnetic" id="sndBtn" aria-pressed="false" title="声音 (S)" data-cursor="sound">♪ <b>OFF</b></button>
+      <button class="chip mono magnetic" id="xrayBtn" aria-pressed="false" title="X 光透视 (X)" data-cursor="x-ray">X</button>
+      <button class="chip mono magnetic" id="motBtn" aria-pressed="false" title="暂停动效" data-cursor="pause">Ⅱ <b>ON</b></button>
+      <button class="chip mono magnetic" id="termBtn" title="终端 (`)" data-cursor="shell">&gt;_</button>
+      <button class="menu-btn magnetic" id="menuBtn" aria-haspopup="dialog" aria-controls="menu" data-cursor="menu"><span>菜单</span><i><b></b><b></b></i></button>
+    </div>
   </header>
 
-  <!-- ===== SIDE RAIL ===== -->
-  <nav class="rail mono" aria-label="章节">
-    <a href="#top" data-k="00">DIE</a>
-    <a href="#spec" data-k="01">SPEC</a>
-    <a href="#build" data-k="02">BUILD</a>
-    <a href="#aura" data-k="03">AURA</a>
-    <a href="#lab" data-k="04">INFER</a>
-    <a href="#wip" data-k="05">WIP</a>
-    <a href="#archive" data-k="06">ARCHIVE</a>
-    <a href="#music" data-k="07">STRINGS</a>
-    <a href="#log" data-k="08">LOG</a>
-    <a href="#ping" data-k="09">PING</a>
+  <!-- ===== MENU ===== -->
+  <nav class="menu" id="menu" role="dialog" aria-label="站点导航" aria-hidden="true">
+    <div class="menu-inner">
+      <a href="#build" data-i="02"><span>手搓</span><em>Bring-up</em></a>
+      <a href="#aura" data-i="03"><span>AuraCore 集群</span><em>Cluster</em></a>
+      <a href="#lab" data-i="04"><span>推理实验室</span><em>Inference</em></a>
+      <a href="#wip" data-i="05"><span>正在折腾</span><em>WIP</em></a>
+      <a href="#archive" data-i="06"><span>档案馆</span><em>Archive</em></a>
+      <a href="#music" data-i="07"><span>六根弦</span><em>Strings</em></a>
+      <a href="#log" data-i="08"><span>经历</span><em>git log</em></a>
+      <a href="#ping" data-i="09"><span>来找我</span><em>Say hi</em></a>
+    </div>
+    <p class="menu-foot mono">按 <kbd>`</kbd> 打开终端 · <kbd>S</kbd> 声音 · <kbd>X</kbd> 透视 · 试试 ↑↑↓↓←→←→BA</p>
   </nav>
 
   <main id="main">
-    <!-- ===== HERO / DIE SHOT ===== -->
+    <!-- ===== HERO ===== -->
     <section class="hero" id="top" data-sec>
-      <canvas id="die" class="die" aria-label="生成式芯片版图，点击注入脉冲"></canvas>
-      <div class="hero-corner tl mono">PART NO. <b>DRM-66</b><br>CLASS · MAKER / AI INFRA / MUSICIAN</div>
-      <div class="hero-corner tr mono">DE BH3FWY · DIE 26.6 × 26.6 mm<br>PROBE · CLICK TO INJECT</div>
-      <div class="hero-title">
-        <p class="hero-pre mono"><span class="led"></span> datasheet of a human · 一份人类规格书</p>
-        <h1 class="name" id="name" aria-label="dreaming66">DREAMING<span>66</span></h1>
-        <p class="hero-sub">从焊锡到张量。<b>画 PCB、编内核、跑大模型</b>，<br>下班后在家手搓机器人、听无线电、弹吉他。</p>
+      <canvas id="ink" class="ink" aria-hidden="true"></canvas>
+      <div class="hero-meta mono"><span>PART NO. DRM-66</span><span>MAKER / AI INFRA / MUSICIAN</span><span>EST. 2021 → ∞</span></div>
+      <div class="hero-copy">
+        <p class="hero-kicker reveal-up"><span class="star">✳</span> 你好，我是 Ruimin：画 PCB、编内核、<span class="hl">跑大模型</span>的人。</p>
+        <h1 class="hero-name" aria-label="dreaming66">
+          <span class="hn-row"><span class="split" data-text="dream">dream</span><span class="hn-serif split" data-text="ing">ing</span></span>
+          <span class="hn-row hn-row2"><span class="hn-num split" data-text="66">66</span><span class="hn-tag mono">/ ˈdriːmɪŋ /<br>n. 把东西亲手造出来的执念</span></span>
+        </h1>
+        <div class="hero-bottom reveal-up">
+          <p class="hero-desc">从 <b>H616 开发板</b>到 <b>PD 分离</b>，从<b>摆线关节</b>到 <b>SDR</b>。<br>我关心一个系统从焊盘到 token 的每一层。</p>
+          <div class="hero-cta">
+            <a class="pill ink-pill magnetic" href="#build" data-cursor="go"><span>看看我做的东西</span><span>↘</span></a>
+            <a class="pill magnetic" href="https://github.com/dreaming66" target="_blank" rel="noopener" data-cursor="open"><span>GitHub</span><span>↗</span></a>
+          </div>
+        </div>
       </div>
-      <table class="hero-spec mono" aria-label="引脚定义">
-        <tr><th>PIN</th><th>NAME</th><th>FUNCTION</th></tr>
-        <tr><td>01</td><td class="hot">SOLDER</td><td>AuraCore H616 · RK3576 <i>WIP</i></td></tr>
-        <tr><td>02</td><td class="hot">INFER</td><td>AI Infra · PD 分离 · K8s</td></tr>
-        <tr><td>03</td><td>WALK</td><td>BHL 人形 · 自研 FOC · MJX <i>WIP</i></td></tr>
-        <tr><td>04</td><td>RF</td><td>ZYNQ SDR · BH3FWY <i>WIP</i></td></tr>
-        <tr><td>05</td><td>STRUM</td><td>电吉他 · 日式摇滚</td></tr>
-      </table>
-      <div class="hero-scroll mono"><i></i>SCROLL TO DECAP</div>
+      <a class="badge-rot magnetic" href="#aura" data-cursor="see" aria-label="AuraCore 集群"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="circ" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0"/></defs><text><textPath href="#circ">AURACORE ✳ RK3576 ✳ BHL ✳ ZYNQ SDR ✳ DE BH3FWY ✳ </textPath></text></svg><b>66</b></a>
+      <p class="hero-hint mono">点击画面，投下一滴墨 · CLICK TO DROP INK</p>
+      <div class="scroll-cue mono"><span>SCROLL</span><i></i></div>
     </section>
 
-    <canvas class="bus" id="bus" aria-hidden="true"></canvas>
+    <div class="marquee" aria-hidden="true"><div class="mq-track"><span>SOLDER ✳ DEVICE TREE ✳ U-BOOT ✳ K3S ✳ PREFILL ✳ DECODE ✳ KV CACHE ✳ CYCLOID ✳ FOC ✳ MJX ✳ ZYNQ ✳ OVERDRIVE ✳ </span><span>SOLDER ✳ DEVICE TREE ✳ U-BOOT ✳ K3S ✳ PREFILL ✳ DECODE ✳ KV CACHE ✳ CYCLOID ✳ FOC ✳ MJX ✳ ZYNQ ✳ OVERDRIVE ✳ </span></div></div>
+    <div class="marquee m2" aria-hidden="true"><div class="mq-track"><span>焊锡 ✳ 张量 ✳ 设备树 ✳ 摆线 ✳ 瀑布图 ✳ 失真 ✳ 盘中孔 ✳ 注意力 ✳ 呼号 BH3FWY ✳ </span><span>焊锡 ✳ 张量 ✳ 设备树 ✳ 摆线 ✳ 瀑布图 ✳ 失真 ✳ 盘中孔 ✳ 注意力 ✳ 呼号 BH3FWY ✳ </span></div></div>
 
     <!-- ===== SPEC ===== -->
     <section class="spec" id="spec" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§01 / GENERAL DESCRIPTION</span>
+        <div class="sec-tag mono"><span>01</span> GENERAL DESCRIPTION</div>
         <h2 class="sec-t" data-glitch>概述</h2>
       </div>
       <div class="gen">
         <div class="gen-meta mono"><span>model: drm-66-self</span><span>temperature: 0.7</span><span>top_p: 0.9</span><span id="genStat">tokens: 0</span></div>
         <p class="gen-out" id="genOut"></p>
         <p class="gen-hint mono">↑ 流式生成。悬停任意 token 查看它的（虚构）logprob。</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><b class="count" data-to="5" data-suffix=" 片">0</b><span>自研 AuraCore 组成 k3s 集群</span></div>
+        <div class="stat"><b class="count" data-to="20" data-prefix="−" data-suffix="%">0</b><span>核心模型并发推理延迟</span></div>
+        <div class="stat"><b class="count" data-to="10" data-suffix="+">0</b><span>款大模型生产级部署</span></div>
+        <div class="stat"><b class="count" data-to="38" data-suffix=" mm">0</b><span>下一块板子的边长</span></div>
       </div>
       <div class="feat">
         <div class="feat-c"><span class="mono">FEATURES</span>
@@ -127,7 +136,7 @@
     <!-- ===== BUILD ===== -->
     <section class="build" id="build" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§02 / HARDWARE BRING-UP</span>
+        <div class="sec-tag mono"><span>02</span> HARDWARE BRING-UP</div>
         <h2 class="sec-t" data-glitch>手搓，<em>从一块空板开始</em></h2>
         <p class="sec-s">AuraCore 是我从零画的全志 H616 开发板：原理图、六层 PCB、手工焊接，再配设备树、编 U-Boot、Kernel、Buildroot，直到串口里出现登录提示符。下面是它的简化布局，交给你：<b>把所有焊盘焊上</b>（点击或拖过焊盘），然后上电。</p>
       </div>
@@ -163,7 +172,7 @@
     <!-- ===== AURACORE CLUSTER ===== -->
     <section class="aura" id="aura" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§03 / AURACORE CLUSTER</span>
+        <div class="sec-tag mono"><span>03</span> AURACORE CLUSTER</div>
         <h2 class="sec-t" data-glitch>五片 AuraCore，<em>插成一个集群</em></h2>
         <p class="sec-s">底座上有五个竖直的 USB-C 插槽：一片做 head + 路由，四片做从节点，从节点以 USB gadget 以太网接入底座的 CH339F，由 head 做路由，组网跑 k3s。下面是从 EasyEDA 导出的<b>真实 3D 模型</b>：拖动旋转、滚轮缩放，按 ASSEMBLE 看它们插上去。</p>
       </div>
@@ -205,7 +214,7 @@
     <!-- ===== LAB ===== -->
     <section class="lab" id="lab" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§04 / INFERENCE LAB</span>
+        <div class="sec-tag mono"><span>04</span> INFERENCE LAB</div>
         <h2 class="sec-t" data-glitch>推理实验室</h2>
         <p class="sec-s">本职工作：在国产算力上部署、调优大模型。四个小实验。</p>
       </div>
@@ -265,7 +274,7 @@
     <!-- ===== WIP ===== -->
     <section class="wip" id="wip" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§05 / WORK IN PROGRESS</span>
+        <div class="sec-tag mono"><span>05</span> WORK IN PROGRESS</div>
         <h2 class="sec-t" data-glitch>正在折腾</h2>
         <p class="sec-s">还没做完、但每周都在推进的几件事。</p>
       </div>
@@ -335,7 +344,7 @@
     <!-- ===== ARCHIVE ===== -->
     <section class="archive" id="archive" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§06 / ARCHIVE</span>
+        <div class="sec-tag mono"><span>06</span> ARCHIVE</div>
         <h2 class="sec-t" data-glitch>档案馆，<em>上学时手搓过的</em></h2>
         <p class="sec-s">从手机相册里翻出来的原始片段，没剪辑、没调色，点击放大。</p>
       </div>
@@ -362,7 +371,7 @@
     <!-- ===== MUSIC ===== -->
     <section class="music" id="music" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§07 / STRINGS &amp; KEYS</span>
+        <div class="sec-tag mono"><span>07</span> STRINGS &amp; KEYS</div>
         <h2 class="sec-t" data-glitch>六根弦，<em>八十八个键</em></h2>
         <p class="sec-s">从原声吉他入门，现在玩电吉他、日式摇滚；钢琴还在学。下面两件乐器都能弹：吉他标准调弦（EADGBE），用 Karplus-Strong 算法实时合成拨弦，打开 DRIVE 就是失真音箱；钢琴用加法合成。先打开声音。</p>
       </div>
@@ -385,7 +394,7 @@
     <!-- ===== LOG ===== -->
     <section class="log" id="log" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§08 / REVISION HISTORY</span>
+        <div class="sec-tag mono"><span>08</span> REVISION HISTORY</div>
         <h2 class="sec-t" data-glitch>git log --graph</h2>
         <p class="sec-s">本职那条主线。点击提交展开 diff。</p>
       </div>
@@ -440,7 +449,7 @@
     <!-- ===== PING ===== -->
     <section class="ping" id="ping" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§09 / CONTACT</span>
+        <div class="sec-tag mono"><span>09</span> CONTACT</div>
         <h2 class="sec-t big" data-glitch>ping <em>dreaming66</em></h2>
       </div>
       <div class="sonar">
@@ -448,12 +457,26 @@
         <pre class="pinglog mono" id="pinglog">PING dreaming66 (github.com): 56 data bytes</pre>
       </div>
       <div class="ping-act">
-        <button class="act big" id="pingBtn">▶ 发送一个 ping</button>
-        <a class="act big solid" href="https://github.com/dreaming66" target="_blank" rel="noopener">github.com/dreaming66 ↗</a>
+        <button class="pill big magnetic" id="pingBtn" data-cursor="ping"><span>发送一个 ping</span><span>◎</span></button>
+        <a class="pill ink-pill big magnetic" href="https://github.com/dreaming66" target="_blank" rel="noopener" data-cursor="open"><span>github.com/dreaming66</span><span>↗</span></a>
+        <button class="pill big magnetic" id="cardBtn" data-cursor="make"><span>生成一张名片</span><span>↓</span></button>
       </div>
       <p class="mono ping-note">联系方式不在此公开 · 去 GitHub 找我，或在终端里输入 <kbd>sudo hire-me</kbd></p>
     </section>
   </main>
+
+  <!-- ===== CARD MODAL ===== -->
+  <div class="modal" id="cardModal" aria-hidden="true" role="dialog" aria-label="名片">
+    <div class="modal-in">
+      <canvas id="cardCanvas" width="1200" height="720"></canvas>
+      <div class="modal-ctl">
+        <input id="cardLine" class="mono" maxlength="28" value="从焊锡到张量，亲手造一切" aria-label="名片上的一句话">
+        <button class="pill sm" id="cardShuffle"><span>换个样式</span><span>↻</span></button>
+        <a class="pill sm ink-pill" id="cardDl" download="dreaming66-card.png"><span>下载 PNG</span><span>↓</span></a>
+        <button class="pill sm" id="cardClose"><span>关闭</span><span>×</span></button>
+      </div>
+    </div>
+  </div>
 
   <footer class="foot mono">
     <canvas id="scope" aria-hidden="true"></canvas>

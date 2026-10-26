@@ -9,143 +9,110 @@
   const visible = el => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; };
 
   /* =========================================================
-     HERO · generative die shot
+     HERO · topographic ink field (WebGL2), click to drop ink
      ========================================================= */
-  function initDie() {
-    const cv = $("#die"), g = ctx2d(cv);
-    const off = document.createElement("canvas"), og = ctx2d(off);
-    let W = 0, H = 0, G = 26, blocks = [], traces = [], pulses = [];
-    const names = ["CUBE", "VECTOR", "HBM0", "HBM1", "L2$", "HCCS", "PCIe", "DMA", "NoC", "SRAM", "ISP", "UART", "GPIO", "PLL", "DDR", "RF", "SERVO", "DSP", "KV$", "MCU"];
-    function build() {
-      W = cv.width / DPR; H = cv.height / DPR; G = W < 700 ? 20 : 26;
-      const cols = Math.ceil(W / G), rows = Math.ceil(H / G);
-      const occ = new Uint8Array(cols * rows);
-      blocks = [];
-      for (let k = 0; k < 400 && blocks.length < 26; k++) {
-        const w = 2 + (Math.random() * 7 | 0), h = 2 + (Math.random() * 5 | 0);
-        const x = Math.random() * (cols - w - 2) + 1 | 0, y = Math.random() * (rows - h - 2) + 1 | 0;
-        let free = true;
-        for (let i = x - 1; i <= x + w && free; i++) for (let j = y - 1; j <= y + h; j++) if (occ[j * cols + i]) { free = false; break; }
-        if (!free) continue;
-        for (let i = x; i < x + w; i++) for (let j = y; j < y + h; j++) occ[j * cols + i] = 1;
-        blocks.push({ x, y, w, h, name: names[blocks.length % names.length], hot: 0, kind: Math.random() < .3 ? 1 : 0 });
-      }
-      traces = [];
-      const port = b => { const s = Math.random() * 4 | 0; return s === 0 ? [b.x + (Math.random() * b.w | 0), b.y - 1] : s === 1 ? [b.x + b.w, b.y + (Math.random() * b.h | 0)] : s === 2 ? [b.x + (Math.random() * b.w | 0), b.y + b.h] : [b.x - 1, b.y + (Math.random() * b.h | 0)]; };
-      for (let k = 0; k < blocks.length * 3; k++) {
-        const a = blocks[Math.random() * blocks.length | 0], b = blocks[Math.random() * blocks.length | 0]; if (a === b) continue;
-        const [x0, y0] = port(a), [x1, y1] = port(b);
-        const mid = Math.random() < .5;
-        const pts = mid ? [[x0, y0], [x1, y0], [x1, y1]] : [[x0, y0], [x0, (y0 + y1) / 2 | 0], [x1, (y0 + y1) / 2 | 0], [x1, y1]];
-        const P = pts.map(([x, y]) => [x * G + G / 2, y * G + G / 2]);
-        let len = 0; for (let i = 1; i < P.length; i++) len += Math.abs(P[i][0] - P[i - 1][0]) + Math.abs(P[i][1] - P[i - 1][1]);
-        traces.push({ P, len, lit: 0 });
-      }
-      off.width = cv.width; off.height = cv.height; og.setTransform(DPR, 0, 0, DPR, 0, 0);
-      og.fillStyle = C.bg; og.fillRect(0, 0, W, H);
-      og.fillStyle = "#ffffff10"; for (let x = 0; x < W; x += G) for (let y = 0; y < H; y += G) og.fillRect(x + G / 2, y + G / 2, 1, 1);
-      og.lineWidth = 1; og.strokeStyle = "#ffb21a2e";
-      for (const t of traces) { og.beginPath(); t.P.forEach(([x, y], i) => i ? og.lineTo(x, y) : og.moveTo(x, y)); og.stroke(); og.fillStyle = "#ffb21a55"; for (const [x, y] of [t.P[0], t.P[t.P.length - 1]]) og.fillRect(x - 2, y - 2, 4, 4); }
-      og.font = "500 9px IBM Plex Mono, monospace";
-      for (const b of blocks) {
-        const x = b.x * G, y = b.y * G, w = b.w * G, h = b.h * G;
-        og.fillStyle = b.kind ? "#36e2ff0c" : "#ffffff07"; og.fillRect(x, y, w, h);
-        og.strokeStyle = b.kind ? "#36e2ff40" : "#ffffff26"; og.strokeRect(x + .5, y + .5, w - 1, h - 1);
-        // inner texture: memory arrays or logic hatch
-        og.strokeStyle = b.kind ? "#36e2ff18" : "#ffffff0d";
-        og.beginPath();
-        if (b.kind) for (let yy = y + 6; yy < y + h - 4; yy += 4) { og.moveTo(x + 4, yy); og.lineTo(x + w - 4, yy); }
-        else for (let xx = x + 6; xx < x + w - 4; xx += 7) { og.moveTo(xx, y + 4); og.lineTo(xx, y + h - 4); }
-        og.stroke();
-        og.fillStyle = "#8b8c84"; og.fillText(b.name, x + 5, y + 12);
-      }
-    }
-    const at = (t, s) => {
-      let d = s; for (let i = 1; i < t.P.length; i++) { const a = t.P[i - 1], b = t.P[i]; const L = Math.abs(b[0] - a[0]) + Math.abs(b[1] - a[1]); if (d <= L) { const k = L ? d / L : 0; return [lerp(a[0], b[0], k), lerp(a[1], b[1], k)]; } d -= L; }
-      return t.P[t.P.length - 1];
-    };
-    const spawn = (t, c = Math.random() < .2 ? C.sig : C.amb) => pulses.push({ t, s: 0, v: rand(160, 420), c });
-    cv.addEventListener("pointerdown", e => {
-      const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-      const near = traces.map(t => ({ t, d: Math.min(...t.P.map(([px, py]) => Math.hypot(px - x, py - y))) })).sort((a, b) => a.d - b.d).slice(0, 18);
-      near.forEach(n => { spawn(n.t, C.sig); n.t.lit = 1; });
-      for (const b of blocks) if (Math.hypot((b.x + b.w / 2) * G - x, (b.y + b.h / 2) * G - y) < 260) b.hot = 1;
-      S.zap();
-    });
-    let acc = 0;
-    D.loop(cv, (dt, T) => {
-      if (D.fit(cv) || !W) build();
-      g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(off, 0, 0); g.setTransform(DPR, 0, 0, DPR, 0, 0);
-      const r = cv.getBoundingClientRect(), mx = D.mx - r.left, my = D.my - r.top;
-      acc += dt; while (acc > .06) { acc -= .06; if (pulses.length < 160) spawn(traces[Math.random() * traces.length | 0]); }
-      // hot blocks near probe
-      g.font = "500 9px IBM Plex Mono, monospace";
-      for (const b of blocks) {
-        const x = b.x * G, y = b.y * G, w = b.w * G, h = b.h * G;
-        const inside = mx > x && mx < x + w && my > y && my < y + h;
-        if (inside) b.hot = Math.max(b.hot, .6);
-        if (b.hot > .01) {
-          g.fillStyle = `rgba(255,178,26,${b.hot * .14})`; g.fillRect(x, y, w, h);
-          g.strokeStyle = `rgba(255,178,26,${b.hot})`; g.strokeRect(x + .5, y + .5, w - 1, h - 1);
-          if (inside) { g.fillStyle = C.amb; g.fillText(`${b.name} · ${(40 + Math.sin(T * 3 + b.x) * 30 + 30).toFixed(0)}% · ${(0.8 + b.y * .01).toFixed(2)}V`, x + 5, y + h - 6); }
-          b.hot *= Math.pow(.2, dt);
+  function initInk() {
+    const cv = $("#ink");
+    const gl = cv.getContext("webgl2", { antialias: false, premultipliedAlpha: false });
+    if (!gl) { cv.style.background = "radial-gradient(circle at 70% 30%, #ff4f1f22, transparent 50%)"; return; }
+    const vs = `#version 300 es
+    in vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
+    const fs = `#version 300 es
+    precision highp float;
+    uniform vec2 R; uniform float T; uniform vec2 M; uniform vec4 Dr[6];
+    out vec4 o;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
+    float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+      return mix(mix(h(i),h(i+vec2(1,0)),f.x), mix(h(i+vec2(0,1)),h(i+1.),f.x), f.y); }
+    float fbm(vec2 p){ float v=0., a=.5; mat2 r=mat2(.8,.6,-.6,.8);
+      for(int i=0;i<5;i++){ v+=a*n(p); p=r*p*2.03; a*=.5; } return v; }
+    void main(){
+      vec2 p = (gl_FragCoord.xy - .5*R) / R.y;
+      vec2 m = (M - .5*R) / R.y;
+      float t = T * .05, dm = length(p - m);
+      float rip = 0., wet = 0.;
+      for (int i = 0; i < 6; i++) {
+        float age = T - Dr[i].z;
+        if (Dr[i].w > 0. && age > 0. && age < 7.) {
+          vec2 c = (Dr[i].xy - .5*R) / R.y; float d = length(p - c), front = age * .32;
+          rip += sin((d - front) * 34.) * exp(-abs(d - front) * 9.) * exp(-age * .55);
+          wet += smoothstep(front, front - .05, d) * exp(-age * .5) * smoothstep(.0, .25, age);
         }
       }
-      g.globalCompositeOperation = "lighter";
-      for (let i = pulses.length - 1; i >= 0; i--) {
-        const p = pulses[i]; p.s += p.v * dt;
-        if (p.s > p.t.len) { pulses.splice(i, 1); continue; }
-        const [x, y] = at(p.t, p.s), [x2, y2] = at(p.t, Math.max(0, p.s - 26));
-        const gr = g.createLinearGradient(x2, y2, x, y); gr.addColorStop(0, "transparent"); gr.addColorStop(1, p.c);
-        g.strokeStyle = gr; g.lineWidth = 2; g.beginPath(); g.moveTo(x2, y2); g.lineTo(x, y); g.stroke();
-        g.fillStyle = p.c; g.fillRect(x - 1.5, y - 1.5, 3, 3);
-      }
-      // probe halo
-      if (mx > 0 && my > 0 && mx < W && my < H) {
-        const rg = g.createRadialGradient(mx, my, 0, mx, my, 160); rg.addColorStop(0, "#ffb21a22"); rg.addColorStop(1, "transparent");
-        g.fillStyle = rg; g.fillRect(mx - 160, my - 160, 320, 320);
-      }
-      g.globalCompositeOperation = "source-over";
-    });
-    // name: per-letter jitter on hover
-    const name = $("#name");
-    const txt = "DREAMING"; name.innerHTML = [...txt].map(c => `<span class="c">${c}</span>`).join("") + `<span>${[..."66"].map(c => `<span class="c">${c}</span>`).join("")}</span>`;
-    $$(".c", name).forEach((s, i) => {
-      s.style.pointerEvents = "auto";
-      s.addEventListener("pointerenter", () => { if (D.still) return; s.style.transform = `translateY(${rand(-14, -4)}px) rotate(${rand(-8, 8)}deg)`; s.style.color = i % 3 ? C.sig : C.hot; S.tone(220 * Math.pow(2, [0, 2, 4, 7, 9, 12, 14, 16, 19, 21][i] / 12), .18, "triangle", .08, .4); setTimeout(() => { s.style.transform = ""; s.style.color = ""; }, 380); });
+      vec2 q = p * 1.25; q += (p - m) * .35 * exp(-dm * 3.5);
+      vec2 a = vec2(fbm(q + vec2(t, -t*.4)), fbm(q + vec2(5.2, 1.3) - t*.7));
+      vec2 b = vec2(fbm(q + 2.4*a + vec2(1.7, 9.2) + t*.3), fbm(q + 2.4*a + vec2(8.3, 2.8)));
+      float f = fbm(q + 2.2*b) + rip * .045;
+      float bands = f * 22., w = fwidth(bands);
+      float line = 1. - smoothstep(w * .3, w * 1.2, .5 - abs(fract(bands) - .5));
+      float major = 1. - smoothstep(w * .8, w * 2.2, 2.5 - abs(fract(bands / 5.) - .5) * 5.);
+      vec3 paper = vec3(.945, .929, .89), ink = vec3(.078, .078, .07), ver = vec3(1., .31, .12), cob = vec3(.15, .28, 1.);
+      vec3 col = paper;
+      col = mix(col, vec3(.91, .885, .83), smoothstep(.45, .75, f) * .7);
+      col = mix(col, ver, smoothstep(.62, .78, b.x) * .10);
+      col = mix(col, cob, smoothstep(.70, .85, a.y) * .06);
+      float near = exp(-dm * 4.);
+      vec3 lc = mix(ink, ver, clamp(near * 1.4 + wet * .8, 0., 1.));
+      col = mix(col, lc, line * (.20 + near * .45) + major * .28);
+      col = mix(col, ver, wet * .10);
+      col = mix(paper, col, .35 + .65 * smoothstep(-.55, .35, p.y));
+      o = vec4(col, 1.);
+    }`;
+    const sh = (t, src) => { const x = gl.createShader(t); gl.shaderSource(x, src); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) console.warn(gl.getShaderInfoLog(x)); return x; };
+    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const uR = gl.getUniformLocation(pr, "R"), uT = gl.getUniformLocation(pr, "T"), uM = gl.getUniformLocation(pr, "M"), uD = gl.getUniformLocation(pr, "Dr");
+    const drops = new Float32Array(24); let di = 0, pmx = 0, pmy = 0;
+    const drop = (x, y) => { const r = cv.getBoundingClientRect(), k = cv.width / r.width; drops.set([(x - r.left) * k, (r.bottom - y) * k, D.T, 1], (di++ % 6) * 4); S.tone(rand(180, 320), .6, "sine", .1, .6); S.noise(.2, 600, .8, .05, "lowpass"); };
+    cv.parentElement.addEventListener("pointerdown", e => { if (!e.target.closest("a,button")) drop(e.clientX, e.clientY); });
+    document.addEventListener("d66boot", () => setTimeout(() => drop(innerWidth * .66, innerHeight * .38), 900));
+    D.loop(cv, (dt, T) => {
+      D.fit(cv, .6); gl.viewport(0, 0, cv.width, cv.height);
+      const r = cv.getBoundingClientRect(), k = cv.width / r.width;
+      pmx = lerp(pmx, (D.mx - r.left) * k, .08); pmy = lerp(pmy, (r.bottom - D.my) * k, .08);
+      gl.uniform2f(uR, cv.width, cv.height); gl.uniform1f(uT, T); gl.uniform2f(uM, pmx, pmy); gl.uniform4fv(uD, drops);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
     });
   }
 
   /* =========================================================
-     logic analyzer bus
+     business-card generator
      ========================================================= */
-  function initBus() {
-    const cv = $("#bus"), g = ctx2d(cv); let W = 0, H = 0, off = 0;
-    const rows = [["CLK", C.amb], ["UART_TX", C.ok], ["CW_KEY", C.sig], ["IRQ", C.hot]];
-    const bits = (seed, n) => { let s = seed, a = []; for (let i = 0; i < n; i++) { s = (s * 1103515245 + 12345) & 0x7fffffff; a.push(s >> 16 & 1); } return a; };
-    const pattern = [bits(1, 400), bits(7, 400), bits(13, 400)];
-    D.loop(cv, (dt, T) => {
-      if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
-      g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
-      off += dt * 60;
-      const rh = H / rows.length, step = 12;
-      g.font = "500 9px IBM Plex Mono, monospace";
-      rows.forEach(([name, col], r) => {
-        const y0 = r * rh + rh * .2, y1 = r * rh + rh * .8;
-        g.strokeStyle = col; g.lineWidth = 1.2; g.globalAlpha = .85; g.beginPath();
-        let prev = null;
-        for (let x = 70; x < W + step; x += step) {
-          const i = Math.floor((x + off) / step);
-          let v = r === 0 ? i & 1 : r === 3 ? (i % 53 === 0 ? 1 : 0) : pattern[r - 1][i % 400];
-          const y = v ? y0 : y1;
-          if (prev === null) g.moveTo(x, y); else { g.lineTo(x, prev); g.lineTo(x, y); }
-          g.lineTo(x + step, y); prev = y;
-        }
-        g.stroke(); g.globalAlpha = 1;
-        g.fillStyle = C.bg; g.fillRect(0, r * rh, 66, rh); g.fillStyle = C.dim; g.fillText(name, 12, r * rh + rh / 2 + 3);
-      });
-      g.strokeStyle = C.line; g.beginPath(); g.moveTo(66.5, 0); g.lineTo(66.5, H); g.stroke();
-    });
+  function initCard() {
+    const modal = $("#cardModal"), cv = $("#cardCanvas"), g = ctx2d(cv), line = $("#cardLine"), dl = $("#cardDl");
+    const P = { paper: "#f1ede3", ink: "#141412", ver: "#ff4f1f", cob: "#2747ff", sun: "#f2c230" };
+    const themes = [{ bg: P.paper, fg: P.ink, ac: P.ver }, { bg: P.ink, fg: P.paper, ac: P.ver }, { bg: P.ver, fg: P.ink, ac: P.paper }, { bg: P.cob, fg: P.paper, ac: P.sun }, { bg: P.sun, fg: P.ink, ac: P.cob }];
+    let ti = 0, seed = Math.random() * 1000, motif = 0;
+    function draw() {
+      const th = themes[ti % themes.length], W = cv.width, H = cv.height;
+      g.fillStyle = th.bg; g.fillRect(0, 0, W, H);
+      g.save(); g.globalAlpha = .2; g.strokeStyle = th.fg; g.lineWidth = 1.2;
+      for (let k = 0; k < 26; k++) { g.beginPath(); for (let x = 0; x <= W; x += 8) { const y = H * .1 + k * 22 + Math.sin(x * .006 + seed + k * .25) * 40 + Math.sin(x * .017 + seed * 2 + k * .1) * 14; x ? g.lineTo(x, y) : g.moveTo(x, y); } g.stroke(); }
+      g.restore();
+      // motif top-right: BGA balls / morse / waveform
+      const mx = W - 70, my = 70;
+      if (motif % 3 === 0) for (let i = 0; i < 12; i++) for (let j = 0; j < 4; j++) { const on = Math.sin(seed + i * 1.7 + j * 2.3) > .4; g.fillStyle = on ? th.ac : th.fg; g.globalAlpha = on ? 1 : .18; g.beginPath(); g.arc(mx - i * 26 - 10, my + j * 26 + 10, 9, 0, 7); g.fill(); }
+      else if (motif % 3 === 1) { let x = mx; g.fillStyle = th.ac; for (const ch of "BH3FWY".split("").reverse()) { for (const s of [...D.MORSE[ch]].reverse()) { const w = s === "." ? 12 : 34; x -= w; g.fillRect(x, my + 20, w, 12); x -= 8; } x -= 22; } g.font = "500 18px JetBrains Mono, monospace"; g.fillStyle = th.fg; g.textAlign = "right"; g.fillText("DE BH3FWY", mx, my + 70); g.textAlign = "left"; }
+      else { g.strokeStyle = th.ac; g.lineWidth = 3; g.beginPath(); for (let x = 0; x < 330; x += 3) { const y = my + 40 + Math.sin(x * .09 + seed) * 22 * Math.exp(-x / 260) * Math.sin(x * .013); x ? g.lineTo(mx - 330 + x, y) : g.moveTo(mx - 330 + x, y); } g.stroke(); }
+      g.globalAlpha = 1;
+      g.fillStyle = th.fg; g.font = "600 22px JetBrains Mono, monospace"; g.fillText("MAKER · AI INFRA · MUSICIAN", 70, 92);
+      g.font = "italic 400 190px Instrument Serif, Georgia, serif"; g.fillText("dreaming", 62, 400);
+      g.fillStyle = th.ac; g.fillText("66", 62 + g.measureText("dreaming").width + 10, 400);
+      g.fillStyle = th.fg; g.font = "900 40px Noto Serif SC, serif"; g.fillText(line.value || " ", 70, 500);
+      g.fillRect(70, 560, W - 140, 2);
+      g.font = "500 24px JetBrains Mono, monospace"; g.fillText("github.com/dreaming66", 70, 620);
+      g.textAlign = "right"; g.fillText("me.dustinz.de", W - 70, 620); g.textAlign = "left";
+      dl.href = cv.toDataURL("image/png");
+    }
+    const open = async () => { await document.fonts.ready; draw(); modal.classList.add("open"); modal.setAttribute("aria-hidden", false); S.chord([523, 659, 784], .05, "triangle", .07); };
+    const close = () => { modal.classList.remove("open"); modal.setAttribute("aria-hidden", true); };
+    $("#cardBtn").addEventListener("click", open);
+    $("#cardClose").addEventListener("click", close);
+    $("#cardShuffle").addEventListener("click", () => { ti++; motif++; seed = Math.random() * 1000; draw(); S.blip(rand(500, 900)); });
+    line.addEventListener("input", draw);
+    modal.addEventListener("click", e => { if (e.target === modal) close(); });
+    addEventListener("keydown", e => { if (e.key === "Escape") close(); });
   }
 
   /* =========================================================
@@ -1124,7 +1091,7 @@
   }
 
   /* ---------------- boot ---------------- */
-  initDie(); initBus(); initGen(); initPCB(); initMCU(); initRack();
+  initInk(); initCard(); initGen(); initPCB(); initMCU(); initRack();
   initPD(); initNPU(); initMCP(); initGraph();
   initRK(); initRobot(); initCyc(); initSDR(); initFT(); initArchive();
   initGuitar(); initPiano(); initLog(); initPing(); initScope();

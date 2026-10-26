@@ -10,7 +10,8 @@
   const rand = (a, b) => a + Math.random() * (b - a);
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
   const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
-  const C = { bg: "#0a0b0a", bg2: "#101210", bg3: "#171a17", fg: "#ebe7dc", dim: "#8b8c84", dim2: "#5a5c55", line: "#ffffff16", amb: "#ffb21a", sig: "#36e2ff", hot: "#ff4b2b", ok: "#a4ff5e" };
+  // canvases live on ink "instrument screens" sitting on paper
+  const C = { bg: "#141412", bg2: "#1c1c1a", bg3: "#24241f", fg: "#f1ede3", dim: "#9a968a", dim2: "#5f5c55", line: "#ffffff16", amb: "#ff4f1f", sig: "#8fb2ff", hot: "#ff2e4d", ok: "#7dff9a", sun: "#f2c230", paper: "#f1ede3", ink: "#141412", ver: "#ff4f1f", cob: "#2747ff" };
 
   const D = window.D66 = { $, $$, clamp, lerp, rand, DPR, fine, C, still: matchMedia("(prefers-reduced-motion: reduce)").matches, mx: -999, my: -999, T: 0 };
 
@@ -199,7 +200,7 @@
       $("#gate").classList.add("off");
       $("#crt").classList.add("on");
       document.body.classList.remove("gated");
-      document.body.classList.add("booted");
+      document.body.classList.add("booted", "ready");
       setTimeout(() => { $("#gate").remove(); S.boot(); }, 300);
       document.dispatchEvent(new Event("d66boot"));
     };
@@ -212,25 +213,62 @@
     });
   }
 
-  /* ---------------- probe cursor ---------------- */
-  const probe = $(".probe"), pread = $("#pread");
-  let px = 0, py = 0, lastTick = 0;
+  /* ---------------- cursor + magnetic ---------------- */
+  const cur = $(".cursor"), dot = $(".c-dot"), ring = $(".c-ring"), label = $(".c-label");
+  let rx = 0, ry = 0, lastTick = 0;
   addEventListener("pointermove", e => { D.mx = e.clientX; D.my = e.clientY; }, { passive: true });
   if (fine) {
-    document.body.classList.add("probe-on");
-    (function pl() {
-      px = lerp(px, D.mx, .35); py = lerp(py, D.my, .35);
-      probe.style.transform = `translate(${px}px,${py}px)`;
-      pread.textContent = `x${String(Math.round(D.mx)).padStart(4, "0")} y${String(Math.round(D.my + scrollY)).padStart(5, "0")}`;
-      requestAnimationFrame(pl);
-    })();
+    document.body.classList.add("has-cursor");
+    addEventListener("pointerdown", () => cur.classList.add("down"));
+    addEventListener("pointerup", () => cur.classList.remove("down"));
     document.addEventListener("pointerover", e => {
-      const t = e.target.closest("a,button,input,.mcu,label,canvas,.wk,.bk");
-      probe.classList.toggle("hot", !!t && t.tagName !== "CANVAS");
-      if (t && t.tagName !== "CANVAS" && performance.now() - lastTick > 60) { lastTick = performance.now(); S.tick(); }
+      const t = e.target.closest("a,button,input,label,[data-cursor],.clip,.mcu,.wk,.bk");
+      cur.classList.toggle("hover", !!t && t.tagName !== "INPUT");
+      label.textContent = t ? (t.dataset.cursor || (t.classList.contains("clip") ? "play" : t.tagName === "A" ? "open" : t.matches(".wk,.bk") ? "♪" : t.tagName === "BUTTON" ? "click" : "")) : "";
+      if (t && performance.now() - lastTick > 60) { lastTick = performance.now(); S.tick(); }
+    });
+    (function cl() {
+      rx = lerp(rx, D.mx, .18); ry = lerp(ry, D.my, .18);
+      dot.style.transform = `translate(${D.mx}px,${D.my}px)`; ring.style.transform = `translate(${rx}px,${ry}px)`;
+      requestAnimationFrame(cl);
+    })();
+    $$(".magnetic").forEach(el => {
+      el.addEventListener("pointermove", e => { if (D.still) return; const r = el.getBoundingClientRect(); el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * .25}px,${(e.clientY - r.top - r.height / 2) * .35}px)`; });
+      el.addEventListener("pointerleave", () => { el.style.transition = "transform .6s cubic-bezier(.23,1,.32,1)"; el.style.transform = ""; setTimeout(() => el.style.transition = "", 600); });
     });
   }
   document.addEventListener("click", e => { if (e.target.closest("button, a")) S.click(); });
+
+  /* split hero letters */
+  $$(".split").forEach((el, k) => {
+    const t = el.dataset.text || el.textContent; el.textContent = "";
+    [...t].forEach((c, i) => {
+      const sp = document.createElement("span"); sp.className = "ch"; sp.textContent = c; sp.style.transitionDelay = (.25 + k * .12 + i * .045) + "s";
+      sp.addEventListener("pointerenter", () => S.tone(220 * Math.pow(2, [0, 2, 4, 7, 9, 12, 14][(i + k * 2) % 7] / 12), .2, "triangle", .07, .4));
+      el.appendChild(sp);
+    });
+  });
+  document.addEventListener("d66boot", () => setTimeout(() => $$(".split .ch").forEach(s => s.style.transitionDelay = "0s"), 3200));
+
+  /* menu */
+  const menuBtn = $("#menuBtn"), menu = $("#menu");
+  const setMenu = open => { document.body.classList.toggle("menu-open", open); menu.setAttribute("aria-hidden", !open); menuBtn.setAttribute("aria-expanded", open); S.whoosh(open); };
+  menuBtn.addEventListener("click", () => setMenu(!document.body.classList.contains("menu-open")));
+  $$(".menu a").forEach(a => a.addEventListener("click", () => setMenu(false)));
+  D.setMenu = setMenu;
+
+  /* counters */
+  const cio = new IntersectionObserver(es => es.forEach(e => {
+    if (!e.isIntersecting) return; const el = e.target; cio.unobserve(el);
+    const to = +el.dataset.to, pre = el.dataset.prefix || "", suf = el.dataset.suffix || "", t0 = performance.now(), dur = D.still ? 1 : 1800;
+    const run = now => { const k = clamp((now - t0) / dur, 0, 1); el.textContent = pre + (k >= 1 ? to : Math.round(to * (1 - Math.pow(2, -10 * k)))) + suf; if (k < 1) requestAnimationFrame(run); else S.blip(880); };
+    requestAnimationFrame(run);
+  }), { threshold: .4 });
+  $$(".count").forEach(el => cio.observe(el));
+
+  /* scroll progress */
+  const prog = $("#progress");
+  addEventListener("scroll", () => { const H = document.documentElement.scrollHeight - innerHeight; prog.style.transform = `scaleX(${H > 0 ? scrollY / H : 0})`; }, { passive: true });
 
   /* ---------------- chrome ---------------- */
   const clock = $("#clock");
@@ -374,7 +412,7 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
     if (kp === konami.length) { kp = 0; document.body.classList.add("shake"); S.zap(); D.toggleMatrix(true); setTimeout(() => { document.body.classList.remove("shake"); D.toggleMatrix(false); }, 5000); }
     if (field || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === "`") { e.preventDefault(); setTerm(!term.classList.contains("open")); }
-    else if (e.key === "Escape") setTerm(false);
+    else if (e.key === "Escape") { setTerm(false); D.setMenu && D.setMenu(false); }
     else if (e.key.toLowerCase() === "s" && !D.pianoFocus) D.setSound(!A.on);
     else if (e.key.toLowerCase() === "x" && !D.pianoFocus) setX(!document.body.classList.contains("xray"));
   });
@@ -382,6 +420,6 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
   D.boot = () => {
     runGate();
     requestAnimationFrame(frame);
-    console.log("%c DRM-66 %c 在看源码？按 ` 打开终端 · ↑↑↓↓←→←→BA · 呼号 BH3FWY", "background:#ffb21a;color:#0a0b0a;font-weight:700;padding:3px 8px", "color:#8b8c84");
+    console.log("%c dreaming66 %c 在看源码？按 ` 打开终端 · ↑↑↓↓←→←→BA · 呼号 BH3FWY", "background:#ff4f1f;color:#141412;font-weight:700;padding:3px 8px", "color:#8b8c84");
   };
 })();
