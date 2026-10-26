@@ -106,7 +106,22 @@
     boot() { S.chord([261.6, 329.6, 392, 523.3, 784], .09, "sine", .11); S.noise(.4, 200, .7, .05, "lowpass"); },
     // Karplus–Strong plucked string, cached per frequency
     _ks: new Map(),
-    pluck(f, v = .3, bright = .5) {
+    // drive chain: pre-gain → HPF → soft-clip waveshaper → mid boost → cab low-pass
+    _amp() {
+      if (A.amp) return A.amp; const c = A.ctx;
+      const pre = c.createGain(); pre.gain.value = 7;
+      const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 110;
+      const ws = c.createWaveShaper(); const n = 2048, cur = new Float32Array(n), k = 55;
+      for (let i = 0; i < n; i++) { const x = i * 2 / n - 1; cur[i] = (1 + k) * x / (1 + k * Math.abs(x)); }
+      ws.curve = cur; ws.oversample = "4x";
+      const mid = c.createBiquadFilter(); mid.type = "peaking"; mid.frequency.value = 850; mid.Q.value = .9; mid.gain.value = 7;
+      const cab = c.createBiquadFilter(); cab.type = "lowpass"; cab.frequency.value = 4200; cab.Q.value = .8;
+      const cab2 = c.createBiquadFilter(); cab2.type = "lowpass"; cab2.frequency.value = 6500;
+      const post = c.createGain(); post.gain.value = .16;
+      pre.connect(hp); hp.connect(ws); ws.connect(mid); mid.connect(cab); cab.connect(cab2); cab2.connect(post); out(post, .3);
+      return A.amp = pre;
+    },
+    pluck(f, v = .3, bright = .5, drive = false) {
       if (!ok()) return; const sr = A.ctx.sampleRate, key = Math.round(f * 10) + ":" + bright;
       let buf = S._ks.get(key);
       if (!buf) {
@@ -123,7 +138,9 @@
       const s = A.ctx.createBufferSource(); s.buffer = buf;
       const g = A.ctx.createGain(); g.gain.value = v;
       const fl = A.ctx.createBiquadFilter(); fl.type = "lowpass"; fl.frequency.value = 2400 + bright * 4000;
-      s.connect(fl); fl.connect(g); out(g, .35); s.start();
+      s.connect(fl); fl.connect(g);
+      if (drive) g.connect(S._amp()); else out(g, .35);
+      s.start();
     },
     piano(f, v = .22) {
       if (!ok()) return; const t = A.ctx.currentTime;
@@ -154,11 +171,13 @@
     ["CPU0 ........ curiosity @ ∞ GHz", "ok"],
     ["SOLDER IRON ........ 350°C", "ok"],
     ["UART0 ........ 115200 8N1", "ok"],
+    ["BOARD ........ AuraCore V2.0 · Allwinner H616", "ok"],
+    ["CLUSTER ........ 1 head + 4 workers · k3s", "ok"],
     ["NPU ........ 96 cards · HCCL ring up", "ok"],
     ["KV-CACHE ........ mooncake pool mounted", "ok"],
     ["RF FRONTEND ........ 144–146 MHz · DE BH3FWY", "ok"],
-    ["SERVO BUS ........ biped gait policy: training", "w"],
-    ["STRINGS ........ EADGBE in tune", "ok"],
+    ["ACTUATOR ........ cycloidal 5010 · FOC driver: selecting", "w"],
+    ["STRINGS ........ EADGBE · overdrive on", "ok"],
     ["PRIVACY ........ phone / email / employer → REDACTED", "w"],
     ["AUDIO ........ WebAudio synth ready (awaiting user gesture)", "ok"],
   ];
@@ -273,23 +292,31 @@
   const cmds = {
     help: () => `<span class="p">commands</span>
   whoami · neofetch · ls · uname -a
-  build      去焊板子          sdr      去听信标
+  build      去焊板子          aura     看 AuraCore 集群
+  kubectl get nodes            sdr      去听信标
   cq         用摩尔斯拍发呼号  play     弹一段吉他
   infer      推理实验室        matrix   进入矩阵
   xray       透视模式          sound    开/关声音
   sudo hire-me · clear · exit`,
     whoami: () => `<span class="g">dreaming66</span> · maker / AI Infra engineer · DE <span class="p">BH3FWY</span>
-画 PCB、编内核、跑大模型；在家手搓机器人、玩 SDR、弹吉他。`,
+画 PCB、编内核、跑大模型；在家手搓人形机器人、画 SDR 板子、弹电吉他。`,
+    aura: () => { go("#aura"); return "→ §03 AuraCore cluster"; },
+    "kubectl get nodes": () => `NAME            STATUS   ROLES                  ARCH
+auracore-head   <span class="g">Ready</span>    control-plane,master   arm64
+auracore-w1     <span class="g">Ready</span>    &lt;none&gt;                 arm64
+auracore-w2     <span class="g">Ready</span>    &lt;none&gt;                 arm64
+auracore-w3     <span class="g">Ready</span>    &lt;none&gt;                 arm64
+auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm64`,
     neofetch: () => `<span class="p">   ┌──────┐   </span><span class="g">dreaming66</span>@<span class="g">drm-66</span>
-<span class="p"> ──┤ ▣▣▣▣ ├── </span>OS: Buildroot (self-built)
+<span class="p"> ──┤ ▣▣▣▣ ├── </span>Board: AuraCore V2.0 (H616, 6L)
 <span class="p"> ──┤ ▣<span class="y">██</span>▣ ├── </span>Kernel: curiosity-6.6
 <span class="p"> ──┤ ▣▣▣▣ ├── </span>Uptime: since 2021
 <span class="p">   └──────┘   </span>Shell: zsh · Editor: whatever works
-              CPU: STM32 / ESP32 / Cortex-A
-              GPU: 96 × NPU (at work)
-              RF: 144–146 MHz · BH3FWY
-              Strings: EADGBE · Keys: learning`,
-    ls: () => `hardware/  homelab/  inference/  robot/  sdr/  finetune/  guitar.wav  piano.wav(wip)  <span class="d">.secrets</span>`,
+              Next: RK3576 · 38×38 mm · 6 TOPS
+              Robot: BHL-based · FOC · MJX
+              RF: ZYNQ-7010 + AD936x · BH3FWY
+              Strings: electric · J-rock · Keys: learning`,
+    ls: () => `auracore/  rk3576/  homelab/  inference/  robot/  sdr/  archive/  guitar.wav  <span class="d">.secrets</span>`,
     "cat .secrets": () => `<span class="r">permission denied</span> · 隐私已抹除`,
     "uname -a": () => `Linux drm-66 6.6.66-dreaming #1 SMP PREEMPT armv7l GNU/Linux`,
     build: () => { go("#build"); return "→ §02 hardware bring-up"; },

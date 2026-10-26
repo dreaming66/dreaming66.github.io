@@ -153,8 +153,8 @@
      ========================================================= */
   function initGen() {
     const el = $("#genOut"), stat = $("#genStat");
-    const text = "你好，我是 dreaming66。白天，我在国产算力集群上部署和调优大模型，盯着 TTFT 和 TPOT；晚上，我画原理图、焊板子、编内核，在家手搓一台双足机器人，用 SDR 收听天上的信号——呼号 BH3FWY。偶尔弹吉他，正在学钢琴。我相信：理解一个系统最好的方式，是亲手把它从零搭起来。";
-    const keys = ["大模型", "TTFT", "TPOT", "焊板子", "编内核", "双足机器人", "SDR", "BH3FWY", "吉他", "钢琴", "从零搭起来"];
+    const text = "你好，我是 dreaming66。白天，我在国产算力集群上部署和调优大模型，盯着 TTFT 和 TPOT；晚上，我画自己的 Linux 开发板：全志 H616 的 AuraCore 已经插成了一个 k3s 集群，RK3576 正在布线。周末在家手搓人形机器人的关节，画 ZYNQ 的 SDR 板子，呼号 BH3FWY。累了就插上电吉他，弹一段日式摇滚。我相信：理解一个系统最好的方式，是亲手把它从零搭起来。";
+    const keys = ["大模型", "TTFT", "TPOT", "AuraCore", "k3s", "RK3576", "人形机器人", "SDR", "BH3FWY", "电吉他", "从零搭起来"];
     const toks = []; let i = 0;
     while (i < text.length) {
       const m = text.slice(i).match(/^[A-Za-z0-9]+/);
@@ -185,38 +185,38 @@
   function initPCB() {
     const cv = $("#pcb"), g = ctx2d(cv), cnt = $("#solderCnt"), pwr = $("#powerBtn"), outEl = $("#serialOut"), state = $("#serialState");
     const flow = $$("#flow li");
-    let W = 0, H = 0, pads = [], parts = [], traces = [], smoke = [], down = false, powered = false, ledOn = 0, built = false;
+    let W = 0, H = 0, s = 1, ox = 0, oy = 0, pads = [], parts = [], smoke = [], down = false, powered = false, ledOn = 0, built = false;
     const setFlow = n => flow.forEach((li, i) => { li.classList.toggle("done", i < n); li.classList.toggle("cur", i === n); });
     setFlow(2);
+    // AuraCore V2.0 layout, portrait mm (x 0..31 across, y 0..62 down), read off the PCB PDF; drawn landscape
+    const BW = 31, BL = 62;
+    const L = (x, y) => [ox + y * s, oy + (BW - x) * s];
+    const R = (x, y, w, h) => { const [X, Y] = L(x + w, y); return [X, Y, h * s, w * s]; };
     function build() {
-      W = cv.width / DPR; H = cv.height / DPR; const s = Math.min(W / 640, H / 460);
+      W = cv.width / DPR; H = cv.height / DPR;
+      s = Math.min((W - 40) / BL, (H - 80) / (BW + 4)); ox = (W - BL * s) / 2; oy = (H - 60 - BW * s) / 2 + 6;
       const old = new Set(pads.filter(p => p.on).map(p => p.id));
-      pads = []; parts = []; traces = [];
-      const ox = (W - 640 * s) / 2, oy = (H - 420 * s) / 2 - 16;
-      const P = (x, y) => [ox + x * s, oy + y * s];
-      const addPart = (name, x, y, w, h, padsFn, label) => { const [px, py] = P(x, y); parts.push({ name, x: px, y: py, w: w * s, h: h * s, label }); padsFn && padsFn(px, py, w * s, h * s); };
-      const pad = (x, y, w, h) => pads.push({ id: pads.length, x, y, w, h, on: false, t: 0 });
-      // SoC (QFP-ish)
-      addPart("SoC", 230, 130, 120, 120, (x, y, w, h) => { const n = 14, st = w / (n + 1); for (let i = 1; i <= n; i++) { pad(x + i * st - 2, y - 10, 4, 8); pad(x + i * st - 2, y + h + 2, 4, 8); pad(x - 10, y + i * st - 2, 8, 4); pad(x + w + 2, y + i * st - 2, 8, 4); } }, "SoC");
-      // DDR x2
-      [[400, 120], [400, 200]].forEach(([x, y], k) => addPart("DDR" + k, x, y, 70, 50, (px, py, w, h) => { for (let i = 0; i < 6; i++) for (let j = 0; j < 3; j++) pad(px + 8 + i * (w - 16) / 5 - 2, py + 10 + j * (h - 20) / 2 - 2, 5, 5); }, "DDR3"));
-      addPart("PMIC", 110, 140, 60, 60, (x, y, w, h) => { for (let i = 0; i < 6; i++) { pad(x - 8, y + 6 + i * 9, 6, 4); pad(x + w + 2, y + 6 + i * 9, 6, 4); } }, "PMIC");
-      addPart("FLASH", 110, 250, 70, 40, (x, y, w, h) => { for (let i = 0; i < 4; i++) { pad(x + 8 + i * 17, y - 8, 5, 7); pad(x + 8 + i * 17, y + h + 1, 5, 7); } }, "SPI NOR");
-      addPart("XTAL", 250, 290, 40, 18, (x, y, w, h) => { pad(x - 8, y + 4, 6, 10); pad(x + w + 2, y + 4, 6, 10); }, "24MHz");
-      addPart("USB", 30, 60, 40, 50, (x, y, w, h) => { for (let i = 0; i < 6; i++) pad(x + w + 2, y + 5 + i * 7, 7, 4); }, "USB-C");
-      addPart("ETH", 520, 290, 80, 70, (x, y, w, h) => { for (let i = 0; i < 8; i++) pad(x - 9, y + 6 + i * 7.5, 7, 4); }, "RJ45");
-      addPart("HDR", 120, 360, 300, 22, (x, y, w, h) => { for (let i = 0; i < 20; i++) { pad(x + 6 + i * 14.6, y + 3, 7, 7); pad(x + 6 + i * 14.6, y + 12, 7, 7); } }, "GPIO 2×20");
-      addPart("LED", 520, 60, 14, 10, (x, y, w, h) => { pad(x - 6, y + 2, 5, 6); pad(x + w + 1, y + 2, 5, 6); }, "PWR");
-      addPart("UART", 520, 110, 50, 16, (x, y, w, h) => { for (let i = 0; i < 3; i++) pad(x + 6 + i * 15, y + 4, 8, 8); }, "UART");
-      // passives row
-      for (let i = 0; i < 10; i++) { const [x, y] = P(200 + i * 18, 320); pads.push({ id: pads.length, x, y, w: 4, h: 4, on: false, t: 0 }); pads.push({ id: pads.length, x, y: y + 8 * s, w: 4, h: 4, on: false, t: 0 }); parts.push({ name: "C", x: x - 1, y: y + 4, w: 6, h: 4 * s, cap: true }); }
-      // decorative traces between random pads
-      for (let k = 0; k < 70; k++) {
-        const a = pads[Math.random() * pads.length | 0], b = pads[Math.random() * pads.length | 0];
-        const ax = a.x + a.w / 2, ay = a.y + a.h / 2, bx = b.x + b.w / 2, by = b.y + b.h / 2;
-        const mx = Math.random() < .5 ? ax : bx;
-        traces.push([[ax, ay], [mx, ay + (by - ay) * .5], [mx, by], [bx, by]]);
-      }
+      pads = []; parts = [];
+      const part = (name, x, y, w, h, kind, label) => { const p = { name, x, y, w, h, kind, label, pads: [], t: 0 }; parts.push(p); return p; };
+      const pad = (p, x, y, w, h, round) => { const q = { id: pads.length, x, y, w, h, round, on: false, t: 0, part: p }; pads.push(q); p && p.pads.push(q); };
+      const bga = (p, cols, rows, pitch, skip) => { const x0 = p.x + (p.w - (cols - 1) * pitch) / 2, y0 = p.y + (p.h - (rows - 1) * pitch) / 2; for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) if (!skip || !skip(i, j)) pad(p, x0 + i * pitch - .22, y0 + j * pitch - .22, .44, .44, true); };
+      const qfn = (p, n, len) => { const st = p.w / (n + 1); for (let i = 1; i <= n; i++) { pad(p, p.x + i * st - .15, p.y - len, .3, len); pad(p, p.x + i * st - .15, p.y + p.h, .3, len); pad(p, p.x - len, p.y + i * st - .15, len, .3); pad(p, p.x + p.w, p.y + i * st - .15, len, .3); } pad(p, p.x + p.w * .3, p.y + p.h * .3, p.w * .4, p.h * .4); };
+      const two = (p, vertical) => { if (vertical) { pad(p, p.x, p.y - .3, p.w, .45); pad(p, p.x, p.y + p.h - .15, p.w, .45); } else { pad(p, p.x - .3, p.y, .45, p.h); pad(p, p.x + p.w - .15, p.y, .45, p.h); } };
+      const h616 = part("H616", 15.4, 21.4, 12.7, 14.7, "bga", "H616"); bga(h616, 16, 18, .72, (i, j) => (i > 3 && i < 12 && j > 3 && j < 14) && !(i > 5 && i < 10 && j > 6 && j < 11));
+      const ddr = part("DDR", 4.3, 20.9, 8.6, 14.3, "bga", "DDR3"); bga(ddr, 7, 16, .8, (i) => i === 3);
+      const emmc = part("eMMC", 15.6, 6.8, 12.3, 13.9, "bga", "eMMC"); bga(emmc, 12, 13, .85, (i, j) => (i > 1 && i < 10 && j > 1 && j < 11) && !(i > 3 && i < 8 && j > 3 && j < 9));
+      const tf = part("TF", 1.8, 6.3, 13.1, 12.4, "metal", "microSD"); for (let i = 0; i < 8; i++) pad(tf, 3 + i * 1.3, 5.2, .7, 1.4); pad(tf, 1, 7, 1, 1.6); pad(tf, 14.7, 7, 1, 1.6); pad(tf, 1, 16, 1, 1.6); pad(tf, 14.7, 16, 1, 1.6);
+      const pmic = part("PMIC", 13.1, 42.8, 3.9, 4.3, "ic", "AXP313A"); qfn(pmic, 5, .7);
+      [[18.1, 45, "L1"], [18.1, 41.7, "L2"], [12.7, 39.4, "L3"]].forEach(([x, y, n]) => { const p = part(n, x, y, 2.3, 2.6, "ind", n); two(p, true); });
+      const xt = part("X2", 28.3, 28.9, 1.8, 2.2, "ic", "24M"); pad(xt, 28.1, 28.7, .6, .6); pad(xt, 29.6, 28.7, .6, .6); pad(xt, 28.1, 30.7, .6, .6); pad(xt, 29.6, 30.7, .6, .6);
+      const fel = part("FEL", 24.8, 42.8, 5.3, 3.3, "btn", "FEL"); pad(fel, 24.3, 42.5, 1, .9); pad(fel, 29.6, 42.5, 1, .9); pad(fel, 24.3, 45.5, 1, .9); pad(fel, 29.6, 45.5, 1, .9);
+      const ant = part("ANT", 19, .4, 10.1, 4, "ant", "ANT"); pad(ant, 19.2, .8, 1.4, 3.2); pad(ant, 27.5, .8, 1.4, 3.2);
+      [[14.6, "LED1"], [16.6, "LED2"]].forEach(([x, n]) => { const p = part(n, x, .9, 1.6, 3, "led", ""); two(p, true); });
+      const usbs = [part("USB2", -.8, 38.4, 8.9, 10, "usb", "USB-C"), part("USB3", -.8, 51.2, 8.9, 10, "usb", "USB-C"), part("USB1", 9.9, 53.8, 10, 9, "usb", "USB-C")];
+      usbs.forEach((p, k) => { const vert = k < 2; for (let i = 0; i < 12; i++) vert ? pad(p, p.x + p.w + .2, p.y + 1.6 + i * .58, 1.1, .3) : pad(p, p.x + 1.6 + i * .58, p.y - 1.2, .3, 1.1); });
+      const hd = part("HDMI", 22.8, 48.3, 8.6, 12.6, "metal", "HDMI"); for (let i = 0; i < 19; i++) pad(hd, 21.4, 49 + i * .5, 1.2, .25);
+      const caps = part("DECAP", 1.9, 21.6, 2, 13, null, ""); for (let i = 0; i < 12; i++) { pad(caps, 1.9, 22 + i * 1.05, .5, .5); pad(caps, 3.3, 22 + i * 1.05, .5, .5); }
+      for (let i = 0; i < 6; i++) { const p = part("R", 9.6 + (i % 3) * 1.2, 41 + (i / 3 | 0) * 2.6, .6, 1.1, "r", ""); two(p, true); }
       pads.forEach(p => { if (old.has(p.id)) p.on = true; });
       built = true; upd();
     }
@@ -224,9 +224,14 @@
       const n = pads.filter(p => p.on).length; cnt.textContent = `${n} / ${pads.length} joints`;
       if (n === pads.length && pwr.disabled && !powered) { pwr.disabled = false; setFlow(3); S.chord([523, 659, 784], .06, "triangle", .07); }
     };
-    const solderAt = (x, y, rad = 9) => {
-      let hit = 0;
-      for (const p of pads) if (!p.on && x > p.x - rad && x < p.x + p.w + rad && y > p.y - rad && y < p.y + p.h + rad) { p.on = true; p.t = 1; hit++; for (let k = 0; k < 3; k++) smoke.push({ x: p.x + p.w / 2, y: p.y, vx: rand(-8, 8), vy: rand(-30, -14), a: .7, r: rand(3, 6) }); }
+    const toBoard = (X, Y) => [BW - (Y - oy) / s, (X - ox) / s];
+    const solderAt = (X, Y) => {
+      const [x, y] = toBoard(X, Y), rad = 9 / s; let hit = 0;
+      for (const p of pads) if (!p.on && x > p.x - rad && x < p.x + p.w + rad && y > p.y - rad && y < p.y + p.h + rad) {
+        p.on = true; p.t = 1; hit++;
+        if (hit < 6) { const [sx, sy] = L(p.x + p.w / 2, p.y + p.h / 2); smoke.push({ x: sx, y: sy, vx: rand(-8, 8), vy: rand(-30, -14), a: .7, r: rand(3, 6) }); }
+        if (p.part && p.part.pads.every(q => q.on)) { p.part.t = 1; S.blip(rand(700, 1100)); }
+      }
       if (hit) { S.sizzle(); upd(); }
     };
     const loc = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
@@ -234,24 +239,31 @@
     cv.addEventListener("pointermove", e => { if (down) solderAt(...loc(e)); });
     cv.addEventListener("pointerup", () => down = false);
     $("#autoSolder").addEventListener("click", () => {
-      const left = pads.filter(p => !p.on).sort((a, b) => a.x - b.x); let i = 0;
-      const tm = setInterval(() => { for (let k = 0; k < 6 && i < left.length; k++, i++) { left[i].on = true; left[i].t = 1; smoke.push({ x: left[i].x, y: left[i].y, vx: rand(-6, 6), vy: rand(-26, -10), a: .5, r: 4 }); } if (i % 18 < 6) S.sizzle(); upd(); if (i >= left.length) clearInterval(tm); }, 30);
+      const left = pads.filter(p => !p.on).sort((a, b) => a.y - b.y); let i = 0;
+      const tm = setInterval(() => {
+        for (let k = 0; k < 14 && i < left.length; k++, i++) { const p = left[i]; p.on = true; p.t = 1; if (p.part && p.part.pads.every(q => q.on)) p.part.t = 1; }
+        if (i % 56 < 14) { S.sizzle(); const p = left[Math.min(i, left.length - 1)], [sx, sy] = L(p.x, p.y); smoke.push({ x: sx, y: sy, vx: rand(-6, 6), vy: rand(-26, -10), a: .5, r: 4 }); }
+        upd(); if (i >= left.length) clearInterval(tm);
+      }, 30);
     });
 
-    // serial boot
     const boot = [
-      [0, "", "U-Boot SPL 2024.01 (DRM-66 EVB rev.A)"], [80, "", "DRAM:  512 MiB"], [60, "", "Trying to boot from SPI"],
-      [300, "w", "\nU-Boot 2024.01-drm66 (Oct 25 2026)\n"], [50, "", "CPU:   ARMv7 Processor @ 1.2GHz"], [50, "", "Model: DRM-66 EVB"], [50, "", "DRAM:  512 MiB"],
-      [60, "", "MMC:   mmc@1c0f000: 0"], [60, "", "Loading Environment from SPIFlash... OK"], [80, "", "Net:   eth0: ethernet@1c30000"], [120, "y", "Hit any key to stop autoboot:  1 "], [700, "y", "Hit any key to stop autoboot:  0 "],
-      [80, "", "reading zImage\n5021696 bytes read in 236 ms"], [60, "c", "reading drm66-evb.dtb\n24581 bytes read in 4 ms"], [80, "", "Kernel image @ 0x42000000 [ 0x000000 - 0x4ca000 ]"], [80, "c", "## Flattened Device Tree blob at 43000000\n   Loading Device Tree to 49ff7000, end 49ffffff ... OK"],
-      [300, "w", "\nStarting kernel ...\n"], [200, "", "[    0.000000] Booting Linux on physical CPU 0x0"], [40, "", "[    0.000000] Linux version 6.6.66-dreaming (dreaming66@drm-66) (arm-buildroot-linux-gnueabihf-gcc 13.2.0) #1 SMP PREEMPT"],
-      [40, "c", "[    0.000000] OF: fdt: Machine model: DRM-66 EVB rev.A"], [40, "", "[    0.000000] Memory: 494712K/524288K available"], [60, "", "[    0.081920] CPU0: thread -1, cpu 0, socket 0, mpidr 80000000"],
-      [60, "", "[    0.314159] gpio-leds: probed"], [60, "", "[    0.420000] dwmac-sun8i 1c30000.ethernet eth0: PHY [stmmac-0:01] driver [Generic PHY]"], [60, "", "[    0.666666] mmc0: new high speed SDHC card at address aaaa"],
-      [80, "", "[    1.024000] EXT4-fs (mmcblk0p2): mounted filesystem with ordered data mode"], [60, "", "[    1.100000] Run /sbin/init as init process"],
-      [200, "", "Starting syslogd: OK\nStarting klogd: OK\nRunning sysctl: OK\nStarting network: OK\nStarting dropbear sshd: OK"],
-      [300, "w", "\nWelcome to Buildroot · DRM-66"],
+      [0, "", "U-Boot SPL 2024.07 (Oct 25 2026 - 21:06:06 +0800)"], [60, "", "DRAM: 512 MiB"], [40, "", "Trying to boot from MMC2"],
+      [80, "c", "NOTICE:  BL31: v2.10.0(release)\nNOTICE:  BL31: Detected Allwinner H616 SoC (1823)\nNOTICE:  BL31: Found U-Boot DTB, model: AuraCore V2.0"],
+      [250, "w", "\nU-Boot 2024.07 (Oct 25 2026 - 21:06:06 +0800) Allwinner Technology\n"], [40, "", "CPU:   Allwinner H616 (SUN50I)"], [40, "c", "Model: AuraCore V2.0"], [40, "", "DRAM:  512 MiB"],
+      [50, "", "MMC:   mmc@4020000: 0, mmc@4022000: 1"], [60, "", "Loading Environment from FAT... OK"], [120, "y", "Hit any key to stop autoboot:  1 "], [700, "y", "Hit any key to stop autoboot:  0 "],
+      [80, "", "Scanning mmc 1:1...\nFound U-Boot script /boot.scr"], [60, "", "reading Image\n21178880 bytes read in 902 ms"], [60, "c", "reading sun50i-h616-auracore.dtb\n31872 bytes read in 5 ms"],
+      [80, "c", "## Flattened Device Tree blob at 4fa00000\n   Loading Device Tree to 0000000049ff6000 ... OK"],
+      [300, "w", "\nStarting kernel ...\n"], [200, "", "[    0.000000] Booting Linux on physical CPU 0x0000000000 [0x410fd034]"],
+      [40, "", "[    0.000000] Linux version 6.12.0-auracore (dreaming66@drm-66) (aarch64-buildroot-linux-gnu-gcc 13.3.0) #1 SMP PREEMPT"],
+      [40, "c", "[    0.000000] Machine model: AuraCore V2.0"], [40, "", "[    0.000000] Memory: 486120K/524288K available"], [60, "", "[    0.082114] smp: Brought up 1 node, 4 CPUs"],
+      [60, "", "[    0.412530] axp20x-i2c 0-0036: AXP313a driver loaded"], [60, "", "[    0.880142] mmc1: new HS200 MMC card at address 0001"],
+      [60, "", "[    1.204466] rtw_8821cu 1-1:1.0: Firmware version 24.11.0, H2C version 12"], [60, "", "[    1.360021] g_ether gadget.0: Ethernet Gadget, version: Memorial Day 2008"],
+      [80, "", "[    1.512908] EXT4-fs (mmcblk1p2): mounted filesystem r/w with ordered data mode"], [60, "", "[    1.590000] Run /sbin/init as init process"],
+      [200, "", "Starting syslogd: OK\nStarting klogd: OK\nStarting network: OK\nStarting dropbear sshd: OK\nStarting k3s-agent: OK"],
+      [300, "w", "\nWelcome to Buildroot · AuraCore V2.0 (H616)"],
     ];
-    const stageAt = i => i < 3 ? 4 : i < 16 ? 4 : i < 27 ? 5 : 6;
+    const stageAt = i => i < 16 ? 4 : i < 27 ? 5 : 6;
     const pr = (cls, t) => { outEl.insertAdjacentHTML("beforeend", (cls ? `<span class="${cls}">${t}</span>` : t) + "\n"); outEl.scrollTop = outEl.scrollHeight; };
     pwr.addEventListener("click", () => {
       if (powered) return; powered = true; pwr.disabled = true; outEl.textContent = ""; state.textContent = "CONNECTED"; state.classList.add("live");
@@ -260,68 +272,81 @@
       const nx = () => {
         if (i >= boot.length) {
           setFlow(7); S.chord([392, 523, 659, 784], .08, "sine", .08);
-          outEl.insertAdjacentHTML("beforeend", `drm-66 login: <input id="login" aria-label="login" autocomplete="off" spellcheck="false">`); const inp = $("#login");
-          inp.focus({ preventScroll: true }); shell(inp); return;
+          outEl.insertAdjacentHTML("beforeend", `auracore login: <input aria-label="login" autocomplete="off" spellcheck="false">`);
+          const inp = outEl.lastElementChild; inp.focus({ preventScroll: true }); login(inp); return;
         }
         const [d, c, t] = boot[i]; setFlow(stageAt(i)); i++;
         setTimeout(() => { pr(c, t); S.tone(rand(1500, 2200), .01, "square", .02); nx(); }, D.still ? 0 : d);
       };
       nx();
     });
+    const CMDS = {
+      help: "help · uname -a · cat /proc/cpuinfo · free -m · ip a · kubectl get nodes · led · poweroff",
+      "uname -a": "Linux auracore 6.12.0-auracore #1 SMP PREEMPT aarch64 GNU/Linux",
+      "cat /proc/cpuinfo": "processor\t: 0-3\nBogoMIPS\t: 48.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 cpuid\nCPU part\t: 0xd03  (Cortex-A53)\nHardware\t: Allwinner H616 · AuraCore V2.0",
+      "free -m": "        total   used   free\nMem:      474    118    356",
+      "ip a": "1: lo: <LOOPBACK,UP> mtu 65536\n2: usb0: <BROADCAST,MULTICAST,UP> mtu 1500\n    inet 10.66.0.2/24 scope global usb0\n3: wlan0: <BROADCAST,MULTICAST> mtu 1500",
+      "kubectl get nodes": "NAME            STATUS   ROLES\nauracore-head   Ready    control-plane,master\nauracore-w1     Ready    <none>\nauracore-w2     Ready    <none>\nauracore-w3     Ready    <none>\nauracore-w4     Ready    <none>",
+      whoami: "root (but really: dreaming66)",
+    };
+    function login(inp) { hook(inp, v => { pr("", v === "root" ? "" : "(any user is root on this board)"); pr("w", "# 输入 help 试试"); }); }
     function shell(inp) {
+      hook(inp, v => {
+        if (v === "poweroff") { pr("y", "The system is going down NOW!\nreboot: Power down"); powered = false; ledOn = 0; state.textContent = "NO CARRIER"; state.classList.remove("live"); pwr.disabled = false; setFlow(3); S.whoosh(false); return true; }
+        if (v === "led") { ledOn = 2; pr("", "echo heartbeat > /sys/class/leds/auracore:green:status/trigger"); }
+        else if (v) pr("", CMDS[v] || `-sh: ${v.replace(/[<>&]/g, "")}: not found`);
+      });
+    }
+    function hook(inp, fn) {
       inp.addEventListener("keydown", e => {
         if (e.key.length === 1) S.tone(rand(1800, 2400), .01, "square", .02);
         if (e.key !== "Enter") return;
         const v = inp.value.trim(); inp.replaceWith(document.createTextNode(v + "\n"));
-        pr("", v === "root" ? "" : "(any user is root on this board)"); pr("w", "# 输入 help 试试");
-        prompt();
+        if (fn(v) === true) return;
+        outEl.insertAdjacentHTML("beforeend", `# <input aria-label="shell" autocomplete="off" spellcheck="false">`);
+        const n = outEl.lastElementChild; n.focus({ preventScroll: true }); outEl.scrollTop = outEl.scrollHeight; shell(n);
       });
     }
-    const prompt = () => { outEl.insertAdjacentHTML("beforeend", `# <input aria-label="shell" autocomplete="off" spellcheck="false">`); const n = outEl.lastElementChild; n.focus({ preventScroll: true }); outEl.scrollTop = outEl.scrollHeight; shellLogged(n); };
-    function shellLogged(inp) {
-      inp.addEventListener("keydown", e => {
-        if (e.key.length === 1) S.tone(rand(1800, 2400), .01, "square", .02);
-        if (e.key !== "Enter") return;
-        const v = inp.value.trim(); inp.replaceWith(document.createTextNode(v + "\n"));
-        const map = { help: "help · uname -a · cat /proc/cpuinfo · ls · led · whoami · poweroff", "uname -a": "Linux drm-66 6.6.66-dreaming #1 SMP PREEMPT armv7l GNU/Linux", "cat /proc/cpuinfo": "processor\t: 0\nmodel name\t: ARMv7 Processor rev 5 (v7l)\nBogoMIPS\t: 66.66\nHardware\t: DRM-66 EVB (Flattened Device Tree)", ls: "bin  dev  etc  home  lib  proc  root  sys  tmp  usr  var", whoami: "root (but really: dreaming66)" };
-        if (v === "poweroff") { pr("y", "The system is going down NOW!\nreboot: Power down"); powered = false; ledOn = 0; state.textContent = "NO CARRIER"; state.classList.remove("live"); pwr.disabled = false; setFlow(3); S.whoosh(false); return; }
-        if (v === "led") { ledOn = 2; pr("", "echo heartbeat > /sys/class/leds/pwr/trigger"); }
-        else if (v) pr("", map[v] || `-sh: ${v.replace(/[<>&]/g, "")}: not found`);
-        prompt();
-      });
-    }
-    pr("", "<span class=\"y\">[ board unpowered ]</span>\n先把焊盘焊好，再按 POWER ON。");
+    pr("", "<span class=\"y\">[ board unpowered ]</span>\n先把焊盘焊好（或 AUTO-SOLDER），再按 POWER ON。");
 
     D.loop(cv, (dt, T) => {
       if (D.fit(cv) || !built) build();
       g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
-      // board
-      const b = parts.length ? [Math.min(...parts.map(p => p.x)) - 26, Math.min(...parts.map(p => p.y)) - 26] : [0, 0];
-      const bw = Math.max(...parts.map(p => p.x + p.w)) - b[0] + 26, bh = Math.max(...parts.map(p => p.y + p.h)) - b[1] + 26;
-      g.fillStyle = "#0f3a24"; rr(g, b[0], b[1], bw, bh, 12); g.fill();
-      g.strokeStyle = "#1b5a38"; g.lineWidth = 2; g.stroke();
-      [[b[0] + 12, b[1] + 12], [b[0] + bw - 12, b[1] + 12], [b[0] + 12, b[1] + bh - 12], [b[0] + bw - 12, b[1] + bh - 12]].forEach(([x, y]) => { g.fillStyle = "#c8a24a"; g.beginPath(); g.arc(x, y, 6, 0, 7); g.fill(); g.fillStyle = "#0a0b0a"; g.beginPath(); g.arc(x, y, 3, 0, 7); g.fill(); });
-      g.strokeStyle = "#2a7a4c"; g.lineWidth = 1.2;
-      for (const t of traces) { g.beginPath(); t.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); }
+      const [bx, by, bw, bh] = R(0, 0, BW, BL);
+      g.fillStyle = "#0f3a24"; rr(g, bx, by, bw, bh, 2.5 * s); g.fill(); g.strokeStyle = "#1d6b42"; g.lineWidth = 1.5; g.stroke();
+      // copper pour hint + silkscreen
+      g.strokeStyle = "#1a5a37"; g.lineWidth = 1;
+      for (let k = 0; k < 26; k++) { const [x1, y1] = L(2 + (k * 7) % 28, 2 + k * 2.3), [x2, y2] = L(2 + (k * 11) % 28, 4 + k * 2.3); g.beginPath(); g.moveTo(x1, y1); g.lineTo(x1, y2); g.lineTo(x2, y2); g.stroke(); }
+      g.fillStyle = "#e6c35c"; g.font = `600 ${Math.max(9, 1.9 * s)}px Unbounded, sans-serif`;
+      const [tx, ty] = L(1.6, 3.4); g.save(); g.translate(tx, ty); g.rotate(-Math.PI / 2); g.fillText("AuraCore", 0, 0); g.restore();
+      g.font = `500 ${Math.max(8, 1.2 * s)}px IBM Plex Mono, monospace`; g.fillStyle = "#e8e4d8aa";
+      const [dx, dy] = L(3, 37.5); g.save(); g.translate(dx, dy); g.rotate(-Math.PI / 2); g.fillText("Dustin.Z · Engineering Sample", 0, 0); g.restore();
+      for (const p of pads) {
+        const [x, y, w, h] = R(p.x, p.y, p.w, p.h);
+        if (p.on) {
+          const gr = g.createLinearGradient(x, y, x + w, y + h); gr.addColorStop(0, "#f4f4f0"); gr.addColorStop(1, "#8d9290"); g.fillStyle = gr;
+          if (p.round) { g.beginPath(); g.arc(x + w / 2, y + h / 2, Math.max(1.1, w * .62), 0, 7); g.fill(); } else { rr(g, x - .3, y - .3, w + .6, h + .6, 1); g.fill(); }
+          if (p.t > 0) { g.fillStyle = `rgba(255,178,26,${p.t})`; g.fillRect(x - 1, y - 1, w + 2, h + 2); p.t -= dt * 2.5; }
+        } else { g.fillStyle = "#c8873a"; if (p.round) { g.beginPath(); g.arc(x + w / 2, y + h / 2, Math.max(1, w * .55), 0, 7); g.fill(); } else g.fillRect(x, y, w, h); }
+      }
       g.font = "600 9px IBM Plex Mono, monospace";
       for (const p of parts) {
-        if (p.cap) { g.fillStyle = "#b08a5a"; g.fillRect(p.x, p.y, p.w, p.h); continue; }
-        g.fillStyle = p.name === "ETH" || p.name === "USB" ? "#9a9d98" : p.name === "HDR" ? "#111" : "#1a1c1a"; g.fillRect(p.x, p.y, p.w, p.h);
-        g.fillStyle = "#e8e4d8cc"; g.fillText(p.label || p.name, p.x + 4, p.y + 12);
-        if (p.name === "LED") { const on = powered && (ledOn === 2 ? (Math.sin(T * 9) > .5 || Math.sin(T * 9 + .9) > .9) : true); g.fillStyle = on ? C.hot : "#3a1a14"; g.fillRect(p.x, p.y, p.w, p.h); if (on) { g.shadowColor = C.hot; g.shadowBlur = 18; g.fillRect(p.x, p.y, p.w, p.h); g.shadowBlur = 0; } }
+        if (!p.kind) continue;
+        const placed = p.pads.length && p.pads.every(q => q.on);
+        const [x, y, w, h] = R(p.x, p.y, p.w, p.h);
+        if (!placed) { g.setLineDash([3, 3]); g.strokeStyle = "#e8e4d855"; g.lineWidth = 1; g.strokeRect(x, y, w, h); g.setLineDash([]); if (p.label && w > 30) { g.fillStyle = "#e8e4d866"; g.fillText(p.label, x + 4, y + 11); } continue; }
+        const k = p.t > 0 ? 1 + p.t * .25 : 1; if (p.t > 0) p.t -= dt * 3;
+        g.save(); g.translate(x + w / 2, y + h / 2); g.scale(k, k); g.translate(-w / 2, -h / 2);
+        const col = { bga: "#16181a", ic: "#1c1e1c", metal: "#a7aaa4", usb: "#c9ccc6", ind: "#3a3c3a", btn: "#d9d4c6", ant: "#e9e9e9", led: powered && (ledOn === 2 ? Math.sin(T * 9) > .3 : true) ? C.hot : "#5a2a20", r: "#202020" }[p.kind] || "#222";
+        g.fillStyle = col; rr(g, 0, 0, w, h, Math.min(3, w * .08)); g.fill();
+        if (p.kind === "led" && powered) { g.shadowColor = C.hot; g.shadowBlur = 16; g.fill(); g.shadowBlur = 0; }
+        if (p.kind === "bga") { g.fillStyle = "#ffffff10"; g.beginPath(); g.arc(6, 6, 2, 0, 7); g.fill(); }
+        if (p.label) { g.fillStyle = p.kind === "metal" || p.kind === "usb" || p.kind === "btn" || p.kind === "ant" ? "#1a1a1a" : "#e8e4d8"; g.fillText(p.label, 4, Math.min(h - 4, 12)); }
+        g.restore();
       }
-      g.fillStyle = "#e8e4d8aa"; g.fillText("DRM-66 EVB rev.A · designed & hand-soldered by dreaming66", b[0] + 22, b[1] + bh - 10);
-      for (const p of pads) {
-        if (p.on) {
-          const gr = g.createLinearGradient(p.x, p.y, p.x + p.w, p.y + p.h); gr.addColorStop(0, "#f4f4f0"); gr.addColorStop(1, "#8d9290");
-          g.fillStyle = gr; rr(g, p.x - .5, p.y - .5, p.w + 1, p.h + 1, 1.5); g.fill();
-          if (p.t > 0) { g.fillStyle = `rgba(255,178,26,${p.t})`; g.fillRect(p.x - 1, p.y - 1, p.w + 2, p.h + 2); p.t -= dt * 2.5; }
-        } else { g.fillStyle = "#c8873a"; g.fillRect(p.x, p.y, p.w, p.h); }
-      }
-      for (let i = smoke.length - 1; i >= 0; i--) { const s = smoke[i]; s.x += s.vx * dt; s.y += s.vy * dt; s.r += dt * 10; s.a -= dt * .7; if (s.a <= 0) { smoke.splice(i, 1); continue; } g.fillStyle = `rgba(220,220,210,${s.a * .35})`; g.beginPath(); g.arc(s.x, s.y, s.r, 0, 7); g.fill(); }
-      // iron at cursor
+      for (let i = smoke.length - 1; i >= 0; i--) { const q = smoke[i]; q.x += q.vx * dt; q.y += q.vy * dt; q.r += dt * 10; q.a -= dt * .7; if (q.a <= 0) { smoke.splice(i, 1); continue; } g.fillStyle = `rgba(220,220,210,${q.a * .35})`; g.beginPath(); g.arc(q.x, q.y, q.r, 0, 7); g.fill(); }
       const r = cv.getBoundingClientRect(), mx = D.mx - r.left, my = D.my - r.top;
-      if (mx > 0 && my > 0 && mx < W && my < H) { g.strokeStyle = down ? C.amb : "#ffffff55"; g.lineWidth = 1; g.beginPath(); g.arc(mx, my, 9, 0, 7); g.stroke(); g.fillStyle = down ? C.amb : "#ffffff55"; g.fillRect(mx - 1, my - 1, 2, 2); }
+      if (mx > 0 && my > 0 && mx < W && my < H) { g.strokeStyle = down ? C.amb : "#ffffff55"; g.lineWidth = 1; g.beginPath(); g.arc(mx, my, 9, 0, 7); g.stroke(); }
     });
   }
 
@@ -809,42 +834,197 @@
   /* =========================================================
      §05 guitar (Karplus–Strong) + piano
      ========================================================= */
-  function initGuitar() {
-    const cv = $("#guitar"), g = ctx2d(cv);
-    const OPEN = [82.41, 110, 146.83, 196, 246.94, 329.63]; // E2 A2 D3 G3 B3 E4
-    const CHORDS = { C: [-1, 3, 2, 0, 1, 0], G: [3, 2, 0, 0, 0, 3], Am: [-1, 0, 2, 2, 1, 0], F: [1, 3, 3, 2, 1, 1], Em: [0, 2, 2, 0, 0, 0], D: [-1, -1, 0, 2, 3, 2], Dm: [-1, -1, 0, 2, 3, 1], E: [0, 2, 2, 1, 0, 0] };
-    let chord = "C", W = 0, H = 0, amp = Array(6).fill(0), last = null;
-    const box = $("#chords");
-    Object.keys(CHORDS).forEach(k => { const b = document.createElement("button"); b.textContent = k; if (k === chord) b.className = "on"; b.addEventListener("click", () => { chord = k; $$("button", box).forEach(x => x.classList.toggle("on", x === b)); strum(true); }); box.appendChild(b); });
-    const sy = i => H * .2 + (5 - i) * (H * .6 / 5); // low E at bottom
-    const pluck = (i, v = .32) => { const fr = CHORDS[chord][i]; if (fr < 0) { S.noise(.03, 800, 2, .04); return; } S.pluck(OPEN[i] * Math.pow(2, fr / 12), v, .55); amp[i] = 1; };
-    const strum = (down = true) => { [0, 1, 2, 3, 4, 5].forEach((i, k) => setTimeout(() => pluck(down ? i : 5 - i, .26), k * 18)); };
-    cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); const r = cv.getBoundingClientRect(), y = e.clientY - r.top; last = y; let best = -1, bd = 14; for (let i = 0; i < 6; i++) { const d = Math.abs(sy(i) - y); if (d < bd) { bd = d; best = i; } } if (best >= 0) pluck(best); });
-    cv.addEventListener("pointermove", e => { if (last == null) return; const r = cv.getBoundingClientRect(), y = e.clientY - r.top; for (let i = 0; i < 6; i++) { const s = sy(i); if ((last - s) * (y - s) < 0) pluck(i, .25); } last = y; });
-    cv.addEventListener("pointerup", () => last = null);
-    document.addEventListener("d66riff", () => {
-      const seq = [["Am", 0], ["Am", 1], ["C", 0], ["C", 1], ["G", 0], ["G", 1], ["D", 0], ["Am", 0]];
-      seq.forEach(([c, up], k) => setTimeout(() => { chord = c; $$("button", box).forEach(x => x.classList.toggle("on", x.textContent === c)); strum(!up); }, k * 380));
-      $("#music").scrollIntoView({ behavior: "smooth" });
-    });
+  /* =========================================================
+     §05 WIP · RK3576 size + BGA fanout
+     ========================================================= */
+  function initRK() {
+    const cv = $("#rkCanvas"), g = ctx2d(cv), read = $("#rkRead"); let W = 0, H = 0, view = "size", t0 = 0;
+    $$("#rkTog button").forEach(b => b.addEventListener("click", () => { $$("#rkTog button").forEach(x => x.classList.toggle("on", x === b)); view = b.dataset.v; t0 = D.T; S.blip(view === "size" ? 523 : 784); }));
+    const dim = (x1, y1, x2, y2, txt, col) => { g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 1; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); g.font = "500 10px IBM Plex Mono, monospace"; g.fillText(txt, (x1 + x2) / 2 + 4, (y1 + y2) / 2 - 4); };
     D.loop(cv, (dt, T) => {
       if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
       g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
-      // neck + frets
-      const nx0 = 30, nx1 = W * (W < 600 ? .9 : .72), top = H * .14, bot = H * .86, hr = Math.min(H * .32, W * .1, 90);
+      const k = clamp((T - t0) * 1.6, 0, 1), e = 1 - Math.pow(1 - k, 3);
+      g.font = "500 10px IBM Plex Mono, monospace";
+      if (view === "size") {
+        const s = Math.min((W - 60) / 150, (H - 70) / 70), cx = W / 2, cy = H / 2 + 8;
+        const ox = cx - 75 * s;
+        // credit card ghost
+        g.setLineDash([4, 5]); g.strokeStyle = "#ffffff33"; rr(g, ox, cy - 27 * s, 85.6 * s, 54 * s, 3 * s); g.stroke(); g.setLineDash([]);
+        g.fillStyle = C.dim2; g.fillText("银行卡 85.6 × 54", ox + 4, cy - 27 * s - 6);
+        // AuraCore
+        const ax = ox + 4 * s, ay = cy - 15.5 * s;
+        g.fillStyle = "#0f3a24"; rr(g, ax, ay, 62 * s * e, 31 * s, 2 * s); g.fill(); g.strokeStyle = C.ok; g.stroke();
+        g.fillStyle = "#e6c35c"; g.fillText("AuraCore · H616 · 31 × 62", ax + 6, ay + 14);
+        g.fillStyle = "#16181a"; rr(g, ax + 21.4 * s, ay + 3 * s, 14.7 * s, 12.7 * s, 1.5); g.fill();
+        // RK3576 board
+        const rx = ox + 98 * s, ry = cy - 19 * s, rs = 38 * s;
+        g.save(); g.translate(rx + rs / 2, ry + rs / 2); g.scale(.6 + .4 * e, .6 + .4 * e); g.rotate((1 - e) * .5); g.translate(-rs / 2, -rs / 2);
+        g.fillStyle = "#13261b"; rr(g, 0, 0, rs, rs, 2.5 * s); g.fill(); g.strokeStyle = C.amb; g.lineWidth = 1.5; g.stroke();
+        g.fillStyle = "#16181a"; rr(g, rs * .3, rs * .28, rs * .42, rs * .42, 2); g.fill();
+        g.fillStyle = C.amb; g.fillText("SoC", rs * .3 + 5, rs * .28 + 14);
+        g.fillStyle = C.sig; g.globalAlpha = .5 + .5 * Math.sin(T * 3); g.fillRect(rs * .3 + 5, rs * .28 + rs * .42 - 12, 34, 6); g.globalAlpha = 1;
+        g.restore();
+        dim(rx, ry + rs + 12, rx + rs, ry + rs + 12, "38 mm", C.amb); dim(rx + rs + 12, ry, rx + rs + 12, ry + rs, "38", C.amb);
+        g.fillStyle = C.amb; g.fillText("RK3576 · 6 TOPS NPU · 6L", rx, ry - 8);
+        // coin
+        const cxn = ox + 98 * s + 19 * s, cyn = cy + 32 * s;
+        read.textContent = `板面积 ${(38 * 38)} mm²，约为 AuraCore 的 ${(38 * 38 / (31 * 62) * 100).toFixed(0)}%\n目标：一张邮票大小的端侧推理节点\n工艺：嘉立创六层免费叠层 + 盘中孔`;
+      } else {
+        const p = Math.min(W / 22, H / 13), cols = 8, rows = 8, gx = W * .25 - cols * p / 2, gx2 = W * .75 - cols * p / 2, gy = H / 2 - rows * p / 2 + 10;
+        g.fillStyle = C.dim; g.fillText("DOG-BONE 狗骨扇出", gx, gy - 14); g.fillStyle = C.amb; g.fillText("VIA-IN-PAD 盘中孔", gx2, gy - 14);
+        for (let side = 0; side < 2; side++) {
+          const X0 = side ? gx2 : gx;
+          for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
+            const x = X0 + i * p + p / 2, y = gy + j * p + p / 2, edge = i === 0 || j === 0 || i === cols - 1 || j === rows - 1;
+            const idx = (i * 7 + j * 3) % 19 / 19, show = e > idx * .8;
+            if (!side) {
+              // via between four pads + short neck
+              if (i < cols - 1 && j < rows - 1 && !edge && (i + j) % 2 === 0 && show) {
+                const vx = x + p / 2, vy = y + p / 2; g.strokeStyle = C.dim; g.lineWidth = p * .14; g.beginPath(); g.moveTo(x, y); g.lineTo(vx, vy); g.stroke();
+                g.fillStyle = "#3a3c3a"; g.beginPath(); g.arc(vx, vy, p * .2, 0, 7); g.fill(); g.fillStyle = C.bg; g.beginPath(); g.arc(vx, vy, p * .09, 0, 7); g.fill();
+              }
+              g.fillStyle = "#c8873a"; g.beginPath(); g.arc(x, y, p * .27, 0, 7); g.fill();
+            } else {
+              g.fillStyle = "#c8873a"; g.beginPath(); g.arc(x, y, p * .27, 0, 7); g.fill();
+              if (!edge && show) { g.fillStyle = C.amb; g.beginPath(); g.arc(x, y, p * .12, 0, 7); g.fill(); }
+            }
+            if (edge && show) { g.strokeStyle = side ? C.amb : C.dim; g.lineWidth = p * .12; g.beginPath(); g.moveTo(x, y); const ox2 = i === 0 ? -p * .9 : i === cols - 1 ? p * .9 : 0, oy2 = j === 0 ? -p * .9 : j === rows - 1 ? p * .9 : 0; g.lineTo(x + ox2, y + oy2); g.stroke(); }
+          }
+        }
+        read.textContent = `盘中孔：过孔直接打在 BGA 焊盘上，树脂塞孔 + 电镀盖帽\n省掉狗骨占位，细间距 BGA 的内圈也能就地换层\n这是把 RK3576 压进 38 × 38 mm 的关键工艺`;
+      }
+    });
+  }
+
+  /* =========================================================
+     §05 WIP · cycloidal reducer
+     ========================================================= */
+  function initCyc() {
+    const cv = $("#cyc"), g = ctx2d(cv), sl = $("#cycRpm"), read = $("#cycRead");
+    const N = 12, LOBES = N - 1, HOLES = 6;
+    let W = 0, H = 0, th = 0, osc = null, og = null;
+    sl.addEventListener("input", () => S.tone(120 + +sl.value * .2, .03, "sine", .03));
+    D.loop(cv, (dt, T) => {
+      if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
+      const rpm = +sl.value; th += rpm / 60 * Math.PI * 2 * dt * .12;
+      g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
+      const R = Math.min(W, H) * .36, Rr = R * .075, e = R * .055, cx = W > 600 ? W * .46 : W / 2, cy = H / 2;
+      // housing + pins
+      g.strokeStyle = "#ffffff1c"; g.lineWidth = 10; g.beginPath(); g.arc(cx, cy, R + Rr + 10, 0, 7); g.stroke();
+      for (let k = 0; k < N; k++) { const a = k / N * Math.PI * 2; g.fillStyle = "#3a3c3a"; g.beginPath(); g.arc(cx + Math.cos(a) * R, cy + Math.sin(a) * R, Rr, 0, 7); g.fill(); g.strokeStyle = C.dim; g.lineWidth = 1; g.stroke(); }
+      // cycloid disk (epitrochoid), centre orbits by e, spins backwards by th/LOBES
+      const dcx = cx + e * Math.cos(th), dcy = cy + e * Math.sin(th), rot = -th / LOBES;
+      g.save(); g.translate(dcx, dcy); g.rotate(rot);
+      g.beginPath();
+      for (let i = 0; i <= 720; i++) {
+        const t = i / 720 * Math.PI * 2;
+        const psi = Math.atan2(Math.sin((1 - N) * t), R / (e * N) - Math.cos((1 - N) * t));
+        const x = R * Math.cos(t) - Rr * Math.cos(t + psi) - e * Math.cos(N * t);
+        const y = -R * Math.sin(t) + Rr * Math.sin(t + psi) + e * Math.sin(N * t);
+        i ? g.lineTo(x, y) : g.moveTo(x, y);
+      }
+      g.closePath(); g.fillStyle = "#ffb21a22"; g.fill(); g.strokeStyle = C.amb; g.lineWidth = 1.6; g.stroke();
+      const hr = R * .12, pr = R * .42;
+      for (let k = 0; k < HOLES; k++) { const a = k / HOLES * Math.PI * 2; g.fillStyle = C.bg; g.beginPath(); g.arc(Math.cos(a) * pr, Math.sin(a) * pr, hr, 0, 7); g.fill(); g.strokeStyle = C.amb; g.stroke(); }
+      g.fillStyle = C.bg; g.beginPath(); g.arc(0, 0, R * .16, 0, 7); g.fill(); g.strokeStyle = C.amb; g.stroke();
+      g.restore();
+      // output pins (rotate with output, about housing centre)
+      for (let k = 0; k < HOLES; k++) { const a = k / HOLES * Math.PI * 2 + rot; g.fillStyle = C.sig; g.beginPath(); g.arc(cx + Math.cos(a) * pr, cy + Math.sin(a) * pr, hr - e, 0, 7); g.fill(); }
+      // eccentric input
+      g.fillStyle = C.hot; g.beginPath(); g.arc(dcx, dcy, R * .07, 0, 7); g.fill();
+      g.strokeStyle = C.hot; g.lineWidth = 2; g.beginPath(); g.moveTo(cx, cy); g.lineTo(dcx, dcy); g.stroke();
+      // indicators
+      const ix = W * .82, iy1 = H * .32, iy2 = H * .68, ir = Math.min(W, H) * .08;
+      if (W > 600) [[iy1, th, C.hot, "INPUT"], [iy2, rot, C.sig, "OUTPUT"]].forEach(([y, a, c, n]) => { g.strokeStyle = "#ffffff22"; g.lineWidth = 1; g.beginPath(); g.arc(ix, y, ir, 0, 7); g.stroke(); g.strokeStyle = c; g.lineWidth = 2.5; g.beginPath(); g.moveTo(ix, y); g.lineTo(ix + Math.cos(a) * ir, y + Math.sin(a) * ir); g.stroke(); g.fillStyle = c; g.font = "500 10px IBM Plex Mono, monospace"; g.fillText(n, ix - ir, y + ir + 14); });
+      read.textContent = `${N} 针 / ${LOBES} 齿 → 减速比 ${LOBES}:1（示意）\n输入 ${rpm} rpm → 输出 ${(rpm / LOBES).toFixed(1)} rpm，反向\n理想扭矩 × ${LOBES}，多齿同时啮合，抗冲击`;
+      // motor whine
+      const a = D.audio;
+      if (a.on && a.ctx) {
+        if (!osc) { osc = a.ctx.createOscillator(); osc.type = "sawtooth"; og = a.ctx.createGain(); og.gain.value = 0; const f = a.ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 900; osc.connect(f); f.connect(og); og.connect(a.master); osc.start(); }
+        osc.frequency.setTargetAtTime(40 + rpm * .18, a.ctx.currentTime, .05);
+        og.gain.setTargetAtTime(visible(cv) && rpm > 0 && dt > 0 ? .025 : 0, a.ctx.currentTime, .05);
+      } else if (og) og.gain.value = 0;
+    });
+  }
+
+  /* =========================================================
+     §06 archive reels
+     ========================================================= */
+  function initArchive() {
+    const lb = $("#lightbox"), lv = $("#lbVideo");
+    const close = () => { lb.classList.remove("open"); lb.setAttribute("aria-hidden", true); lv.pause(); };
+    $("#lbClose").addEventListener("click", close); lb.addEventListener("click", e => { if (e.target === lb) close(); });
+    addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+    const vio = new IntersectionObserver(es => es.forEach(en => {
+      const v = en.target;
+      if (en.isIntersecting) { if (!v.src) v.src = v.dataset.src; if (!D.still) v.play().catch(() => {}); } else v.pause();
+    }), { rootMargin: "100px" });
+    $$(".clip").forEach(fig => {
+      const n = fig.dataset.v;
+      const v = document.createElement("video");
+      v.muted = true; v.loop = true; v.playsInline = true; v.preload = "none"; v.poster = `assets/video/${n}.jpg`; v.dataset.src = `assets/video/${n}.mp4`;
+      v.setAttribute("aria-label", n);
+      fig.appendChild(v); fig.insertAdjacentHTML("beforeend", `<span class="rec">${n.toUpperCase()}</span>`);
+      vio.observe(v);
+      fig.addEventListener("click", () => { lv.src = v.dataset.src; lb.classList.add("open"); lb.setAttribute("aria-hidden", false); lv.play().catch(() => {}); S.whoosh(true); });
+    });
+  }
+
+  /* =========================================================
+     §07 electric guitar (Karplus–Strong → drive → cab)
+     ========================================================= */
+  function initGuitar() {
+    const cv = $("#guitar"), g = ctx2d(cv);
+    const OPEN = [82.41, 110, 146.83, 196, 246.94, 329.63]; // E2 A2 D3 G3 B3 E4 · standard tuning
+    const CHORDS = { E5: [0, 2, 2, -1, -1, -1], A5: [-1, 0, 2, 2, -1, -1], D5: [-1, -1, 0, 2, 3, -1], G5: [3, 5, 5, -1, -1, -1], C5: [-1, 3, 5, 5, -1, -1], Em: [0, 2, 2, 0, 0, 0], C: [-1, 3, 2, 0, 1, 0], G: [3, 2, 0, 0, 0, 3], D: [-1, -1, 0, 2, 3, 2], Am: [-1, 0, 2, 2, 1, 0], F: [1, 3, 3, 2, 1, 1] };
+    let chord = "E5", drive = true, W = 0, H = 0, amp = Array(6).fill(0), last = null;
+    const box = $("#chords");
+    const setChord = k => { chord = k; $$("button", box).forEach(x => x.classList.toggle("on", x.textContent === k)); };
+    Object.keys(CHORDS).forEach(k => { const b = document.createElement("button"); b.textContent = k; b.addEventListener("click", () => { setChord(k); strum(true); }); box.appendChild(b); });
+    setChord(chord);
+    $$("#ampTog button").forEach(b => b.addEventListener("click", () => { $$("#ampTog button").forEach(x => x.classList.toggle("on", x === b)); drive = b.dataset.a === "1"; strum(true); }));
+    const sy = i => H * .2 + (5 - i) * (H * .6 / 5);
+    const pluck = (i, v = .3, fr = CHORDS[chord][i]) => { if (fr < 0) { S.noise(.03, 800, 2, .04); return; } S.pluck(OPEN[i] * Math.pow(2, fr / 12), drive ? v * .8 : v, drive ? .75 : .55, drive); amp[i] = 1; };
+    const strum = (down = true) => { [0, 1, 2, 3, 4, 5].forEach((i, k) => setTimeout(() => pluck(down ? i : 5 - i, .26), k * (drive ? 10 : 18))); };
+    cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); const r = cv.getBoundingClientRect(), y = e.clientY - r.top; last = y; let best = -1, bd = 14; for (let i = 0; i < 6; i++) { const d = Math.abs(sy(i) - y); if (d < bd) { bd = d; best = i; } } if (best >= 0) pluck(best); });
+    cv.addEventListener("pointermove", e => { if (last == null) return; const r = cv.getBoundingClientRect(), y = e.clientY - r.top; for (let i = 0; i < 6; i++) { const s = sy(i); if ((last - s) * (y - s) < 0) pluck(i, .25); } last = y; });
+    cv.addEventListener("pointerup", () => last = null);
+    // an original riff: Em–C–G–D, palm-muted root pulses + 8th-note arpeggio on top, then a power-chord tag
+    const riff = () => {
+      if (!D.audio.on) { D.setSound(true); }
+      const bar = [["Em", 0], ["C", 1], ["G", 0], ["D", 2]], step = .17, pat = [-1, 3, 4, 5, 4, 3, 4, 5];
+      let t = 0;
+      bar.forEach(([c, root]) => {
+        pat.forEach((sIdx, k) => {
+          setTimeout(() => { setChord(c); const st = sIdx < 0 ? (CHORDS[c][0] >= 0 ? 0 : CHORDS[c][1] >= 0 ? 1 : 2) : sIdx; pluck(st, sIdx < 0 ? .34 : .22); }, (t + k * step) * 1000);
+        });
+        t += pat.length * step;
+      });
+      [["E5", 0], ["G5", 2], ["A5", 3], ["C5", 4.5], ["D5", 5.5], ["E5", 6.5]].forEach(([c, b]) => setTimeout(() => { setChord(c); strum(true); }, (t + b * step) * 1000));
+      $("#music").scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    $("#riffBtn").addEventListener("click", riff);
+    document.addEventListener("d66riff", riff);
+    D.loop(cv, (dt, T) => {
+      if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
+      g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
+      const nx0 = 30, nx1 = W * (W < 600 ? .9 : .7), top = H * .14, bot = H * .86;
+      // body + pickups (electric)
+      if (W >= 600) {
+        g.fillStyle = drive ? "#2a0d08" : "#1c140c"; g.beginPath(); g.ellipse(W * .9, H / 2, W * .16, H * .48, 0, 0, 7); g.fill();
+        [W * .8, W * .88].forEach(x => { g.fillStyle = "#0d0d0d"; rr(g, x - 14, H * .2, 28, H * .6, 6); g.fill(); g.strokeStyle = "#555"; g.stroke(); for (let i = 0; i < 6; i++) { g.fillStyle = "#9a9a9a"; g.beginPath(); g.arc(x, sy(i), 3, 0, 7); g.fill(); } });
+      }
       g.fillStyle = "#2a1a0e"; g.fillRect(nx0, top, nx1 - nx0, bot - top);
       const fx = n => nx0 + (nx1 - nx0) * (1 - Math.pow(2, -n / 12)) / (1 - Math.pow(2, -12 / 12));
       for (let n = 0; n <= 12; n++) { g.fillStyle = n === 0 ? "#e8e4d8" : "#9a958a"; g.fillRect(fx(n) - (n ? 1 : 3), top, n ? 2 : 6, bot - top); }
       [3, 5, 7, 9].forEach(n => { g.fillStyle = "#e8e4d822"; g.beginPath(); g.arc((fx(n - 1) + fx(n)) / 2, (top + bot) / 2, 6, 0, 7); g.fill(); });
-      [12].forEach(n => { g.fillStyle = "#e8e4d822"; [-1, 1].forEach(s => { g.beginPath(); g.arc((fx(n - 1) + fx(n)) / 2, (top + bot) / 2 + s * 24, 6, 0, 7); g.fill(); }); });
-      // sound hole
-      if (W >= 600) { g.strokeStyle = "#e8e4d822"; g.lineWidth = 6; g.beginPath(); g.arc(W * .86, H / 2, hr, 0, 7); g.stroke(); g.fillStyle = "#050302"; g.beginPath(); g.arc(W * .86, H / 2, hr * .9, 0, 7); g.fill(); }
-      // strings
+      [-1, 1].forEach(sg => { g.fillStyle = "#e8e4d822"; g.beginPath(); g.arc((fx(11) + fx(12)) / 2, (top + bot) / 2 + sg * 24, 6, 0, 7); g.fill(); });
       for (let i = 0; i < 6; i++) {
-        const y = sy(i), a = amp[i]; amp[i] *= Math.pow(.18, dt);
+        const y = sy(i), a = amp[i]; amp[i] *= Math.pow(drive ? .3 : .18, dt);
         g.strokeStyle = i < 3 ? "#d8c39a" : "#e8e4d8"; g.lineWidth = 2.6 - i * .32;
         g.beginPath();
-        for (let x = nx0; x <= W - 10; x += 6) { const k = (x - nx0) / (W - 10 - nx0); const off = a * Math.sin(k * Math.PI) * Math.sin(T * (60 + i * 14) + k * 4) * 6; x === nx0 ? g.moveTo(x, y + off) : g.lineTo(x, y + off); }
+        for (let x = nx0; x <= W - 10; x += 6) { const k = (x - nx0) / (W - 10 - nx0); const off = a * Math.sin(k * Math.PI) * Math.sin(T * (60 + i * 14) + k * 4) * (drive ? 8 : 6); x === nx0 ? g.moveTo(x, y + off) : g.lineTo(x, y + off); }
         g.stroke();
         const fr = CHORDS[chord][i];
         g.font = "600 11px IBM Plex Mono, monospace";
@@ -852,7 +1032,8 @@
         else if (fr === 0) { g.strokeStyle = C.ok; g.lineWidth = 1.5; g.beginPath(); g.arc(16, y, 5, 0, 7); g.stroke(); }
         else { g.fillStyle = C.amb; g.shadowColor = C.amb; g.shadowBlur = a * 20; g.beginPath(); g.arc((fx(fr - 1) + fx(fr)) / 2, y, 8, 0, 7); g.fill(); g.shadowBlur = 0; }
       }
-      g.fillStyle = C.dim; g.font = "500 10px IBM Plex Mono, monospace"; g.fillText(`chord ${chord} · Karplus-Strong synthesis`, nx0, H - 10);
+      g.fillStyle = drive ? C.hot : C.dim; g.font = "500 10px IBM Plex Mono, monospace";
+      g.fillText(`${chord} · standard EADGBE · ${drive ? "DRIVE: waveshaper → mid boost → cab sim" : "CLEAN"} · Karplus-Strong`, nx0, H - 10);
     });
   }
 
@@ -945,7 +1126,7 @@
   /* ---------------- boot ---------------- */
   initDie(); initBus(); initGen(); initPCB(); initMCU(); initRack();
   initPD(); initNPU(); initMCP(); initGraph();
-  initRobot(); initSDR(); initFT();
+  initRK(); initRobot(); initCyc(); initSDR(); initFT(); initArchive();
   initGuitar(); initPiano(); initLog(); initPing(); initScope();
   D.boot();
 })();

@@ -53,11 +53,13 @@
     <a href="#top" data-k="00">DIE</a>
     <a href="#spec" data-k="01">SPEC</a>
     <a href="#build" data-k="02">BUILD</a>
-    <a href="#lab" data-k="03">INFER</a>
-    <a href="#wip" data-k="04">WIP</a>
-    <a href="#music" data-k="05">STRINGS</a>
-    <a href="#log" data-k="06">LOG</a>
-    <a href="#ping" data-k="07">PING</a>
+    <a href="#aura" data-k="03">AURA</a>
+    <a href="#lab" data-k="04">INFER</a>
+    <a href="#wip" data-k="05">WIP</a>
+    <a href="#archive" data-k="06">ARCHIVE</a>
+    <a href="#music" data-k="07">STRINGS</a>
+    <a href="#log" data-k="08">LOG</a>
+    <a href="#ping" data-k="09">PING</a>
   </nav>
 
   <main id="main">
@@ -73,11 +75,11 @@
       </div>
       <table class="hero-spec mono" aria-label="引脚定义">
         <tr><th>PIN</th><th>NAME</th><th>FUNCTION</th></tr>
-        <tr><td>01</td><td class="hot">SOLDER</td><td>原理图 · PCB · 焊接 · 设备树</td></tr>
+        <tr><td>01</td><td class="hot">SOLDER</td><td>AuraCore H616 · RK3576 <i>WIP</i></td></tr>
         <tr><td>02</td><td class="hot">INFER</td><td>AI Infra · PD 分离 · K8s</td></tr>
-        <tr><td>03</td><td>WALK</td><td>双足机器人 · RL 步态 <i>WIP</i></td></tr>
-        <tr><td>04</td><td>RF</td><td>SDR · 呼号 BH3FWY <i>WIP</i></td></tr>
-        <tr><td>05</td><td>STRUM</td><td>吉他 · 钢琴 <i>WIP</i></td></tr>
+        <tr><td>03</td><td>WALK</td><td>BHL 人形 · 自研 FOC · MJX <i>WIP</i></td></tr>
+        <tr><td>04</td><td>RF</td><td>ZYNQ SDR · BH3FWY <i>WIP</i></td></tr>
+        <tr><td>05</td><td>STRUM</td><td>电吉他 · 日式摇滚</td></tr>
       </table>
       <div class="hero-scroll mono"><i></i>SCROLL TO DECAP</div>
     </section>
@@ -98,12 +100,14 @@
       <div class="feat">
         <div class="feat-c"><span class="mono">FEATURES</span>
           <ul>
-            <li>从零独立研发 Linux 开发板：原理图、PCB、手工焊接、设备树、U-Boot / Kernel / Buildroot</li>
+            <li>自研全志 H616 SBC「AuraCore」（六层板）与五槽 USB 组网集群底座，跑 k3s</li>
+            <li>原理图、PCB、手工焊接、设备树、U-Boot / Kernel / Buildroot 全流程</li>
+            <li>在研：RK3576 SBC，38 × 38 mm，冲 6 TOPS NPU 端侧推理</li>
             <li>STM32 · ESP32 · Arduino 等各类微控制器</li>
             <li>服务器部署 · 虚拟化 · Docker · K8s · 软路由</li>
             <li>大模型推理 · AI Infra · PD 分离 · 国产算力</li>
             <li>Agent · MCP · Graph-RAG</li>
-            <li>吉他；钢琴学习中</li>
+            <li>电吉他（日式摇滚）；钢琴学习中</li>
           </ul>
         </div>
         <div class="feat-c"><span class="mono">ABSOLUTE MAXIMUM RATINGS</span>
@@ -125,7 +129,7 @@
       <div class="sec-h">
         <span class="sec-k mono">§02 / HARDWARE BRING-UP</span>
         <h2 class="sec-t" data-glitch>手搓，<em>从一块空板开始</em></h2>
-        <p class="sec-s">自己画原理图、画 PCB、手工焊接，再配设备树、编 U-Boot、Kernel、Buildroot，直到串口里出现登录提示符。下面这块板子交给你：<b>把所有焊盘焊上</b>（点击或拖过焊盘），然后上电。</p>
+        <p class="sec-s">AuraCore 是我从零画的全志 H616 开发板：原理图、六层 PCB、手工焊接，再配设备树、编 U-Boot、Kernel、Buildroot，直到串口里出现登录提示符。下面是它的简化布局，交给你：<b>把所有焊盘焊上</b>（点击或拖过焊盘），然后上电。</p>
       </div>
       <ol class="flow mono" id="flow">
         <li data-s="0">SCHEMATIC</li><li data-s="1">PCB LAYOUT</li><li data-s="2">SOLDER</li><li data-s="3">DEVICE TREE</li><li data-s="4">U-BOOT</li><li data-s="5">KERNEL</li><li data-s="6">BUILDROOT</li><li data-s="7">LOGIN</li>
@@ -156,10 +160,52 @@
       </div>
     </section>
 
+    <!-- ===== AURACORE CLUSTER ===== -->
+    <section class="aura" id="aura" data-sec>
+      <div class="sec-h">
+        <span class="sec-k mono">§03 / AURACORE CLUSTER</span>
+        <h2 class="sec-t" data-glitch>五片 AuraCore，<em>插成一个集群</em></h2>
+        <p class="sec-s">底座上有五个竖直的 USB-C 插槽：一片做 head + 路由，四片做从节点，从节点以 USB gadget 以太网接入底座的 CH339F，由 head 做路由，组网跑 k3s。下面是从 EasyEDA 导出的<b>真实 3D 模型</b>：拖动旋转、滚轮缩放，按 ASSEMBLE 看它们插上去。</p>
+      </div>
+      <div class="aura-grid">
+        <div class="stage aura-stage">
+          <canvas id="aura3d" aria-label="AuraCore 集群 3D 模型"></canvas>
+          <div class="aura-hud mono"><button class="act" id="auAssemble">▶ ASSEMBLE</button><button class="act" id="auExplode">⇡ EXPLODE</button><button class="act" id="auSolo">◎ SINGLE</button><span id="auStat">loading models…</span></div>
+          <pre class="kube mono" id="kube"></pre>
+        </div>
+        <div class="aura-spec">
+          <table class="dt mono">
+            <tr><th colspan="2">AuraCore V2.0</th></tr>
+            <tr><td>SoC</td><td>Allwinner H616 · 4× Cortex-A53</td></tr>
+            <tr><td>DRAM</td><td>DDR3 · 单颗 x16 · 512 MB</td></tr>
+            <tr><td>Storage</td><td>4 GB eMMC + microSD</td></tr>
+            <tr><td>Wireless</td><td>RTL8821CU · Wi-Fi 5 / BT</td></tr>
+            <tr><td>PMIC</td><td>AXP313A</td></tr>
+            <tr><td>I/O</td><td>3× USB-C · HDMI · FEL</td></tr>
+            <tr><td>PCB</td><td>6 层 · 31 × 60 mm</td></tr>
+            <tr><th colspan="2">Cluster Base</th></tr>
+            <tr><td>Hub</td><td>CH339F · USB Hub + Ethernet</td></tr>
+            <tr><td>Slots</td><td>5× 竖直 USB-C · 1 head + 4 workers</td></tr>
+            <tr><td>Power</td><td>DC-in · SY8113B · 每槽储能</td></tr>
+            <tr><td>Stack</td><td>USB gadget 以太网 → head 路由 → k3s</td></tr>
+          </table>
+          <ul class="bring mono">
+            <li class="ok">DDR 一板跑通</li>
+            <li class="ok">mainline U-Boot / Linux 正常启动</li>
+            <li class="bad">全志 BSP 下内存异常：初步定位在启动阶段的 DDR training，排查中</li>
+          </ul>
+        </div>
+      </div>
+      <div class="photos">
+        <figure><img src="assets/img/auracore-front.jpg" loading="lazy" alt="AuraCore V2.0 工程样板正面"><figcaption class="mono">AuraCore V2.0 · Engineering Sample · TOP</figcaption></figure>
+        <figure><img src="assets/img/auracore-back.jpg" loading="lazy" alt="AuraCore 背面的 0402 阻容"><figcaption class="mono">BOTTOM · 0402 阻容，手工焊接</figcaption></figure>
+      </div>
+    </section>
+
     <!-- ===== LAB ===== -->
     <section class="lab" id="lab" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§03 / INFERENCE LAB</span>
+        <span class="sec-k mono">§04 / INFERENCE LAB</span>
         <h2 class="sec-t" data-glitch>推理实验室</h2>
         <p class="sec-s">本职工作：在国产算力上部署、调优大模型。四个小实验。</p>
       </div>
@@ -219,16 +265,28 @@
     <!-- ===== WIP ===== -->
     <section class="wip" id="wip" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§04 / WORK IN PROGRESS</span>
+        <span class="sec-k mono">§05 / WORK IN PROGRESS</span>
         <h2 class="sec-t" data-glitch>正在折腾</h2>
-        <p class="sec-s">还没做完、但每周都在推进的三件事。</p>
+        <p class="sec-s">还没做完、但每周都在推进的几件事。</p>
       </div>
+
+      <article class="exp" data-exp id="exp-rk">
+        <header class="exp-h">
+          <span class="mono tag">WIP.0</span>
+          <h3>RK3576 · 38 × 38 mm</h3>
+          <p>下一块板：瑞芯微 RK3576，目标做到 38 × 38 mm，冲着那颗 6 TOPS NPU 跑端侧推理，把本职工作里的推理塞进一张邮票大小的板子。嘉立创六层免费工艺 + 盘中孔。</p>
+          <ol class="steps mono"><li class="done">原理图</li><li class="cur">布局 / 布线</li><li>打样</li><li>Bring-up</li><li>NPU 推理</li></ol>
+          <div class="ctl mono"><div class="tog" id="rkTog"><button class="on" data-v="size">尺寸对比</button><button data-v="fanout">BGA 扇出</button></div></div>
+          <pre class="readout mono" id="rkRead"></pre>
+        </header>
+        <div class="stage"><canvas id="rkCanvas" aria-label="RK3576 板子尺寸与扇出示意"></canvas></div>
+      </article>
 
       <article class="exp" data-exp id="exp-robot">
         <header class="exp-h">
           <span class="mono tag">WIP.1</span>
-          <h3>在家手搓双足机器人</h3>
-          <p>用强化学习训练步态。拖动训练进度，看它从摔跤到走路：早期的策略只会乱蹬，奖励曲线爬上去之后，步态才稳下来。点击画面给它一脚。</p>
+          <h3>低成本人形机器人</h3>
+          <p>基于 Berkeley Humanoid Lite（BHL）在家手搓：关节已打印装好，正在调驱动器；步态用强化学习在 MJX（MuJoCo + JAX）里训练。下面是一个程序化的小玩具：拖动训练进度，看它从摔跤到走路；点击画面给它一脚。</p>
           <div class="ctl mono"><label class="sl wide">EPISODE<input type="range" id="rlEp" min="0" max="1000" value="80"></label></div>
           <dl class="meter mono">
             <div><dt>EPISODE</dt><dd id="rlE">—</dd></div>
@@ -240,11 +298,22 @@
         <div class="stage"><canvas id="robot" aria-label="双足机器人步态"></canvas><span class="note mono">PROCEDURAL TOY · NOT THE REAL POLICY</span></div>
       </article>
 
-      <article class="exp" data-exp id="exp-sdr">
+      <article class="exp" data-exp id="exp-act">
         <header class="exp-h">
           <span class="mono tag">WIP.2</span>
+          <h3>摆线减速关节 · 自研 FOC</h3>
+          <p>关节用的是 BHL 的 5010 摆线减速器，3D 打印。我写了 cadquery 脚本，只重建和电机接触的两个件（Motor Shell / Motor Shaft），把它适配到手头的 5010 360KV 电机上，其余打印件不动。驱动器自研 FOC，正在选型画板。拖动转速，看摆线盘怎么“摆”。</p>
+          <div class="ctl mono"><label class="sl wide">INPUT RPM<input type="range" id="cycRpm" min="0" max="3000" value="900"></label></div>
+          <pre class="readout mono" id="cycRead"></pre>
+        </header>
+        <div class="stage"><canvas id="cyc" aria-label="摆线减速器示意"></canvas><span class="note mono">ILLUSTRATIVE GEOMETRY · NOT BHL'S EXACT PARAMETERS</span></div>
+      </article>
+
+      <article class="exp" data-exp id="exp-sdr">
+        <header class="exp-h">
+          <span class="mono tag">WIP.3</span>
           <h3>软件定义无线电</h3>
-          <p>瀑布图里藏着几个信号。拖动或滚轮调台，开着声音能“听”到它们——其中一个是摩尔斯信标，在反复拍发一串呼号。你能解出来吗？</p>
+          <p>自己画板：ZYNQ-7010 + AD936x，学射频前端和 FPGA 上的数字信号处理。业余无线电呼号 BH3FWY。下面的瀑布图里藏着几个模拟信号，拖动或滚轮调台，开着声音能“听”到它们。其中一个是摩尔斯信标，在反复拍发一串呼号，你能解出来吗？</p>
           <div class="ctl mono"><span class="freq" id="sdrFreq">145.000 MHz</span><button class="act" id="sdrScan">⟳ SCAN</button></div>
           <pre class="readout mono" id="sdrRead">tuning…</pre>
         </header>
@@ -253,7 +322,7 @@
 
       <article class="exp" data-exp id="exp-ft">
         <header class="exp-h">
-          <span class="mono tag">WIP.3</span>
+          <span class="mono tag">WIP.4</span>
           <h3>大模型训练与微调</h3>
           <p>从推理往上游走：学习训练和微调。选一个 LoRA 秩开始训练，看 loss 曲线和学习率调度（warmup + cosine）。</p>
           <div class="ctl mono"><div class="tog" id="loraTog"><button data-r="8" class="on">r=8</button><button data-r="16">r=16</button><button data-r="64">r=64</button><button data-r="0">FULL</button></div><button class="act" id="ftRun">▶ TRAIN</button></div>
@@ -263,17 +332,46 @@
       </article>
     </section>
 
+    <!-- ===== ARCHIVE ===== -->
+    <section class="archive" id="archive" data-sec>
+      <div class="sec-h">
+        <span class="sec-k mono">§06 / ARCHIVE</span>
+        <h2 class="sec-t" data-glitch>档案馆，<em>上学时手搓过的</em></h2>
+        <p class="sec-s">从手机相册里翻出来的原始片段，没剪辑、没调色，点击放大。</p>
+      </div>
+      <div class="reels">
+        <article class="reel">
+          <header><span class="mono">REEL 01 · 2024</span><h3>四足机器人复刻</h3><p>复刻 <a href="https://github.com/ToanTech/py-apple-quadruped-robot" target="_blank" rel="noopener">ToanTech/py-apple-quadruped-robot ↗</a>：3D 打印腿部结构、舵机驱动、步态调试。我的第一台“会走”的机器人。</p></header>
+          <div class="clips"><figure class="clip" data-v="legged-desk"></figure><figure class="clip" data-v="legged-walk"></figure></div>
+        </article>
+        <article class="reel">
+          <header><span class="mono">REEL 02 · 2024</span><h3>单目视觉自主飞行</h3><p>ORB-SLAM3 单目定位 + <a href="https://github.com/geturin/MiDaS/tree/master/ros" target="_blank" rel="noopener">MiDaS ↗</a> 单目深度估计补出稠密深度，再交给 EGO-Planner 做避障规划。也在仿真里跑了 swarm 编队。</p></header>
+          <div class="clips"><figure class="clip" data-v="mono-flight"></figure><figure class="clip" data-v="mono-traj"></figure><figure class="clip" data-v="mono-swarm"></figure></div>
+        </article>
+        <article class="reel">
+          <header><span class="mono">REEL 03 · 2024</span><h3>HAHA OMNI 全向底盘</h3><p>三个 60 mm 全向轮 + 42 步进电机，GD32F103 主控、LV8731V 驱动，自己做运动学和 ROS 串口协议，挂上 YDLIDAR X2 建图。<a href="https://github.com/dreaming66/omni_haha" target="_blank" rel="noopener">源码 ↗</a></p></header>
+          <div class="clips"><figure class="clip" data-v="omni-cad"></figure><figure class="clip" data-v="omni-bot"></figure><figure class="clip" data-v="omni-ydlidar"></figure><figure class="clip" data-v="omni-lidar"></figure><figure class="clip" data-v="omni-mapping"></figure></div>
+        </article>
+        <article class="reel fail">
+          <header><span class="mono">REEL 04 · FAILURE LOG</span><h3>BeSafe：芯片冒火光</h3><p>功率估小了，芯片过载，当场冒出火光。失败也是数据：从这以后，我画板子一定先算功耗、留余量、加保护。</p></header>
+          <div class="clips"><figure class="clip" data-v="besafe-fire"></figure></div>
+        </article>
+      </div>
+    </section>
+
     <!-- ===== MUSIC ===== -->
     <section class="music" id="music" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§05 / STRINGS &amp; KEYS</span>
+        <span class="sec-k mono">§07 / STRINGS &amp; KEYS</span>
         <h2 class="sec-t" data-glitch>六根弦，<em>八十八个键</em></h2>
-        <p class="sec-s">会弹吉他，正在学钢琴。下面两件乐器都能弹：吉他用 Karplus-Strong 算法实时合成拨弦，钢琴用加法合成。先打开声音。</p>
+        <p class="sec-s">从原声吉他入门，现在玩电吉他、日式摇滚；钢琴还在学。下面两件乐器都能弹：吉他标准调弦（EADGBE），用 Karplus-Strong 算法实时合成拨弦，打开 DRIVE 就是失真音箱；钢琴用加法合成。先打开声音。</p>
       </div>
       <div class="guitar">
         <div class="gt-ctl mono">
           <span>CHORD</span>
           <div class="tog" id="chords"></div>
+          <div class="tog" id="ampTog"><button data-a="0">CLEAN</button><button class="on" data-a="1">DRIVE</button></div>
+          <button class="act" id="riffBtn">▶ RIFF（原创）</button>
           <span class="d">拖过琴弦扫弦 · 点击单弦拨奏</span>
         </div>
         <div class="stage gt-stage"><canvas id="guitar" aria-label="可弹奏的吉他"></canvas></div>
@@ -287,7 +385,7 @@
     <!-- ===== LOG ===== -->
     <section class="log" id="log" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§06 / REVISION HISTORY</span>
+        <span class="sec-k mono">§08 / REVISION HISTORY</span>
         <h2 class="sec-t" data-glitch>git log --graph</h2>
         <p class="sec-s">本职那条主线。点击提交展开 diff。</p>
       </div>
@@ -342,7 +440,7 @@
     <!-- ===== PING ===== -->
     <section class="ping" id="ping" data-sec>
       <div class="sec-h">
-        <span class="sec-k mono">§07 / CONTACT</span>
+        <span class="sec-k mono">§09 / CONTACT</span>
         <h2 class="sec-t big" data-glitch>ping <em>dreaming66</em></h2>
       </div>
       <div class="sonar">
@@ -368,6 +466,8 @@
   <div class="xnote mono" style="top:46vh;right:4vw">&lt;!-- easter egg: ↑↑↓↓←→←→BA --&gt;</div>
 
   <!-- ===== TERMINAL ===== -->
+  <div class="lightbox" id="lightbox" aria-hidden="true"><video id="lbVideo" muted loop playsinline controls></video><button class="act" id="lbClose">[×] CLOSE</button></div>
+
   <div class="term mono" id="term" role="dialog" aria-label="终端" aria-hidden="true">
     <div class="term-bar"><span>tty0 · drm-66</span><button id="termClose" aria-label="关闭">[×]</button></div>
     <div class="term-body" id="termBody"></div>
@@ -377,5 +477,7 @@
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
   <script src="js/core.js"></script>
   <script src="js/labs.js"></script>
+  <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }</script>
+  <script type="module" src="js/aura.js"></script>
 </body>
 </html>
