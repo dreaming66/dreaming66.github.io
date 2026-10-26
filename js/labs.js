@@ -966,23 +966,40 @@
      §06 archive reels
      ========================================================= */
   function initArchive() {
-    const lb = $("#lightbox"), lv = $("#lbVideo");
-    const close = () => { lb.classList.remove("open"); lb.setAttribute("aria-hidden", true); lv.pause(); };
-    $("#lbClose").addEventListener("click", close); lb.addEventListener("click", e => { if (e.target === lb) close(); });
-    addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+    // inline, muted, looping; sources are fetched into blob: URLs so there is no plain .mp4 link to save,
+    // and every built-in save path (context menu, controls, PiP, cast, drag, long-press) is switched off
+    const load = async v => {
+      if (v.dataset.loaded) return; v.dataset.loaded = 1;
+      try { const r = await fetch(v.dataset.src); v.src = URL.createObjectURL(await r.blob()); }
+      catch { v.src = v.dataset.src; }
+      if (v.dataset.want === "1" && !D.still) v.play().catch(() => {});
+    };
     const vio = new IntersectionObserver(es => es.forEach(en => {
-      const v = en.target;
-      if (en.isIntersecting) { if (!v.src) v.src = v.dataset.src; if (!D.still) v.play().catch(() => {}); } else v.pause();
-    }), { rootMargin: "100px" });
+      const v = en.target, fig = v.parentElement;
+      if (en.isIntersecting) { v.dataset.want = fig.classList.contains("paused") ? "0" : "1"; load(v); if (v.src && v.dataset.want === "1" && !D.still) v.play().catch(() => {}); }
+      else { v.dataset.want = "0"; v.pause(); }
+    }), { rootMargin: "150px" });
     $$(".clip").forEach(fig => {
       const n = fig.dataset.v;
       const v = document.createElement("video");
       v.muted = true; v.loop = true; v.playsInline = true; v.preload = "none"; v.poster = `assets/video/${n}.jpg`; v.dataset.src = `assets/video/${n}.mp4`;
-      v.setAttribute("aria-label", n);
-      fig.appendChild(v); fig.insertAdjacentHTML("beforeend", `<span class="rec">${n.toUpperCase()}</span>`);
+      v.disablePictureInPicture = true; v.disableRemotePlayback = true;
+      v.setAttribute("controlslist", "nodownload nofullscreen noremoteplayback noplaybackrate");
+      v.setAttribute("aria-label", n); v.setAttribute("draggable", "false");
+      fig.appendChild(v);
+      fig.insertAdjacentHTML("beforeend", `<div class="shield" data-cursor="pause"></div><span class="rec">${n.toUpperCase()}</span><span class="wm">dreaming66</span><span class="bar"><i></i></span>`);
+      const bar = fig.querySelector(".bar i"), shield = fig.querySelector(".shield");
+      v.addEventListener("timeupdate", () => { if (v.duration) bar.style.width = (v.currentTime / v.duration * 100) + "%"; });
+      shield.addEventListener("click", () => {
+        const p = !fig.classList.contains("paused"); fig.classList.toggle("paused", p); shield.dataset.cursor = p ? "play" : "pause";
+        if (p) v.pause(); else { load(v); v.play().catch(() => {}); }
+        S.blip(p ? 330 : 660);
+      });
       vio.observe(v);
-      fig.addEventListener("click", () => { lv.src = v.dataset.src; lb.classList.add("open"); lb.setAttribute("aria-hidden", false); lv.play().catch(() => {}); S.whoosh(true); });
     });
+    // no context menu / drag on media
+    document.addEventListener("contextmenu", e => { if (e.target.closest(".clip, .photos, video")) e.preventDefault(); });
+    document.addEventListener("dragstart", e => { if (e.target.closest(".clip, .photos, video, img")) e.preventDefault(); });
   }
 
   /* =========================================================

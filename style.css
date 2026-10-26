@@ -305,7 +305,7 @@ main > section { position: relative; padding-left: var(--g); padding-right: var(
 .photos img { display: block; width: 100%; height: 100%; max-height: 540px; object-fit: cover; }
 .photos figcaption { position: absolute; left: 12px; bottom: 12px; padding: 6px 12px; border-radius: 99px; font-size: 11px; background: var(--paper); border: 1.5px solid var(--ink); }
 @media (max-width: 900px) { .aura-grid, .photos { grid-template-columns: 1fr; } .aura-stage { min-height: 460px; } }
-@media (max-width: 600px) { .kube { font-size: 8.5px; padding: 5px 8px; opacity: .85; } }
+@media (max-width: 820px), (pointer: coarse) { .kube { display: none; } .aura-hud span { margin-left: 0; color: var(--mint); } }
 
 /* ---------- experiments ---------- */
 .lab, .wip { padding-top: clamp(60px, 9vw, 120px); padding-bottom: clamp(40px, 6vw, 80px); }
@@ -348,17 +348,20 @@ main > section { position: relative; padding-left: var(--g); padding-right: var(
 .reel p { color: var(--ink-2); font-size: 15px; margin: 0; }
 .reel a { color: var(--cobalt); border-bottom: 1.5px solid currentColor; }
 .reel.fail h3 { color: var(--vermilion); }
-.clips { display: flex; gap: 14px; overflow-x: auto; scrollbar-width: thin; padding: 4px 12px 14px 4px; }
-.clip { margin: 0; flex: 0 0 auto; height: 250px; position: relative; background: var(--ink); border: 1.5px solid var(--ink); border-radius: 18px; overflow: hidden; cursor: zoom-in; box-shadow: 6px 6px 0 var(--ink); transition: transform .4s var(--ease), box-shadow .3s; }
-.clip:nth-child(odd) { transform: rotate(-1deg); } .clip:nth-child(even) { transform: rotate(1deg); }
+.clips { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.clip { margin: 0; flex: 0 1 auto; height: clamp(220px, 26vw, 360px); position: relative; background: var(--ink); border: 1.5px solid var(--ink); border-radius: 18px; overflow: hidden; box-shadow: 6px 6px 0 var(--ink); transition: transform .4s var(--ease), box-shadow .3s; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.clip:nth-child(odd) { transform: rotate(-.8deg); } .clip:nth-child(even) { transform: rotate(.8deg); }
 .clip:hover { transform: rotate(0) translateY(-4px); box-shadow: 10px 10px 0 var(--vermilion); }
-.clip video { height: 100%; width: auto; display: block; }
-.clip .rec { position: absolute; left: 10px; top: 10px; z-index: 2; font: 700 10px var(--mono); background: var(--paper); color: var(--ink); padding: 3px 9px; border-radius: 99px; }
+.clip video { height: 100%; width: auto; max-width: 100%; display: block; object-fit: cover; pointer-events: none; }
+.clip .shield { position: absolute; inset: 0; z-index: 1; cursor: pointer; }
+.clip .rec { position: absolute; left: 10px; top: 10px; z-index: 2; font: 700 10px var(--mono); background: var(--paper); color: var(--ink); padding: 3px 9px; border-radius: 99px; pointer-events: none; }
 .clip .rec::before { content: "●"; color: var(--vermilion); margin-right: 5px; animation: blink 1s steps(1) infinite; }
-@media (max-width: 900px) { .reel { grid-template-columns: 1fr; } .clip { height: 210px; } }
-.lightbox { position: fixed; inset: 0; z-index: 160; background: #141412ee; display: grid; place-items: center; gap: 14px; padding: var(--g); opacity: 0; pointer-events: none; transition: opacity .3s; grid-template-rows: 1fr auto; }
-.lightbox.open { opacity: 1; pointer-events: auto; }
-.lightbox video { max-width: 100%; max-height: 80vh; border-radius: 18px; background: #000; }
+.clip.paused .rec::before { content: "Ⅱ"; color: var(--ink); animation: none; }
+.clip .wm { position: absolute; right: 10px; bottom: 8px; z-index: 2; font: 600 9.5px var(--mono); color: #ffffffb0; text-shadow: 0 0 4px #000; pointer-events: none; letter-spacing: .06em; }
+.clip .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 2; background: #ffffff22; pointer-events: none; }
+.clip .bar i { display: block; height: 100%; width: 0; background: var(--vermilion); }
+@media (max-width: 900px) { .reel { grid-template-columns: 1fr; } .clips { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 14px 14px 4px; } .clip { height: 260px; flex: 0 0 auto; scroll-snap-align: start; } }
+.photos img { -webkit-user-drag: none; -webkit-touch-callout: none; user-select: none; }
 
 /* ---------- music ---------- */
 .music { padding-top: clamp(60px, 9vw, 120px); padding-bottom: clamp(60px, 9vw, 120px); }

@@ -30,14 +30,22 @@ const FLAT_Q = new THREE.Quaternion();
 const seatPos = y => new THREE.Vector3(47.3 - 4.2, y - 2.7, 7.3 - 15.2);
 const FLAT_POS = new THREE.Vector3(15.6, 9, 24);
 
+// phones / tablets: lighter models, lower pixel ratio, no MSAA, 30 fps cap, render only when something moves
+const MOBILE = matchMedia("(pointer: coarse)").matches || innerWidth < 820;
+let dirty = true, interacting = false, lastRender = 0;
 let renderer, scene, camera, controls, cad, base, boards = [], visible = false, ready = false, mode = "assembled", seq = null, lastT = 0, loadStarted = false, pendingAssemble = false;
 
-const toCad = root => { const w = new THREE.Group(); root.scale.setScalar(1000); w.add(root); return w; }; // OCCT kept Z-up, metres → mm
+// OCCT kept Z-up, metres → mm. Normals were stripped so faceted CAD parts could weld + simplify → flat shading.
+const toCad = root => {
+  root.traverse(o => { if (o.isMesh) { o.material.flatShading = true; o.material.needsUpdate = true; o.matrixAutoUpdate = false; o.updateMatrix(); } });
+  const w = new THREE.Group(); root.scale.setScalar(1000); w.add(root); return w;
+};
 
 function kubeTable() {
   const lines = ["$ kubectl get nodes", "NAME            STATUS     ROLES"];
   boards.forEach((b, i) => lines.push(`${NAMES[i].padEnd(16)}${(b.userData.seated ? "Ready" : "NotReady").padEnd(11)}${i === HEAD ? "control-plane,master" : "<none>"}`));
   kube.textContent = lines.join("\n");
+  if (MOBILE && ready) stat.textContent = `k3s · ${boards.filter(b => b.userData.seated).length}/${boards.length} Ready`;
 }
 
 const progress = {};
@@ -48,14 +56,15 @@ async function load() {
   const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
   const get = url => new Promise((res, rej) => loader.load(url, res, e => { progress[url] = e.total ? e.loaded / e.total : .5; showProgress(); }, rej));
   try {
-    const [gb, ga] = await Promise.all([get("assets/models/base.glb"), get("assets/models/auracore.glb")]);
+    const sfx = MOBILE ? "-lite" : "";
+    const [gb, ga] = await Promise.all([get(`assets/models/base${sfx}.glb`), get(`assets/models/auracore${sfx}.glb`)]);
     build(gb, ga);
   } catch (e) { stat.textContent = "model load failed"; console.warn(e); }
 }
 
 function setup() {
-  renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: devicePixelRatio < 2, alpha: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75));
+  renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: !MOBILE && devicePixelRatio < 2, alpha: true, powerPreference: "high-performance" });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, MOBILE ? 1.25 : 1.75));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
   scene = new THREE.Scene();
@@ -63,8 +72,10 @@ function setup() {
   controls = new OrbitControls(camera, cv);
   controls.enableDamping = true; controls.autoRotate = true; controls.autoRotateSpeed = .8;
   controls.minDistance = 70; controls.maxDistance = 420; controls.enablePan = false;
-  controls.addEventListener("start", () => { controls.autoRotate = false; });
-  controls.addEventListener("end", () => { setTimeout(() => controls.autoRotate = !D.still, 4000); });
+  controls.autoRotateSpeed = MOBILE ? .6 : .8;
+  controls.addEventListener("start", () => { controls.autoRotate = false; interacting = true; });
+  controls.addEventListener("end", () => { interacting = false; setTimeout(() => controls.autoRotate = !D.still, 4000); });
+  controls.addEventListener("change", () => dirty = true);
   scene.add(new THREE.HemisphereLight(0xffffff, 0x202020, 1.6));
   const key = new THREE.DirectionalLight(0xfff0dc, 2.6); key.position.set(120, 200, 140); scene.add(key);
   const rim = new THREE.DirectionalLight(0x8fb2ff, 1.3); rim.position.set(-160, 80, -120); scene.add(rim);
@@ -89,7 +100,7 @@ function build(gb, ga) {
     cad.add(b); boards.push(b);
   });
   ready = true; stage.classList.add("loaded");
-  stat.textContent = "drag to orbit · scroll to zoom";
+  stat.textContent = MOBILE ? "k3s · 0/5 Ready" : "drag to orbit · scroll to zoom";
   kubeTable();
   if (visible) assemble(); else pendingAssemble = true;
 }
@@ -97,7 +108,7 @@ function build(gb, ga) {
 function resize() {
   if (!renderer) return;
   const w = stage.clientWidth, h = stage.clientHeight;
-  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); dirty = true;
 }
 new ResizeObserver(resize).observe(stage);
 
@@ -129,20 +140,26 @@ const tmpP = new THREE.Vector3();
 function tick(now) {
   requestAnimationFrame(tick);
   if (!ready || !visible) { lastT = now; return; }
+  if (MOBILE && now - lastRender < 32) return;          // ~30 fps cap
   const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
   const k = D.still ? 1 : 1 - Math.pow(.0012, dt);
+  let moving = false;
   boards.forEach((b, i) => {
     const u = b.userData;
+    if (Math.abs(u.target - u.off) > .01 || Math.abs(u.flatT - u.flat) > .001) moving = true;
     u.off += (u.target - u.off) * k;
     u.flat += (u.flatT - u.flat) * k;
     b.quaternion.slerpQuaternions(SEAT_Q, FLAT_Q, u.flat);
     tmpP.copy(u.seat).lerp(FLAT_POS, u.flat); tmpP.z += u.off; b.position.copy(tmpP);
     if (mode === "assembled" && !u.seated && u.target === 0 && u.off < .4) { u.seated = true; S.thud(.16); S.blip(i === HEAD ? 523 : 659); kubeTable(); }
     const on = u.seated && (i === HEAD ? Math.sin(now / 160) > -.2 : Math.sin(now / 90 + i * 2) > .3);
-    u.led.material.color.setHex(on ? (i === HEAD ? 0xff4f1f : 0x7dff9a) : 0x331a10);
+    const hex = on ? (i === HEAD ? 0xff4f1f : 0x7dff9a) : 0x331a10;
+    if (u.led.material.color.getHex() !== hex) { u.led.material.color.setHex(hex); moving = true; }
   });
   if (D.still) controls.autoRotate = false;
-  controls.update();
+  controls.update();                                     // fires "change" while rotating / damping
+  if (!(dirty || moving || interacting)) return;          // nothing changed → skip the frame
+  dirty = false; lastRender = now;
   renderer.render(scene, camera);
 }
 
