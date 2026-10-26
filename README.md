@@ -14,3 +14,8 @@ Hand-written Canvas2D + WebAudio. Zero frameworks, zero build step, zero audio s
 - `` ` `` terminal · `X` x-ray · `S` sound · ↑↑↓↓←→←→BA
 
 All APIs, IPs, graph data and simulations are fictional demos.
+
+## Languages
+
+中文 / English / 日本語 — auto-detected from the browser, switchable from the header chip, the terminal (`lang en`), or `?lang=zh|en|ja`.
+Static copy lives in `index.html` (Chinese, the source) + `js/i18n.js` (English / Japanese). After changing copy, re-run `tools/subset-fonts.py` so the self-hosted CJK fonts include any new characters.

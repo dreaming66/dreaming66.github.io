@@ -8,6 +8,8 @@
 @font-face { font-family: "Space Grotesk"; src: url(assets/fonts/space-grotesk.woff2) format("woff2"); font-weight: 300 700; font-style: normal; font-display: swap; }
 @font-face { font-family: "Noto Serif SC"; src: url(assets/fonts/noto-serif-sc-500.woff2) format("woff2"); font-weight: 400 600; font-display: swap; }
 @font-face { font-family: "Noto Serif SC"; src: url(assets/fonts/noto-serif-sc-900.woff2) format("woff2"); font-weight: 700 900; font-display: swap; }
+@font-face { font-family: "Noto Serif JP"; src: url(assets/fonts/noto-serif-jp-500.woff2) format("woff2"); font-weight: 400 600; font-display: swap; }
+@font-face { font-family: "Noto Serif JP"; src: url(assets/fonts/noto-serif-jp-900.woff2) format("woff2"); font-weight: 700 900; font-display: swap; }
 
 :root {
   --paper: #f1ede3;
@@ -23,6 +25,7 @@
   --mint: #7dff9a;
   --serif: "Instrument Serif", "Noto Serif SC", Georgia, serif;
   --cn-serif: "Noto Serif SC", "Songti SC", serif;
+  --sans-cjk: "PingFang SC", "Microsoft YaHei";
   --sans: "Space Grotesk", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
   --g: clamp(16px, 4.5vw, 80px);
@@ -467,3 +470,12 @@ body.shake main { animation: shake .4s; }
 body.still *, body.still *::before, body.still *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; }
 body.still .grain { display: none; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .grain, .mq-track, .badge-rot svg { animation: none; } }
+
+/* ---------- languages ---------- */
+:root:lang(ja) { --cn-serif: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif; --sans: "Space Grotesk", "Hiragino Sans", "Yu Gothic", "Meiryo", system-ui, sans-serif; }
+:root:lang(en) .sec-t, :root:lang(en) .exp h3, :root:lang(en) .reel h3, :root:lang(en) .msg, :root:lang(en) .rack-txt h3 { letter-spacing: -.02em; }
+:root:lang(en) .sec-t { font-size: clamp(38px, 6.4vw, 104px); }
+:root:lang(en) .gen-out, :root:lang(ja) .gen-out { max-width: 30em; }
+.lang-chip { min-width: 46px; font-weight: 800; }
+.sec-t, .exp h3, .reel h3, .rack-txt h3, .msg { text-wrap: balance; }
+:root:lang(ja) .sec-t, :root:lang(ja) .exp h3, :root:lang(ja) .reel h3 { line-break: strict; word-break: auto-phrase; }

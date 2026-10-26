@@ -115,6 +115,9 @@
     }
     const open = async () => { await document.fonts.ready; draw(); modal.classList.add("open"); modal.setAttribute("aria-hidden", false); S.chord([523, 659, 784], .05, "triangle", .07); };
     const close = () => { modal.classList.remove("open"); modal.setAttribute("aria-hidden", true); };
+    let edited = false; line.value = D.t("card.line");
+    line.addEventListener("input", () => edited = true, { once: true });
+    document.addEventListener("d66lang", () => { if (!edited) { line.value = D.t("card.line"); if (modal.classList.contains("open")) draw(); } });
     $("#cardBtn").addEventListener("click", open);
     $("#cardClose").addEventListener("click", close);
     $("#cardShuffle").addEventListener("click", () => { ti++; motif++; seed = Math.random() * 1000; draw(); S.blip(rand(500, 900)); });
@@ -128,30 +131,41 @@
      ========================================================= */
   function initGen() {
     const el = $("#genOut"), stat = $("#genStat");
-    const text = "你好，我是 dreaming66。白天和大模型推理打交道，晚上画自己的开发板，周末手搓机器人、折腾无线电，累了就插上电吉他。我相信：理解一个系统最好的方式，是亲手把它从零搭起来。";
-    const keys = ["大模型推理", "开发板", "机器人", "无线电", "电吉他", "从零搭起来"];
-    const toks = []; let i = 0;
-    while (i < text.length) {
-      const m = text.slice(i).match(/^[A-Za-z0-9]+/);
-      let n = m ? m[0].length : Math.random() < .55 ? 2 : 1;
-      if (!m && /[A-Za-z0-9]/.test(text[i + 1] || "")) n = 1;
-      toks.push(text.slice(i, i + n)); i += n;
-    }
-    D.onVisible(el, () => {
+    // latin words stay whole (with their trailing space); CJK goes out one or two characters at a time
+    const tokenize = (text, keys) => {
+      // never let a two-character CJK chunk straddle the start or end of a highlighted phrase
+      const cuts = new Set(); keys.forEach(k => { const a = text.indexOf(k); if (a >= 0) { cuts.add(a); cuts.add(a + k.length); } });
+      const toks = []; let i = 0;
+      while (i < text.length) {
+        const m = text.slice(i).match(/^[A-Za-z0-9'’\-]+[\s]?/) || text.slice(i).match(/^\s+/);
+        let n = m ? m[0].length : (Math.random() < .55 ? 2 : 1);
+        if (!m && (/[A-Za-z0-9\s]/.test(text[i + 1] || "") || cuts.has(i + 1))) n = 1;
+        toks.push(text.slice(i, i + n)); i += n;
+      }
+      return toks;
+    };
+    let run = 0, started = false;
+    const play = () => {
+      const my = ++run, text = D.t("gen.text"), keys = D.t("gen.keys"), toks = tokenize(text, keys);
+      el.textContent = "";
       let k = 0; const cur = document.createElement("span"); cur.className = "cur"; el.appendChild(cur);
+      const t0 = performance.now();
       const step = () => {
+        if (my !== run) return;
         if (k >= toks.length) { cur.remove(); return; }
-        const t = toks[k++], s = document.createElement("span"); s.className = "tk"; s.textContent = t;
+        const t = toks[k++], sp = document.createElement("span"); sp.className = "tk"; sp.textContent = t;
         const p = Math.random() < .12 ? rand(.2, .6) : rand(.75, .99);
-        s.dataset.lp = `p=${p.toFixed(2)} · logprob ${Math.log(p).toFixed(3)}`;
+        sp.dataset.lp = `p=${p.toFixed(2)} · logprob ${Math.log(p).toFixed(3)}`;
         const idx = toks.slice(0, k).join("").length - t.length;
-        if (keys.some(kk => { const a = text.indexOf(kk); return idx >= a && idx < a + kk.length; })) s.classList.add("hl");
-        el.insertBefore(s, cur); stat.textContent = `tokens: ${k} · ${(k / ((performance.now() - t0) / 1000)).toFixed(1)} tok/s`;
+        if (keys.some(kk => { const a = text.indexOf(kk); return a >= 0 && idx >= a && idx < a + kk.length; })) sp.classList.add("hl");
+        el.insertBefore(sp, cur); stat.textContent = `tokens: ${k} · ${(k / ((performance.now() - t0) / 1000)).toFixed(1)} tok/s`;
         if (k % 2 === 0) S.tone(rand(1200, 1600), .015, "square", .018);
-        setTimeout(step, D.still ? 0 : (/[，。；：—]/.test(t) ? rand(120, 220) : rand(28, 70)));
+        setTimeout(step, D.still ? 0 : (/[，。；：—.,;:]/.test(t) ? rand(120, 220) : rand(28, 70)));
       };
-      const t0 = performance.now(); step();
-    });
+      step();
+    };
+    D.onVisible(el, () => { started = true; play(); });
+    document.addEventListener("d66lang", () => { if (started) play(); });
   }
 
   /* =========================================================
@@ -264,7 +278,7 @@
       "kubectl get nodes": "NAME            STATUS   ROLES\nauracore-head   Ready    control-plane,master\nauracore-w1     Ready    &lt;none&gt;\nauracore-w2     Ready    &lt;none&gt;\nauracore-w3     Ready    &lt;none&gt;\nauracore-w4     Ready    &lt;none&gt;",
       whoami: "root (but really: dreaming66)",
     };
-    function login(inp) { hook(inp, v => { pr("", v === "root" ? "" : "(any user is root on this board)"); pr("w", "# 输入 help 试试"); }); }
+    function login(inp) { hook(inp, v => { pr("", v === "root" ? "" : D.t("pcb.anyroot")); pr("w", D.t("pcb.tryhelp")); }); }
     function shell(inp) {
       hook(inp, v => {
         if (v === "poweroff") { pr("y", "The system is going down NOW!\nreboot: Power down"); powered = false; ledOn = 0; state.textContent = "NO CARRIER"; state.classList.remove("live"); pwr.disabled = false; setFlow(3); S.whoosh(false); return true; }
@@ -282,7 +296,8 @@
         const n = outEl.lastElementChild; n.focus({ preventScroll: true }); outEl.scrollTop = outEl.scrollHeight; shell(n);
       });
     }
-    pr("", "<span class=\"y\">[ board unpowered ]</span>\n先把焊盘焊好（或 AUTO-SOLDER），再按 POWER ON。");
+    pr("", `<span class="y">[ board unpowered ]</span>\n<span class="hint-unpowered">${D.t("pcb.unpowered")}</span>`);
+    document.addEventListener("d66lang", () => { const h = outEl.querySelector(".hint-unpowered"); if (h) h.textContent = D.t("pcb.unpowered"); });
     // auto demo when scrolled into view: solder → power on → log in → run a few commands
     let autoMode = false, userTouched = false;
     cv.addEventListener("pointerdown", () => userTouched = true, { capture: true });
@@ -418,9 +433,9 @@
       }
       // info panel
       const ix = G[0].x + G[0].w + 70; if (ix < W - 120) {
-        const u = units[hover >= 0 ? hover : Math.floor(T / 3) % units.length];
+        const ui = hover >= 0 ? hover : Math.floor(T / 3) % units.length, u = units[ui];
         g.fillStyle = C.amb; g.fillText("> " + u.n, ix, 50);
-        g.fillStyle = C.dim; g.font = "500 12px Noto Sans SC, sans-serif"; u.svc.forEach((s, k) => g.fillText("· " + s, ix, 76 + k * 20));
+        g.fillStyle = C.dim; g.font = "500 12px Noto Sans SC, sans-serif"; (D.t("rack.svc")[ui] || u.svc).forEach((s, k) => g.fillText("· " + s, ix, 76 + k * 20));
         g.font = "500 10px IBM Plex Mono, monospace"; g.fillStyle = C.dim2; g.fillText("click → send a packet", ix, H - 20);
       }
     });
@@ -548,20 +563,20 @@
 
   function initMCP() {
     const inn = $("#mcpIn"), out = $("#mcpOut");
-    const ex = [
-      { i: `# openapi: 3.0  (demo / fictional)\npaths:\n  /api/v1/flights/{flightNo}/status:\n    get:\n      summary: 查询航班实时状态\n      parameters:\n        - name: flightNo\n          in: path\n          required: true\n        - name: date\n          in: query\n          schema: { type: string, format: date }\n      security: [ { bearerAuth: [] } ]`,
-        o: `{\n  "name": "get_flight_status",\n  "description": "查询航班实时状态",\n  "inputSchema": {\n    "type": "object",\n    "properties": {\n      "flightNo": { "type": "string" },\n      "date": { "type": "string", "format": "date" }\n    },\n    "required": ["flightNo"]\n  },\n  "annotations": { "readOnlyHint": true },\n  "_gateway": { "auth": "bearer" }\n}` },
-      { i: `# openapi: 3.0  (demo / fictional)\npaths:\n  /geo/v2/route:\n    post:\n      summary: 两点之间的路线规划\n      requestBody:\n        content:\n          application/json:\n            schema:\n              required: [from, to]\n              properties:\n                from: { type: string }\n                to:   { type: string }\n                mode: { enum: [drive, walk] }`,
-        o: `{\n  "name": "plan_route",\n  "description": "两点之间的路线规划",\n  "inputSchema": {\n    "type": "object",\n    "properties": {\n      "from": { "type": "string" },\n      "to": { "type": "string" },\n      "mode": { "enum": ["drive", "walk"] }\n    },\n    "required": ["from", "to"]\n  },\n  "_gateway": { "auth": "apikey", "rateLimit": "60/min" }\n}` },
-      { i: `# openapi: 3.0  (demo / fictional)\npaths:\n  /corp/search:\n    get:\n      summary: 按名称检索企业信息\n      parameters:\n        - name: keyword\n          in: query\n          required: true\n        - name: page\n          in: query\n          schema: { type: integer }\n      x-scope: corp.read`,
-        o: `{\n  "name": "search_company",\n  "description": "按名称检索企业信息",\n  "inputSchema": {\n    "type": "object",\n    "properties": {\n      "keyword": { "type": "string" },\n      "page": { "type": "integer" }\n    },\n    "required": ["keyword"]\n  },\n  "_gateway": { "scope": "corp.read", "audit": true }\n}` },
+    const examples = () => [
+      { i: `# openapi: 3.0  (demo / fictional)\npaths:\n  /api/v1/flights/{flightNo}/status:\n    get:\n      summary: ${D.t("mcp.s1")}\n      parameters:\n        - name: flightNo\n          in: path\n          required: true\n        - name: date\n          in: query\n          schema: { type: string, format: date }\n      security: [ { bearerAuth: [] } ]`,
+        o: `{\n  "name": "get_flight_status",\n  "description": "${D.t("mcp.s1")}",\n  "inputSchema": {\n    "type": "object",\n    "properties": {\n      "flightNo": { "type": "string" },\n      "date": { "type": "string", "format": "date" }\n    },\n    "required": ["flightNo"]\n  },\n  "annotations": { "readOnlyHint": true },\n  "_gateway": { "auth": "bearer" }\n}` },
+      { i: `# openapi: 3.0  (demo / fictional)\npaths:\n  /geo/v2/route:\n    post:\n      summary: ${D.t("mcp.s2")}\n      requestBody:\n        content:\n          application/json:\n            schema:\n              required: [from, to]\n              properties:\n                from: { type: string }\n                to:   { type: string }\n                mode: { enum: [drive, walk] }`,
+        o: `{\n  "name": "plan_route",\n  "description": "${D.t("mcp.s2")}",\n  "inputSchema": {\n    "type": "object",\n    "properties": {\n      "from": { "type": "string" },\n      "to": { "type": "string" },\n      "mode": { "enum": ["drive", "walk"] }\n    },\n    "required": ["from", "to"]\n  },\n  "_gateway": { "auth": "apikey", "rateLimit": "60/min" }\n}` },
+      { i: `# openapi: 3.0  (demo / fictional)\npaths:\n  /corp/search:\n    get:\n      summary: ${D.t("mcp.s3")}\n      parameters:\n        - name: keyword\n          in: query\n          required: true\n        - name: page\n          in: query\n          schema: { type: integer }\n      x-scope: corp.read`,
+        o: `{\n  "name": "search_company",\n  "description": "${D.t("mcp.s3")}",\n  "inputSchema": {\n    "type": "object",\n    "properties": {\n      "keyword": { "type": "string" },\n      "page": { "type": "integer" }\n    },\n    "required": ["keyword"]\n  },\n  "_gateway": { "scope": "corp.read", "audit": true }\n}` },
     ];
     const esc = s => s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
     const hiY = s => esc(s).replace(/(#.*)/g, '<span class="c">$1</span>').replace(/^(\s*)([\w\/{}.-]+):/gm, '$1<span class="k">$2</span>:').replace(/\b(get|post)\b/g, '<span class="m">$1</span>');
     const hiJ = s => esc(s).replace(/("[\w_]+")(\s*:)/g, '<span class="k">$1</span>$2').replace(/:\s*("[^"]*")/g, ': <span class="s">$1</span>');
     let k = 0, job = 0, started = false;
     async function play() {
-      const my = ++job, e = ex[k++ % ex.length];
+      const ex = examples(), my = ++job, e = ex[k++ % ex.length];
       const type = async (el, text, hi, sp) => {
         if (D.still) { el.innerHTML = hi(text); return; }
         for (let i = 0; i <= text.length; i += sp) { if (my !== job) return; el.innerHTML = hi(text.slice(0, i)) + '<span class="caret"></span>'; if (i % (sp * 3) === 0) S.tone(rand(1800, 2600), .01, "square", .015); await new Promise(r => requestAnimationFrame(r)); }
@@ -786,8 +801,8 @@
         const sent = chars.filter(([te]) => te <= m).map(([, c]) => c).join("");
         let out = "", ci = 0; for (const ch of MSG.trim()) { if (ch === " ") { if (ci < sent.length) out += " "; continue; } if (ci < sent.length) out += ch; ci++; }
         read.textContent = `▶ ${near.s.name}\nS-meter ${"█".repeat(Math.round(str * 9))}${"░".repeat(9 - Math.round(str * 9))}  S${Math.round(str * 9)}\ndecoded: ${out}${keyAt(T) ? "▮" : ""}`;
-      } else if (str > .35) read.textContent = `▶ ${near.s.name}\nS-meter ${"█".repeat(Math.round(str * 9))}${"░".repeat(9 - Math.round(str * 9))}  S${Math.round(str * 9)}\n${D.audio.on ? "listening…" : "(按 S 打开声音来收听)"}`;
-      else read.textContent = `tuning… ${f.toFixed(3)} MHz\nnoise floor\n提示：拖动 / 滚轮 / SCAN`;
+      } else if (str > .35) read.textContent = `▶ ${near.s.name}\nS-meter ${"█".repeat(Math.round(str * 9))}${"░".repeat(9 - Math.round(str * 9))}  S${Math.round(str * 9)}\n${D.audio.on ? "listening…" : D.t("sdr.listen")}`;
+      else read.textContent = `tuning… ${f.toFixed(3)} MHz\nnoise floor\n${D.t("sdr.hint")}`;
     });
   }
 
@@ -835,8 +850,8 @@
       ghosts.forEach(gh => drawRun(gh, .3)); if (run) drawRun(run, 1);
       if (run) {
         const s = run.step, l = run.tr[s - 1] || 2.4, ev = run.ev.length ? run.ev[run.ev.length - 1][1] : NaN;
-        read.textContent = `${run.r ? "LoRA r=" + run.r : "full fine-tune"} · trainable ${run.c.pct} · mem ≈ ${run.c.mem}\nstep ${s}/1000 · train ${l.toFixed(3)} · eval ${isNaN(ev) ? "—" : ev.toFixed(3)} · lr ${(lr(s) * 2e-4).toExponential(1)}${run.r === 0 && s > 700 ? "\n⚠ eval loss rising — overfitting?" : ""}`;
-      } else if (Math.random() < dt) read.textContent = "idle · 选一个秩，按 TRAIN\n（曲线为示意，不代表真实实验结果）";
+        read.textContent = `${run.r ? "LoRA r=" + run.r : "full fine-tune"} · trainable ${run.c.pct} · mem ≈ ${run.c.mem}\nstep ${s}/1000 · train ${l.toFixed(3)} · eval ${isNaN(ev) ? "—" : ev.toFixed(3)} · lr ${(lr(s) * 2e-4).toExponential(1)}${run.r === 0 && s > 700 ? "\n" + D.t("ft.over") : ""}`;
+      } else if (Math.random() < dt) read.textContent = D.t("ft.idle");
     });
   }
 
@@ -863,7 +878,7 @@
         const ox = cx - 75 * s;
         // credit card ghost
         g.setLineDash([4, 5]); g.strokeStyle = "#ffffff33"; rr(g, ox, cy - 27 * s, 85.6 * s, 54 * s, 3 * s); g.stroke(); g.setLineDash([]);
-        g.fillStyle = C.dim2; g.fillText("银行卡 85.6 × 54", ox + 4, cy - 27 * s - 6);
+        g.fillStyle = C.dim2; g.fillText(D.t("rk.card"), ox + 4, cy - 27 * s - 6);
         // AuraCore
         const ax = ox + 4 * s, ay = cy - 15.5 * s;
         g.fillStyle = "#0f3a24"; rr(g, ax, ay, 62 * s * e, 31 * s, 2 * s); g.fill(); g.strokeStyle = C.ok; g.stroke();
@@ -881,10 +896,10 @@
         g.fillStyle = C.amb; g.fillText("RK3576 · 6 TOPS NPU · 6L", rx, ry - 8);
         // coin
         const cxn = ox + 98 * s + 19 * s, cyn = cy + 32 * s;
-        read.textContent = `板面积 ${(38 * 38)} mm²，约为 AuraCore 的 ${(38 * 38 / (31 * 62) * 100).toFixed(0)}%\n目标：一张邮票大小的端侧推理节点\n工艺：嘉立创六层免费叠层 + 盘中孔`;
+        read.textContent = D.t("rk.size", 38 * 38);
       } else {
         const p = Math.min(W / 22, H / 13), cols = 8, rows = 8, gx = W * .25 - cols * p / 2, gx2 = W * .75 - cols * p / 2, gy = H / 2 - rows * p / 2 + 10;
-        g.fillStyle = C.dim; g.fillText("DOG-BONE 狗骨扇出", gx, gy - 14); g.fillStyle = C.amb; g.fillText("VIA-IN-PAD 盘中孔", gx2, gy - 14);
+        g.fillStyle = C.dim; g.fillText("DOG-BONE", gx, gy - 14); g.fillStyle = C.amb; g.fillText("VIA-IN-PAD", gx2, gy - 14);
         for (let side = 0; side < 2; side++) {
           const X0 = side ? gx2 : gx;
           for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
@@ -904,7 +919,7 @@
             if (edge && show) { g.strokeStyle = side ? C.amb : C.dim; g.lineWidth = p * .12; g.beginPath(); g.moveTo(x, y); const ox2 = i === 0 ? -p * .9 : i === cols - 1 ? p * .9 : 0, oy2 = j === 0 ? -p * .9 : j === rows - 1 ? p * .9 : 0; g.lineTo(x + ox2, y + oy2); g.stroke(); }
           }
         }
-        read.textContent = `盘中孔：过孔直接打在 BGA 焊盘上，树脂塞孔 + 电镀盖帽\n省掉狗骨占位，细间距 BGA 的内圈也能就地换层\n这是把 RK3576 压进 38 × 38 mm 的关键工艺`;
+        read.textContent = D.t("rk.fan");
       }
     });
   }
@@ -951,7 +966,7 @@
       // indicators
       const ix = W * .82, iy1 = H * .32, iy2 = H * .68, ir = Math.min(W, H) * .08;
       if (W > 600) [[iy1, th, C.hot, "INPUT"], [iy2, rot, C.sig, "OUTPUT"]].forEach(([y, a, c, n]) => { g.strokeStyle = "#ffffff22"; g.lineWidth = 1; g.beginPath(); g.arc(ix, y, ir, 0, 7); g.stroke(); g.strokeStyle = c; g.lineWidth = 2.5; g.beginPath(); g.moveTo(ix, y); g.lineTo(ix + Math.cos(a) * ir, y + Math.sin(a) * ir); g.stroke(); g.fillStyle = c; g.font = "500 10px IBM Plex Mono, monospace"; g.fillText(n, ix - ir, y + ir + 14); });
-      read.textContent = `${N} 针 / ${LOBES} 齿 → 减速比 ${LOBES}:1（示意）\n输入 ${rpm} rpm → 输出 ${(rpm / LOBES).toFixed(1)} rpm，反向\n理想扭矩 × ${LOBES}，多齿同时啮合，抗冲击`;
+      read.textContent = D.t("cyc.read", N, LOBES, rpm);
       // motor whine
       const a = D.audio;
       if (a.on && a.ctx) {
@@ -1089,7 +1104,7 @@
       const k = keys[n - start]; if (!k) return;
       S.piano(hz(n)); k.classList.add("dn"); setTimeout(() => k.classList.remove("dn"), 180);
       seq.push(n); if (seq.length > 7) seq.shift();
-      if (seq.join() === twinkle.join()) { D.print && D.print(`<span class="p">★</span> 小星星解锁 · keep practicing!`); S.chord([1047, 1319, 1568, 2093], .05, "sine", .06); el.animate([{ filter: "drop-shadow(0 0 0 #ffb21a)" }, { filter: "drop-shadow(0 0 30px #ffb21a)" }, { filter: "none" }], 1200); }
+      if (seq.join() === twinkle.join()) { D.print && D.print(`<span class="p">★</span> ${D.t("pi.twinkle")}`); S.chord([1047, 1319, 1568, 2093], .05, "sine", .06); el.animate([{ filter: "drop-shadow(0 0 0 #ffb21a)" }, { filter: "drop-shadow(0 0 30px #ffb21a)" }, { filter: "none" }], 1200); }
     };
     // after the riff: play the opening of Twinkle Twinkle (traditional) once
     let twinkled = false;
@@ -1121,7 +1136,7 @@
       try {
         const r = await fetch("https://api.github.com/users/dreaming66"); if (!r.ok) throw 0; const j = await r.json();
         el.textContent = `public_repos: ${j.public_repos} · followers: ${j.followers} · since ${String(j.created_at).slice(0, 10)}`;
-      } catch { el.textContent = "rate-limited · 去 github.com/dreaming66 看看"; }
+      } catch { el.textContent = D.t("gh.rate"); }
     });
   }
 

@@ -13,7 +13,7 @@
   // canvases live on ink "instrument screens" sitting on paper
   const C = { bg: "#141412", bg2: "#1c1c1a", bg3: "#24241f", fg: "#f1ede3", dim: "#9a968a", dim2: "#5f5c55", line: "#ffffff16", amb: "#ff4f1f", sig: "#8fb2ff", hot: "#ff2e4d", ok: "#7dff9a", sun: "#f2c230", paper: "#f1ede3", ink: "#141412", ver: "#ff4f1f", cob: "#2747ff" };
 
-  const D = window.D66 = { $, $$, clamp, lerp, rand, DPR, fine, C, still: matchMedia("(prefers-reduced-motion: reduce)").matches, mx: -999, my: -999, T: 0 };
+  const D = window.D66 = { t: (...a) => window.I18N ? I18N.t(...a) : a[0], $, $$, clamp, lerp, rand, DPR, fine, C, still: matchMedia("(prefers-reduced-motion: reduce)").matches, mx: -999, my: -999, T: 0 };
 
   /* ---------------- loops ---------------- */
   const loops = [];
@@ -266,7 +266,7 @@
   const cio = new IntersectionObserver(es => es.forEach(e => {
     if (!e.isIntersecting) return; const el = e.target; cio.unobserve(el);
     const to = +el.dataset.to, pre = el.dataset.prefix || "", suf = el.dataset.suffix || "", t0 = performance.now(), dur = D.still ? 1 : 1800;
-    const run = now => { const k = clamp((now - t0) / dur, 0, 1); el.textContent = pre + (k >= 1 ? to : Math.round(to * (1 - Math.pow(2, -10 * k)))) + suf; if (k < 1) requestAnimationFrame(run); else S.blip(880); };
+    const run = now => { const k = clamp((now - t0) / dur, 0, 1); el.textContent = pre + (k >= 1 ? to : Math.round(to * (1 - Math.pow(2, -10 * k)))) + suf; if (k < 1) requestAnimationFrame(run); else { el.dataset.done = 1; S.blip(880); } };
     requestAnimationFrame(run);
   }), { threshold: .4 });
   $$(".count").forEach(el => cio.observe(el));
@@ -313,8 +313,14 @@
   })();
 
   // tab title
-  const title0 = document.title;
-  document.addEventListener("visibilitychange", () => { document.title = document.hidden ? "📡 信号丢失… · DRM-66" : title0; });
+  document.addEventListener("visibilitychange", () => { document.title = document.hidden ? "📡 … · dreaming66" : D.t("doc.title"); });
+
+  /* language chip + things that need a nudge after switching */
+  $("#langBtn").addEventListener("click", () => { I18N.next(); S.blip(880); });
+  document.addEventListener("d66lang", () => {
+    $$(".count").forEach(el => { if (el.dataset.done) el.textContent = (el.dataset.prefix || "") + el.dataset.to + (el.dataset.suffix || ""); });
+    $$("[data-glitch]").forEach(t => { t.classList.add("glitching"); setTimeout(() => t.classList.remove("glitching"), 700); });
+  });
 
   // fps + main loop
   let last = performance.now(), fa = 0, fn = 0;
@@ -333,16 +339,8 @@
   const print = D.print = h => { tb.insertAdjacentHTML("beforeend", h + "\n"); tb.scrollTop = tb.scrollHeight; };
   const go = sel => { setTerm(false); $(sel).scrollIntoView({ behavior: "smooth" }); };
   const cmds = {
-    help: () => `<span class="p">commands</span>
-  whoami · neofetch · ls · uname -a
-  build      去焊板子          aura     看 AuraCore 集群
-  kubectl get nodes            sdr      去听信标
-  cq         用摩尔斯拍发呼号  play     弹一段吉他
-  infer      推理实验室        matrix   进入矩阵
-  xray       透视模式          sound    开/关声音
-  sudo hire-me · clear · exit`,
-    whoami: () => `<span class="g">dreaming66</span> · maker / AI Infra engineer · DE <span class="p">BH3FWY</span>
-画 PCB、编内核、跑大模型；在家手搓人形机器人、画 SDR 板子、弹电吉他。`,
+    help: () => D.t("term.help"),
+    whoami: () => D.t("term.whoami"),
     aura: () => { go("#aura"); return "→ §03 AuraCore cluster"; },
     "kubectl get nodes": () => `NAME            STATUS   ROLES                  ARCH
 auracore-head   <span class="g">Ready</span>    control-plane,master   arm64
@@ -360,23 +358,27 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
               RF: ZYNQ-7010 + AD936x · BH3FWY
               Strings: electric · J-rock · Keys: learning`,
     ls: () => `auracore/  rk3576/  homelab/  inference/  robot/  sdr/  archive/  guitar.wav  <span class="d">.secrets</span>`,
-    "cat .secrets": () => `<span class="r">permission denied</span> · 隐私已抹除`,
+    "cat .secrets": () => `<span class="r">permission denied</span> · redacted`,
     "uname -a": () => `Linux drm-66 6.6.66-dreaming #1 SMP PREEMPT armv7l GNU/Linux`,
     build: () => { go("#build"); return "→ §02 hardware bring-up"; },
     sdr: () => { go("#exp-sdr"); document.dispatchEvent(new CustomEvent("d66tune", { detail: 145.66 })); return "→ tuning 145.660 MHz…"; },
     infer: () => { go("#lab"); return "→ §03 inference lab"; },
-    cq: () => { if (!A.on) return `<span class="r">sound is off</span> · 先输入 sound`; const d = S.morse("CQ CQ DE BH3FWY K", 22); return `-.-. --.- / -.-. --.- / -.. . / -... .... ...-- ..-. .-- -.-- / -.-  <span class="d">(${d.toFixed(1)}s)</span>`; },
-    play: () => { if (!A.on) return `<span class="r">sound is off</span> · 先输入 sound`; document.dispatchEvent(new Event("d66riff")); return "♪ ♫"; },
+    cq: () => { if (!A.on) return D.t("term.nosound"); const d = S.morse("CQ CQ DE BH3FWY K", 22); return `-.-. --.- / -.-. --.- / -.. . / -... .... ...-- ..-. .-- -.-- / -.-  <span class="d">(${d.toFixed(1)}s)</span>`; },
+    play: () => { if (!A.on) return D.t("term.nosound"); document.dispatchEvent(new Event("d66riff")); return "♪ ♫"; },
     matrix: () => { D.toggleMatrix(); return D.matrixOn ? "wake up, neo…" : "back."; },
     xray: () => { setX(!document.body.classList.contains("xray")); return "x-ray toggled."; },
     sound: () => { D.setSound(!A.on); return A.on ? "sound on." : "sound off."; },
-    "sudo hire-me": () => `<span class="p">[sudo]</span> password for visitor: ********\n<span class="g">✔ access granted.</span> 请移步 <a href="https://github.com/dreaming66" target="_blank" rel="noopener" style="text-decoration:underline">github.com/dreaming66</a>，期待交流。`,
+    "sudo hire-me": () => `<span class="p">[sudo]</span> password for visitor: ********\n<span class="g">✔ access granted.</span> ${D.t("term.hire")}`,
+    "lang zh": () => { I18N.set("zh"); return "language → 中文"; },
+    "lang en": () => { I18N.set("en"); return "language → English"; },
+    "lang ja": () => { I18N.set("ja"); return "language → 日本語"; },
+    lang: () => `lang zh | en | ja · now: ${I18N.lang}`,
     sudo: () => `visitor is not in the sudoers file. This incident will be reported.`,
     clear: () => { tb.innerHTML = ""; return null; },
     exit: () => { setTerm(false); return null; },
   };
   const setTerm = open => { term.classList.toggle("open", open); term.setAttribute("aria-hidden", !open); S.whoosh(open); if (open) setTimeout(() => ti.focus(), 40); };
-  print(`<span class="d">DRM-66 tty0 · 输入</span> <span class="p">help</span>`);
+  print(`<span class="d">${D.t("term.hello")}</span> <span class="p">help</span>`);
   $("#termBtn").addEventListener("click", () => setTerm(!term.classList.contains("open")));
   $("#termClose").addEventListener("click", () => setTerm(false));
   $("#termForm").addEventListener("submit", e => {
@@ -384,7 +386,7 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
     hist.unshift(v); hi = -1; const safe = v.replace(/[<>&]/g, "");
     print(`<span class="p">$</span> ${safe}`);
     const fn = cmds[v.toLowerCase()];
-    const r = fn ? fn() : `<span class="r">command not found:</span> ${safe} · 试试 <span class="p">help</span>`;
+    const r = fn ? fn() : `${D.t("term.notfound")} ${safe} · ${D.t("term.try")} <span class="p">help</span>`;
     if (r) print(r);
   });
   ti.addEventListener("keydown", e => {

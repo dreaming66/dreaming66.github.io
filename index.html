@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="gated">
-  <a class="skip" href="#main">跳到正文</a>
+  <a class="skip" href="#main" data-i18n="skip">跳到正文</a>
 
   <!-- ===== LOADER / GATE ===== -->
   <div class="gate" id="gate">
@@ -33,27 +33,28 @@
     <a class="brand magnetic" href="#top" data-cursor="home"><span class="brand-mark">66</span><span>dreaming<b>.</b></span></a>
     <div class="hdr-mid mono"><span class="pulse"></span><span id="clock">UTC+8 --:--:--</span><span class="sep">/</span><span id="fps">— fps</span><span class="sep">/</span><span>DE BH3FWY</span></div>
     <div class="hdr-act">
-      <button class="chip mono magnetic" id="sndBtn" aria-pressed="false" title="声音 (S)" data-cursor="sound">♪ <b>OFF</b></button>
-      <button class="chip mono magnetic" id="xrayBtn" aria-pressed="false" title="X 光透视 (X)" data-cursor="x-ray">X</button>
-      <button class="chip mono magnetic" id="motBtn" aria-pressed="false" title="暂停动效" data-cursor="pause">Ⅱ <b>ON</b></button>
-      <button class="chip mono magnetic" id="termBtn" title="终端 (`)" data-cursor="shell">&gt;_</button>
-      <button class="menu-btn magnetic" id="menuBtn" aria-haspopup="dialog" aria-controls="menu" data-cursor="menu"><span>菜单</span><i><b></b><b></b></i></button>
+      <button class="chip mono magnetic" id="sndBtn" aria-pressed="false" title="声音 (S)" data-i18n-attr="title:tt.snd" data-cursor="sound">♪ <b>OFF</b></button>
+      <button class="chip mono magnetic" id="xrayBtn" aria-pressed="false" title="X 光透视 (X)" data-i18n-attr="title:tt.xray" data-cursor="x-ray">X</button>
+      <button class="chip mono magnetic" id="motBtn" aria-pressed="false" title="暂停动效" data-i18n-attr="title:tt.mot" data-cursor="pause">Ⅱ <b>ON</b></button>
+      <button class="chip mono magnetic" id="termBtn" title="终端 (`)" data-i18n-attr="title:tt.term" data-cursor="shell">&gt;_</button>
+      <button class="chip mono magnetic lang-chip" id="langBtn" title="语言 / Language / 言語" data-i18n-attr="title:tt.lang" data-cursor="lang">中</button>
+      <button class="menu-btn magnetic" id="menuBtn" aria-haspopup="dialog" aria-controls="menu" data-cursor="menu"><span data-i18n="menu">菜单</span><i><b></b><b></b></i></button>
     </div>
   </header>
 
   <!-- ===== MENU ===== -->
   <nav class="menu" id="menu" role="dialog" aria-label="站点导航" aria-hidden="true">
     <div class="menu-inner">
-      <a href="#build" data-i="02"><span>手搓</span><em>Bring-up</em></a>
-      <a href="#aura" data-i="03"><span>AuraCore 集群</span><em>Cluster</em></a>
-      <a href="#lab" data-i="04"><span>推理实验室</span><em>Inference</em></a>
-      <a href="#wip" data-i="05"><span>正在折腾</span><em>WIP</em></a>
-      <a href="#archive" data-i="06"><span>档案馆</span><em>Archive</em></a>
-      <a href="#music" data-i="07"><span>六根弦</span><em>Strings</em></a>
-      <a href="#log" data-i="08"><span>经历</span><em>git log</em></a>
-      <a href="#ping" data-i="09"><span>来找我</span><em>Say hi</em></a>
+      <a href="#build" data-i="02"><span data-i18n="m.build">手搓</span><em>Bring-up</em></a>
+      <a href="#aura" data-i="03"><span data-i18n="m.aura">AuraCore 集群</span><em>Cluster</em></a>
+      <a href="#lab" data-i="04"><span data-i18n="m.lab">推理实验室</span><em>Inference</em></a>
+      <a href="#wip" data-i="05"><span data-i18n="m.wip">正在折腾</span><em>WIP</em></a>
+      <a href="#archive" data-i="06"><span data-i18n="m.archive">档案馆</span><em>Archive</em></a>
+      <a href="#music" data-i="07"><span data-i18n="m.music">六根弦</span><em>Strings</em></a>
+      <a href="#log" data-i="08"><span data-i18n="m.log">经历</span><em>git log</em></a>
+      <a href="#ping" data-i="09"><span data-i18n="m.ping">来找我</span><em>Say hi</em></a>
     </div>
-    <p class="menu-foot mono">按 <kbd>`</kbd> 打开终端 · <kbd>S</kbd> 声音 · <kbd>X</kbd> 透视 · 试试 ↑↑↓↓←→←→BA</p>
+    <p class="menu-foot mono" data-i18n="menu.foot">按 <kbd>`</kbd> 打开终端 · <kbd>S</kbd> 声音 · <kbd>X</kbd> 透视 · 试试 ↑↑↓↓←→←→BA</p>
   </nav>
 
   <main id="main">
@@ -62,55 +63,55 @@
       <canvas id="ink" class="ink" aria-hidden="true"></canvas>
       <div class="hero-meta mono"><span>PART NO. DRM-66</span><span>MAKER / AI INFRA / MUSICIAN</span><span>EST. 2021 → ∞</span></div>
       <div class="hero-copy">
-        <p class="hero-kicker reveal-up"><span class="star">✳</span> 你好，我是 Ruimin：画 PCB、编内核、<span class="hl">跑大模型</span>的人。</p>
+        <p class="hero-kicker reveal-up" data-i18n="hero.kicker"><span class="star">✳</span> 你好，我是 Ruimin：画 PCB、编内核、<span class="hl">跑大模型</span>的人。</p>
         <h1 class="hero-name" aria-label="dreaming66">
           <span class="hn-row"><span class="split" data-text="dream">dream</span><span class="hn-serif split" data-text="ing">ing</span></span>
-          <span class="hn-row hn-row2"><span class="hn-num split" data-text="66">66</span><span class="hn-tag mono">/ ˈdriːmɪŋ /<br>n. 把东西亲手造出来的执念</span></span>
+          <span class="hn-row hn-row2"><span class="hn-num split" data-text="66">66</span><span class="hn-tag mono" data-i18n="hero.tag">/ ˈdriːmɪŋ /<br>n. 把东西亲手造出来的执念</span></span>
         </h1>
         <div class="hero-bottom reveal-up">
-          <p class="hero-desc">从 <b>H616 开发板</b>到 <b>PD 分离</b>，从<b>摆线关节</b>到 <b>SDR</b>。<br>我关心一个系统从焊盘到 token 的每一层。</p>
+          <p class="hero-desc" data-i18n="hero.desc">从 <b>H616 开发板</b>到 <b>PD 分离</b>，从<b>摆线关节</b>到 <b>SDR</b>。<br>我关心一个系统从焊盘到 token 的每一层。</p>
           <div class="hero-cta">
-            <a class="pill ink-pill magnetic" href="#build" data-cursor="go"><span>看看我做的东西</span><span>↘</span></a>
+            <a class="pill ink-pill magnetic" href="#build" data-cursor="go"><span data-i18n="hero.cta">看看我做的东西</span><span>↘</span></a>
             <a class="pill magnetic" href="https://github.com/dreaming66" target="_blank" rel="noopener" data-cursor="open"><span>GitHub</span><span>↗</span></a>
           </div>
         </div>
       </div>
       <a class="badge-rot magnetic" href="#aura" data-cursor="see" aria-label="AuraCore 集群"><svg viewBox="0 0 200 200" aria-hidden="true"><defs><path id="circ" d="M100,100 m-80,0 a80,80 0 1,1 160,0 a80,80 0 1,1 -160,0"/></defs><text><textPath href="#circ">AURACORE ✳ RK3576 ✳ BHL ✳ ZYNQ SDR ✳ DE BH3FWY ✳ </textPath></text></svg><b>66</b></a>
-      <p class="hero-hint mono">点击画面，投下一滴墨 · CLICK TO DROP INK</p>
+      <p class="hero-hint mono" data-i18n="hero.hint">点击画面，投下一滴墨 · CLICK TO DROP INK</p>
       <div class="scroll-cue mono"><span>SCROLL</span><i></i></div>
     </section>
 
     <div class="marquee" aria-hidden="true"><div class="mq-track"><span>SOLDER ✳ DEVICE TREE ✳ U-BOOT ✳ K3S ✳ PREFILL ✳ DECODE ✳ KV CACHE ✳ CYCLOID ✳ FOC ✳ MJX ✳ ZYNQ ✳ OVERDRIVE ✳ </span><span>SOLDER ✳ DEVICE TREE ✳ U-BOOT ✳ K3S ✳ PREFILL ✳ DECODE ✳ KV CACHE ✳ CYCLOID ✳ FOC ✳ MJX ✳ ZYNQ ✳ OVERDRIVE ✳ </span></div></div>
-    <div class="marquee m2" aria-hidden="true"><div class="mq-track"><span>焊锡 ✳ 张量 ✳ 设备树 ✳ 摆线 ✳ 瀑布图 ✳ 失真 ✳ 盘中孔 ✳ 注意力 ✳ 呼号 BH3FWY ✳ </span><span>焊锡 ✳ 张量 ✳ 设备树 ✳ 摆线 ✳ 瀑布图 ✳ 失真 ✳ 盘中孔 ✳ 注意力 ✳ 呼号 BH3FWY ✳ </span></div></div>
+    <div class="marquee m2" aria-hidden="true"><div class="mq-track"><span data-i18n="mq2">焊锡 ✳ 张量 ✳ 设备树 ✳ 摆线 ✳ 瀑布图 ✳ 失真 ✳ 盘中孔 ✳ 注意力 ✳ 呼号 BH3FWY ✳ </span><span data-i18n="mq2">焊锡 ✳ 张量 ✳ 设备树 ✳ 摆线 ✳ 瀑布图 ✳ 失真 ✳ 盘中孔 ✳ 注意力 ✳ 呼号 BH3FWY ✳ </span></div></div>
 
     <!-- ===== SPEC ===== -->
     <section class="spec" id="spec" data-sec>
       <div class="sec-h">
         <div class="sec-tag mono"><span>01</span> GENERAL DESCRIPTION</div>
-        <h2 class="sec-t" data-glitch>概述</h2>
+        <h2 class="sec-t" data-glitch data-i18n="spec.t">概述</h2>
       </div>
       <div class="gen">
         <div class="gen-meta mono"><span>model: drm-66-self</span><span>temperature: 0.7</span><span>top_p: 0.9</span><span id="genStat">tokens: 0</span></div>
         <p class="gen-out" id="genOut"></p>
-        <p class="gen-hint mono">↑ 流式生成。悬停任意 token 查看它的（虚构）logprob。</p>
+        <p class="gen-hint mono" data-i18n="spec.hint">↑ 流式生成。悬停任意 token 查看它的（虚构）logprob。</p>
       </div>
       <div class="stats">
-        <div class="stat"><b class="count" data-to="5" data-suffix=" 片">0</b><span>自研 AuraCore 组成 k3s 集群</span></div>
-        <div class="stat"><b class="count" data-to="20" data-prefix="−" data-suffix="%">0</b><span>核心模型并发推理延迟</span></div>
-        <div class="stat"><b class="count" data-to="10" data-suffix="+">0</b><span>款大模型生产级部署</span></div>
-        <div class="stat"><b class="count" data-to="38" data-suffix=" mm">0</b><span>下一块板子的边长</span></div>
+        <div class="stat"><b class="count" data-to="5" data-suffix=" 片" data-i18n-attr="data-suffix:st1u">0</b><span data-i18n="st1">自研 AuraCore 组成 k3s 集群</span></div>
+        <div class="stat"><b class="count" data-to="20" data-prefix="−" data-suffix="%">0</b><span data-i18n="st2">核心模型并发推理延迟</span></div>
+        <div class="stat"><b class="count" data-to="10" data-suffix="+">0</b><span data-i18n="st3">款大模型生产级部署</span></div>
+        <div class="stat"><b class="count" data-to="38" data-suffix=" mm">0</b><span data-i18n="st4">下一块板子的边长</span></div>
       </div>
       <div class="feat">
         <div class="feat-c"><span class="mono">FEATURES</span>
           <ul>
-            <li>自研全志 H616 SBC「AuraCore」（六层板）与五槽 USB 组网集群底座，跑 k3s</li>
-            <li>原理图、PCB、手工焊接、设备树、U-Boot / Kernel / Buildroot 全流程</li>
-            <li>在研：RK3576 SBC，38 × 38 mm，冲 6 TOPS NPU 端侧推理</li>
-            <li>STM32 · ESP32 · Arduino 等各类微控制器</li>
-            <li>服务器部署 · 虚拟化 · Docker · K8s · 软路由</li>
-            <li>大模型推理 · AI Infra · PD 分离</li>
-            <li>Agent · MCP · Graph-RAG</li>
-            <li>电吉他（日式摇滚）；钢琴学习中</li>
+            <li data-i18n="f1">自研全志 H616 SBC「AuraCore」（六层板）与五槽 USB 组网集群底座，跑 k3s</li>
+            <li data-i18n="f2">原理图、PCB、手工焊接、设备树、U-Boot / Kernel / Buildroot 全流程</li>
+            <li data-i18n="f3">在研：RK3576 SBC，38 × 38 mm，冲 6 TOPS NPU 端侧推理</li>
+            <li data-i18n="f4">STM32 · ESP32 · Arduino 等各类微控制器</li>
+            <li data-i18n="f5">服务器部署 · 虚拟化 · Docker · K8s · 软路由</li>
+            <li data-i18n="f6">大模型推理 · AI Infra · PD 分离</li>
+            <li data-i18n="f7">Agent · MCP · Graph-RAG</li>
+            <li data-i18n="f8">电吉他（日式摇滚）；钢琴学习中</li>
           </ul>
         </div>
         <div class="feat-c"><span class="mono">ABSOLUTE MAXIMUM RATINGS</span>
@@ -122,7 +123,7 @@
             <div><dt>Guitar</dt><dd style="--v:.72"></dd></div>
             <div><dt>Sleep</dt><dd style="--v:.28" class="warnbar"></dd></div>
           </dl>
-          <p class="mono fnote">* 超过绝对最大额定值可能导致永久性熬夜。</p>
+          <p class="mono fnote" data-i18n="spec.fnote">* 超过绝对最大额定值可能导致永久性熬夜。</p>
         </div>
       </div>
     </section>
@@ -131,8 +132,8 @@
     <section class="build" id="build" data-sec>
       <div class="sec-h">
         <div class="sec-tag mono"><span>02</span> HARDWARE BRING-UP</div>
-        <h2 class="sec-t" data-glitch>手搓，<em>从一块空板开始</em></h2>
-        <p class="sec-s">AuraCore 是我从零画的全志 H616 开发板：原理图、六层 PCB、手工焊接，再配设备树、编 U-Boot、Kernel、Buildroot，直到串口里出现登录提示符。下面是它的简化布局，交给你：<b>把所有焊盘焊上</b>（点击或拖过焊盘），然后上电。</p>
+        <h2 class="sec-t" data-glitch data-i18n="build.t">手搓，<em>从一块空板开始</em></h2>
+        <p class="sec-s" data-i18n="build.s">AuraCore 是我从零画的全志 H616 开发板：原理图、六层 PCB、手工焊接，再配设备树、编 U-Boot、Kernel、Buildroot，直到串口里出现登录提示符。下面是它的简化布局，交给你：<b>把所有焊盘焊上</b>（点击或拖过焊盘），然后上电。</p>
       </div>
       <ol class="flow mono" id="flow">
         <li data-s="0">SCHEMATIC</li><li data-s="1">PCB LAYOUT</li><li data-s="2">SOLDER</li><li data-s="3">DEVICE TREE</li><li data-s="4">U-BOOT</li><li data-s="5">KERNEL</li><li data-s="6">BUILDROOT</li><li data-s="7">LOGIN</li>
@@ -148,16 +149,16 @@
       </div>
 
       <div class="mcu-row">
-        <div class="mcu" data-mcu="stm32"><div class="chip-svg"><canvas class="blink" data-color="#36e2ff" data-rate="1"></canvas></div><b class="mono">STM32</b><span>寄存器 / HAL · 外设驱动 · RTOS</span></div>
-        <div class="mcu" data-mcu="esp32"><div class="chip-svg"><canvas class="blink" data-color="#a4ff5e" data-rate="2.2"></canvas></div><b class="mono">ESP32</b><span>Wi-Fi / BLE · IoT 小玩意</span></div>
-        <div class="mcu" data-mcu="arduino"><div class="chip-svg"><canvas class="blink" data-color="#ffb21a" data-rate=".6"></canvas></div><b class="mono">ARDUINO</b><span>快速原型 · 一切从 blink 开始</span></div>
+        <div class="mcu" data-mcu="stm32"><div class="chip-svg"><canvas class="blink" data-color="#36e2ff" data-rate="1"></canvas></div><b class="mono">STM32</b><span data-i18n="mcu1">寄存器 / HAL · 外设驱动 · RTOS</span></div>
+        <div class="mcu" data-mcu="esp32"><div class="chip-svg"><canvas class="blink" data-color="#a4ff5e" data-rate="2.2"></canvas></div><b class="mono">ESP32</b><span data-i18n="mcu2">Wi-Fi / BLE · IoT 小玩意</span></div>
+        <div class="mcu" data-mcu="arduino"><div class="chip-svg"><canvas class="blink" data-color="#ffb21a" data-rate=".6"></canvas></div><b class="mono">ARDUINO</b><span data-i18n="mcu3">快速原型 · 一切从 blink 开始</span></div>
       </div>
 
       <div class="rack-wrap">
         <div class="rack-txt">
           <span class="sec-k mono">HOMELAB</span>
-          <h3>家里的那台机柜</h3>
-          <p>服务器部署、虚拟化、Docker、K8s、软路由——工作里用的东西，先在自己家里折腾一遍。悬停设备看状态，点击发一个包看它怎么走。</p>
+          <h3 data-i18n="rack.t">家里的那台机柜</h3>
+          <p data-i18n="rack.s">服务器部署、虚拟化、Docker、K8s、软路由——工作里用的东西，先在自己家里折腾一遍。悬停设备看状态，点击发一个包看它怎么走。</p>
         </div>
         <div class="stage rack-stage"><canvas id="rack" aria-label="homelab 机柜"></canvas></div>
       </div>
@@ -167,8 +168,8 @@
     <section class="aura" id="aura" data-sec>
       <div class="sec-h">
         <div class="sec-tag mono"><span>03</span> AURACORE CLUSTER</div>
-        <h2 class="sec-t" data-glitch>五片 AuraCore，<em>插成一个集群</em></h2>
-        <p class="sec-s">底座上有五个竖直的 USB-C 插槽：一片做 head + 路由，四片做从节点，从节点以 USB gadget 以太网接入底座的 CH339F，由 head 做路由，组网跑 k3s。下面是从 EasyEDA 导出的<b>真实 3D 模型</b>：拖动旋转、滚轮缩放，按 ASSEMBLE 看它们插上去。</p>
+        <h2 class="sec-t" data-glitch data-i18n="aura.t">五片 AuraCore，<em>插成一个集群</em></h2>
+        <p class="sec-s" data-i18n="aura.s">底座上有五个竖直的 USB-C 插槽：一片做 head + 路由，四片做从节点，从节点以 USB gadget 以太网接入底座的 CH339F，由 head 做路由，组网跑 k3s。下面是从 EasyEDA 导出的<b>真实 3D 模型</b>：拖动旋转、滚轮缩放，按 ASSEMBLE 看它们插上去。</p>
       </div>
       <div class="aura-grid">
         <div class="stage aura-stage">
@@ -180,28 +181,28 @@
           <table class="dt mono">
             <tr><th colspan="2">AuraCore V2.0</th></tr>
             <tr><td>SoC</td><td>Allwinner H616 · 4× Cortex-A53</td></tr>
-            <tr><td>DRAM</td><td>DDR3 · 单颗 x16 · 512 MB</td></tr>
+            <tr><td>DRAM</td><td data-i18n="dt.dram">DDR3 · 单颗 x16 · 512 MB</td></tr>
             <tr><td>Storage</td><td>4 GB eMMC + microSD</td></tr>
             <tr><td>Wireless</td><td>RTL8821CU · Wi-Fi 5 / BT</td></tr>
             <tr><td>PMIC</td><td>AXP313A</td></tr>
             <tr><td>I/O</td><td>3× USB-C · HDMI · FEL</td></tr>
-            <tr><td>PCB</td><td>6 层 · 31 × 60 mm</td></tr>
+            <tr><td>PCB</td><td data-i18n="dt.pcb">6 层 · 31 × 60 mm</td></tr>
             <tr><th colspan="2">Cluster Base</th></tr>
             <tr><td>Hub</td><td>CH339F · USB Hub + Ethernet</td></tr>
-            <tr><td>Slots</td><td>5× 竖直 USB-C · 1 head + 4 workers</td></tr>
-            <tr><td>Power</td><td>DC-in · SY8113B · 每槽储能</td></tr>
-            <tr><td>Stack</td><td>USB gadget 以太网 → head 路由 → k3s</td></tr>
+            <tr><td>Slots</td><td data-i18n="dt.slots">5× 竖直 USB-C · 1 head + 4 workers</td></tr>
+            <tr><td>Power</td><td data-i18n="dt.power">DC-in · SY8113B · 每槽储能</td></tr>
+            <tr><td>Stack</td><td data-i18n="dt.stack">USB gadget 以太网 → head 路由 → k3s</td></tr>
           </table>
           <ul class="bring mono">
-            <li class="ok">DDR 一板跑通</li>
-            <li class="ok">mainline U-Boot / Linux 正常启动</li>
-            <li class="bad">全志 BSP 下内存异常：初步定位在启动阶段的 DDR training，排查中</li>
+            <li class="ok" data-i18n="br1">DDR 一板跑通</li>
+            <li class="ok" data-i18n="br2">mainline U-Boot / Linux 正常启动</li>
+            <li class="bad" data-i18n="br3">全志 BSP 下内存异常：初步定位在启动阶段的 DDR training，排查中</li>
           </ul>
         </div>
       </div>
       <div class="photos">
-        <figure><img draggable="false" src="assets/img/auracore-front.jpg" loading="lazy" alt="AuraCore V2.0 工程样板正面"><figcaption class="mono">AuraCore V2.0 · Engineering Sample · TOP</figcaption></figure>
-        <figure><img draggable="false" src="assets/img/auracore-back.jpg" loading="lazy" alt="AuraCore 背面的 0402 阻容"><figcaption class="mono">BOTTOM · 0402 阻容，手工焊接</figcaption></figure>
+        <figure><img draggable="false" src="assets/img/auracore-front.jpg" loading="lazy" alt="AuraCore V2.0 工程样板正面" data-i18n-attr="alt:alt.front"><figcaption class="mono">AuraCore V2.0 · Engineering Sample · TOP</figcaption></figure>
+        <figure><img draggable="false" src="assets/img/auracore-back.jpg" loading="lazy" alt="AuraCore 背面的 0402 阻容" data-i18n-attr="alt:alt.back"><figcaption class="mono" data-i18n="ph2">BOTTOM · 0402 阻容，手工焊接</figcaption></figure>
       </div>
     </section>
 
@@ -209,15 +210,15 @@
     <section class="lab" id="lab" data-sec>
       <div class="sec-h">
         <div class="sec-tag mono"><span>04</span> INFERENCE LAB</div>
-        <h2 class="sec-t" data-glitch>推理实验室</h2>
-        <p class="sec-s">本职工作：部署、调优大模型推理。四个小实验，滚到哪里就自动演示到哪里。</p>
+        <h2 class="sec-t" data-glitch data-i18n="lab.t">推理实验室</h2>
+        <p class="sec-s" data-i18n="lab.s">本职工作：部署、调优大模型推理。四个小实验，滚到哪里就自动演示到哪里。</p>
       </div>
 
       <article class="exp" data-exp id="exp-pd">
         <header class="exp-h">
           <span class="mono tag">FIG.1</span>
-          <h3>Prefill / Decode 分离</h3>
-          <p>同一张卡既做 Prefill 又做 Decode 时，新请求一到，正在吐字的序列就得停下来。拆到不同节点、用 KV Cache 池（Mooncake）中转，decode 就能匀速输出。切换模式，看 TPOT 和抖动的变化。</p>
+          <h3 data-i18n="pd.t">Prefill / Decode 分离</h3>
+          <p data-i18n="pd.p">同一张卡既做 Prefill 又做 Decode 时，新请求一到，正在吐字的序列就得停下来。拆到不同节点、用 KV Cache 池（Mooncake）中转，decode 就能匀速输出。切换模式，看 TPOT 和抖动的变化。</p>
           <div class="ctl mono">
             <div class="tog" role="group" aria-label="部署模式"><button class="on" data-mode="disagg">DISAGG</button><button data-mode="coloc">COLOCATED</button></div>
             <label class="sl">LOAD<input type="range" id="pdLoad" min="1" max="10" value="5"></label>
@@ -235,8 +236,8 @@
       <article class="exp" data-exp id="exp-npu">
         <header class="exp-h">
           <span class="mono tag">FIG.2</span>
-          <h3>NPU 阵列示波</h3>
-          <p>百卡级集群的抽象切片：每格一张卡，亮度是利用率。触发 AllReduce，听一次集合通信沿环跑过 12 个节点；悬停读单卡状态。</p>
+          <h3 data-i18n="npu.t">NPU 阵列示波</h3>
+          <p data-i18n="npu.p">百卡级集群的抽象切片：每格一张卡，亮度是利用率。触发 AllReduce，听一次集合通信沿环跑过 12 个节点；悬停读单卡状态。</p>
           <div class="ctl mono"><button class="act" id="npuRing">▶ ALLREDUCE</button><button class="act" id="npuStorm">⚡ BURST</button></div>
           <pre class="readout mono" id="npuRead">hover a card…</pre>
         </header>
@@ -246,8 +247,8 @@
       <article class="exp" data-exp id="exp-mcp">
         <header class="exp-h">
           <span class="mono tag">FIG.3</span>
-          <h3>REST → MCP 编译器</h3>
-          <p>存量接口千千万，不该为每个智能体重写一遍适配。工具平台读取接口描述，自动生成 MCP Tool 定义，并统一注册、鉴权与分发。（示例接口均为虚构）</p>
+          <h3 data-i18n="mcp.t">REST → MCP 编译器</h3>
+          <p data-i18n="mcp.p">存量接口千千万，不该为每个智能体重写一遍适配。工具平台读取接口描述，自动生成 MCP Tool 定义，并统一注册、鉴权与分发。（示例接口均为虚构）</p>
           <div class="ctl mono"><button class="act" id="mcpNext">▶ COMPILE NEXT</button></div>
         </header>
         <div class="stage mcp"><pre class="code" id="mcpIn"></pre><div class="arrow mono" aria-hidden="true"><i></i>compile</div><pre class="code out" id="mcpOut"></pre></div>
@@ -256,8 +257,8 @@
       <article class="exp" data-exp id="exp-graph">
         <header class="exp-h">
           <span class="mono tag">FIG.4</span>
-          <h3>威胁图谱 · Graph-RAG</h3>
-          <p>纯向量检索答不了“这个 IP 背后是谁”。把情报写进图谱，让智能体在图库、向量库、关系库之间路由。拖拽节点；“六度扩展”会从攻击者逐跳展开。</p>
+          <h3 data-i18n="g.t">威胁图谱 · Graph-RAG</h3>
+          <p data-i18n="g.p">纯向量检索答不了“这个 IP 背后是谁”。把情报写进图谱，让智能体在图库、向量库、关系库之间路由。拖拽节点；“六度扩展”会从攻击者逐跳展开。</p>
           <div class="ctl mono"><button class="act" id="gExpand">▶ EXPAND 6 HOPS</button></div>
           <ul class="legend mono"><li style="--c:var(--hot)">Attacker</li><li style="--c:var(--sig)">IP</li><li style="--c:var(--fg)">Domain</li><li style="--c:var(--ok)">Server</li><li style="--c:var(--amb)">Tag</li></ul>
         </header>
@@ -269,17 +270,17 @@
     <section class="wip" id="wip" data-sec>
       <div class="sec-h">
         <div class="sec-tag mono"><span>05</span> WORK IN PROGRESS</div>
-        <h2 class="sec-t" data-glitch>正在折腾</h2>
-        <p class="sec-s">还没做完、但每周都在推进的几件事。</p>
+        <h2 class="sec-t" data-glitch data-i18n="wip.t">正在折腾</h2>
+        <p class="sec-s" data-i18n="wip.s">还没做完、但每周都在推进的几件事。</p>
       </div>
 
       <article class="exp" data-exp id="exp-rk">
         <header class="exp-h">
           <span class="mono tag">WIP.0</span>
           <h3>RK3576 · 38 × 38 mm</h3>
-          <p>下一块板：瑞芯微 RK3576，目标做到 38 × 38 mm，冲着那颗 6 TOPS NPU 跑端侧推理，把本职工作里的推理塞进一张邮票大小的板子。嘉立创六层免费工艺 + 盘中孔。</p>
-          <ol class="steps mono"><li class="done">原理图</li><li class="cur">布局 / 布线</li><li>打样</li><li>Bring-up</li><li>NPU 推理</li></ol>
-          <div class="ctl mono"><div class="tog" id="rkTog"><button class="on" data-v="size">尺寸对比</button><button data-v="fanout">BGA 扇出</button></div></div>
+          <p data-i18n="rk.p">下一块板：瑞芯微 RK3576，目标做到 38 × 38 mm，冲着那颗 6 TOPS NPU 跑端侧推理，把本职工作里的推理塞进一张邮票大小的板子。嘉立创六层免费工艺 + 盘中孔。</p>
+          <ol class="steps mono"><li class="done" data-i18n="rk.s1">原理图</li><li class="cur" data-i18n="rk.s2">布局 / 布线</li><li data-i18n="rk.s3">打样</li><li data-i18n="rk.s4">Bring-up</li><li data-i18n="rk.s5">NPU 推理</li></ol>
+          <div class="ctl mono"><div class="tog" id="rkTog"><button class="on" data-v="size" data-i18n="rk.v1">尺寸对比</button><button data-v="fanout" data-i18n="rk.v2">BGA 扇出</button></div></div>
           <pre class="readout mono" id="rkRead"></pre>
         </header>
         <div class="stage"><canvas id="rkCanvas" aria-label="RK3576 板子尺寸与扇出示意"></canvas></div>
@@ -288,8 +289,8 @@
       <article class="exp" data-exp id="exp-robot">
         <header class="exp-h">
           <span class="mono tag">WIP.1</span>
-          <h3>低成本人形机器人</h3>
-          <p>基于 Berkeley Humanoid Lite（BHL）在家手搓：关节已打印装好，正在调驱动器；步态用强化学习在 MJX（MuJoCo + JAX）里训练。下面是一个程序化的小玩具：拖动训练进度，看它从摔跤到走路；点击画面给它一脚。</p>
+          <h3 data-i18n="robot.t">低成本人形机器人</h3>
+          <p data-i18n="robot.p">基于 Berkeley Humanoid Lite（BHL）在家手搓：关节已打印装好，正在调驱动器；步态用强化学习在 MJX（MuJoCo + JAX）里训练。下面是一个程序化的小玩具：拖动训练进度，看它从摔跤到走路；点击画面给它一脚。</p>
           <div class="ctl mono"><label class="sl wide">EPISODE<input type="range" id="rlEp" min="0" max="1000" value="80"></label></div>
           <dl class="meter mono">
             <div><dt>EPISODE</dt><dd id="rlE">—</dd></div>
@@ -304,8 +305,8 @@
       <article class="exp" data-exp id="exp-act">
         <header class="exp-h">
           <span class="mono tag">WIP.2</span>
-          <h3>摆线减速关节 · 自研 FOC</h3>
-          <p>关节用的是 BHL 的 5010 摆线减速器，3D 打印。我写了 cadquery 脚本，只重建和电机接触的两个件（Motor Shell / Motor Shaft），把它适配到手头的 5010 360KV 电机上，其余打印件不动。驱动器自研 FOC，正在选型画板。拖动转速，看摆线盘怎么“摆”。</p>
+          <h3 data-i18n="act.t">摆线减速关节 · 自研 FOC</h3>
+          <p data-i18n="act.p">关节用的是 BHL 的 5010 摆线减速器，3D 打印。我写了 cadquery 脚本，只重建和电机接触的两个件（Motor Shell / Motor Shaft），把它适配到手头的 5010 360KV 电机上，其余打印件不动。驱动器自研 FOC，正在选型画板。拖动转速，看摆线盘怎么“摆”。</p>
           <div class="ctl mono"><label class="sl wide">INPUT RPM<input type="range" id="cycRpm" min="0" max="3000" value="900"></label></div>
           <pre class="readout mono" id="cycRead"></pre>
         </header>
@@ -315,8 +316,8 @@
       <article class="exp" data-exp id="exp-sdr">
         <header class="exp-h">
           <span class="mono tag">WIP.3</span>
-          <h3>软件定义无线电</h3>
-          <p>自己画板：ZYNQ-7010 + AD936x，学射频前端和 FPGA 上的数字信号处理。业余无线电呼号 BH3FWY。下面的瀑布图里藏着几个模拟信号，拖动或滚轮调台，开着声音能“听”到它们。其中一个是摩尔斯信标，在反复拍发一串呼号，你能解出来吗？</p>
+          <h3 data-i18n="sdr.t">软件定义无线电</h3>
+          <p data-i18n="sdr.p">自己画板：ZYNQ-7010 + AD936x，学射频前端和 FPGA 上的数字信号处理。业余无线电呼号 BH3FWY。下面的瀑布图里藏着几个模拟信号，拖动或滚轮调台，开着声音能“听”到它们。其中一个是摩尔斯信标，在反复拍发一串呼号，你能解出来吗？</p>
           <div class="ctl mono"><span class="freq" id="sdrFreq">145.000 MHz</span><button class="act" id="sdrScan">⟳ SCAN</button></div>
           <pre class="readout mono" id="sdrRead">tuning…</pre>
         </header>
@@ -326,8 +327,8 @@
       <article class="exp" data-exp id="exp-ft">
         <header class="exp-h">
           <span class="mono tag">WIP.4</span>
-          <h3>大模型训练与微调</h3>
-          <p>从推理往上游走：学习训练和微调。选一个 LoRA 秩开始训练，看 loss 曲线和学习率调度（warmup + cosine）。</p>
+          <h3 data-i18n="ft.t">大模型训练与微调</h3>
+          <p data-i18n="ft.p">从推理往上游走：学习训练和微调。选一个 LoRA 秩开始训练，看 loss 曲线和学习率调度（warmup + cosine）。</p>
           <div class="ctl mono"><div class="tog" id="loraTog"><button data-r="8" class="on">r=8</button><button data-r="16">r=16</button><button data-r="64">r=64</button><button data-r="0">FULL</button></div><button class="act" id="ftRun">▶ TRAIN</button></div>
           <pre class="readout mono" id="ftRead">idle</pre>
         </header>
@@ -339,24 +340,24 @@
     <section class="archive" id="archive" data-sec>
       <div class="sec-h">
         <div class="sec-tag mono"><span>06</span> ARCHIVE</div>
-        <h2 class="sec-t" data-glitch>档案馆，<em>上学时手搓过的</em></h2>
-        <p class="sec-s">从手机相册里翻出来的原始片段，没剪辑、没调色。滚到哪里就播到哪里，点一下暂停。</p>
+        <h2 class="sec-t" data-glitch data-i18n="ar.t">档案馆，<em>上学时手搓过的</em></h2>
+        <p class="sec-s" data-i18n="ar.s">从手机相册里翻出来的原始片段，没剪辑、没调色。滚到哪里就播到哪里，点一下暂停。</p>
       </div>
       <div class="reels">
         <article class="reel">
-          <header><span class="mono">REEL 01 · 2024</span><h3>四足机器人复刻</h3><p>复刻 <a href="https://github.com/ToanTech/py-apple-quadruped-robot" target="_blank" rel="noopener">ToanTech/py-apple-quadruped-robot ↗</a>：3D 打印腿部结构、舵机驱动、步态调试。我的第一台“会走”的机器人。</p></header>
+          <header><span class="mono">REEL 01 · 2024</span><h3 data-i18n="r1.t">四足机器人复刻</h3><p data-i18n="r1.p">复刻 <a href="https://github.com/ToanTech/py-apple-quadruped-robot" target="_blank" rel="noopener">ToanTech/py-apple-quadruped-robot ↗</a>：3D 打印腿部结构、舵机驱动、步态调试。我的第一台“会走”的机器人。</p></header>
           <div class="clips"><figure class="clip" data-v="legged-desk"></figure><figure class="clip" data-v="legged-walk"></figure></div>
         </article>
         <article class="reel">
-          <header><span class="mono">REEL 02 · 2024</span><h3>单目视觉自主飞行</h3><p>ORB-SLAM3 单目定位 + <a href="https://github.com/geturin/MiDaS/tree/master/ros" target="_blank" rel="noopener">MiDaS ↗</a> 单目深度估计补出稠密深度，再交给 EGO-Planner 做避障规划。也在仿真里跑了 swarm 编队。</p></header>
+          <header><span class="mono">REEL 02 · 2024</span><h3 data-i18n="r2.t">单目视觉自主飞行</h3><p data-i18n="r2.p">ORB-SLAM3 单目定位 + <a href="https://github.com/geturin/MiDaS/tree/master/ros" target="_blank" rel="noopener">MiDaS ↗</a> 单目深度估计补出稠密深度，再交给 EGO-Planner 做避障规划。也在仿真里跑了 swarm 编队。</p></header>
           <div class="clips"><figure class="clip" data-v="mono-flight"></figure><figure class="clip" data-v="mono-traj"></figure><figure class="clip" data-v="mono-swarm"></figure></div>
         </article>
         <article class="reel">
-          <header><span class="mono">REEL 03 · 2024</span><h3>HAHA OMNI 全向底盘</h3><p>三个 60 mm 全向轮 + 42 步进电机，GD32F103 主控、LV8731V 驱动，自己做运动学和 ROS 串口协议，挂上 YDLIDAR X2 建图。<a href="https://github.com/dreaming66/omni_haha" target="_blank" rel="noopener">源码 ↗</a></p></header>
+          <header><span class="mono">REEL 03 · 2024</span><h3 data-i18n="r3.t">HAHA OMNI 全向底盘</h3><p data-i18n="r3.p">三个 60 mm 全向轮 + 42 步进电机，GD32F103 主控、LV8731V 驱动，自己做运动学和 ROS 串口协议，挂上 YDLIDAR X2 建图。<a href="https://github.com/dreaming66/omni_haha" target="_blank" rel="noopener">源码 ↗</a></p></header>
           <div class="clips"><figure class="clip" data-v="omni-cad"></figure><figure class="clip" data-v="omni-bot"></figure><figure class="clip" data-v="omni-ydlidar"></figure><figure class="clip" data-v="omni-lidar"></figure><figure class="clip" data-v="omni-mapping"></figure></div>
         </article>
         <article class="reel fail">
-          <header><span class="mono">REEL 04 · FAILURE LOG</span><h3>BeSafe：芯片冒火光</h3><p>功率估小了，芯片过载，当场冒出火光。失败也是数据：从这以后，我画板子一定先算功耗、留余量、加保护。</p></header>
+          <header><span class="mono">REEL 04 · FAILURE LOG</span><h3 data-i18n="r4.t">BeSafe：芯片冒火光</h3><p data-i18n="r4.p">功率估小了，芯片过载，当场冒出火光。失败也是数据：从这以后，我画板子一定先算功耗、留余量、加保护。</p></header>
           <div class="clips"><figure class="clip" data-v="besafe-fire"></figure></div>
         </article>
       </div>
@@ -366,21 +367,21 @@
     <section class="music" id="music" data-sec>
       <div class="sec-h">
         <div class="sec-tag mono"><span>07</span> STRINGS &amp; KEYS</div>
-        <h2 class="sec-t" data-glitch>六根弦，<em>八十八个键</em></h2>
-        <p class="sec-s">从原声吉他入门，现在玩电吉他、日式摇滚；钢琴还在学。下面两件乐器都能弹：吉他标准调弦（EADGBE），用 Karplus-Strong 算法实时合成拨弦，打开 DRIVE 就是失真音箱；钢琴用加法合成。先打开声音。</p>
+        <h2 class="sec-t" data-glitch data-i18n="mu.t">六根弦，<em>八十八个键</em></h2>
+        <p class="sec-s" data-i18n="mu.s">从原声吉他入门，现在玩电吉他、日式摇滚；钢琴还在学。下面两件乐器都能弹：吉他标准调弦（EADGBE），用 Karplus-Strong 算法实时合成拨弦，打开 DRIVE 就是失真音箱；钢琴用加法合成。先打开声音。</p>
       </div>
       <div class="guitar">
         <div class="gt-ctl mono">
           <span>CHORD</span>
           <div class="tog" id="chords"></div>
           <div class="tog" id="ampTog"><button data-a="0">CLEAN</button><button class="on" data-a="1">DRIVE</button></div>
-          <button class="act" id="riffBtn">▶ RIFF（原创）</button>
-          <span class="d">拖过琴弦扫弦 · 点击单弦拨奏</span>
+          <button class="act" id="riffBtn" data-i18n="riff">▶ RIFF（原创）</button>
+          <span class="d" data-i18n="gt.hint">拖过琴弦扫弦 · 点击单弦拨奏</span>
         </div>
         <div class="stage gt-stage"><canvas id="guitar" aria-label="可弹奏的吉他"></canvas></div>
       </div>
       <div class="piano-wrap">
-        <div class="piano-h mono"><span>PIANO · LEARNING</span><span class="prog"><i style="--p:.22"></i></span><span class="d">键盘 A W S E D F T G Y H U J K 也能弹 · 试试弹出 “小星星”</span></div>
+        <div class="piano-h mono"><span>PIANO · LEARNING</span><span class="prog"><i style="--p:.22"></i></span><span class="d" data-i18n="pi.hint">键盘 A W S E D F T G Y H U J K 也能弹 · 试试弹出 “小星星”</span></div>
         <div class="piano" id="piano" aria-label="钢琴键盘"></div>
       </div>
     </section>
@@ -390,42 +391,42 @@
       <div class="sec-h">
         <div class="sec-tag mono"><span>08</span> REVISION HISTORY</div>
         <h2 class="sec-t" data-glitch>git log --graph</h2>
-        <p class="sec-s">本职那条主线。点击提交展开 diff。</p>
+        <p class="sec-s" data-i18n="log.s">本职那条主线。点击提交展开 diff。</p>
       </div>
       <ol class="commits mono" id="commits">
         <li class="cm open">
-          <button class="cm-h"><i class="dot"></i><span class="sha">a66f0c8</span><span class="ref">(HEAD → main)</span><span class="when">2025.08 – now</span><span class="msg">feat: 某大型集团 · AI Infra 工程</span></button>
+          <button class="cm-h"><i class="dot"></i><span class="sha">a66f0c8</span><span class="ref">(HEAD → main)</span><span class="when">2025.08 – now</span><span class="msg" data-i18n="c1.m">feat: 某大型集团 · AI Infra 工程</span></button>
           <div class="cm-b"><div>
-            <p class="diff add">+ 百卡级昇腾 NPU 集群与 PPU 一体机运维调优：HCCL 组网与通信调优、容器化资源调度、扩容网络架构设计</p>
-            <p class="diff add">+ vLLM / MindIE 私有化部署 DeepSeek、Qwen、Embedding / Reranker、MinerU 等 10+ 款模型，新模型一周内完成验证与压测准入</p>
-            <p class="diff add">+ 定位多机多卡通信瓶颈；Mooncake PD 分离 + W8A8 量化 + 算子优化 → 并发延迟 −20%，资源利用率 +25%</p>
-            <p class="diff add">+ 集团级智能体平台 K8s 运维 + Prometheus / Grafana 告警，累计 1000 万+ 人次、零重大事故</p>
-            <p class="diff add">+ 主导自研 MCP 工具平台：REST → MCP 自动转换，统一注册、鉴权与分发</p>
-            <p class="diff del">- “部署模型就是 docker run 一下”的天真想法</p>
+            <p class="diff add" data-i18n="c1.d1">+ 百卡级昇腾 NPU 集群与 PPU 一体机运维调优：HCCL 组网与通信调优、容器化资源调度、扩容网络架构设计</p>
+            <p class="diff add" data-i18n="c1.d2">+ vLLM / MindIE 私有化部署 DeepSeek、Qwen、Embedding / Reranker、MinerU 等 10+ 款模型，新模型一周内完成验证与压测准入</p>
+            <p class="diff add" data-i18n="c1.d3">+ 定位多机多卡通信瓶颈；Mooncake PD 分离 + W8A8 量化 + 算子优化 → 并发延迟 −20%，资源利用率 +25%</p>
+            <p class="diff add" data-i18n="c1.d4">+ 集团级智能体平台 K8s 运维 + Prometheus / Grafana 告警，累计 1000 万+ 人次、零重大事故</p>
+            <p class="diff add" data-i18n="c1.d5">+ 主导自研 MCP 工具平台：REST → MCP 自动转换，统一注册、鉴权与分发</p>
+            <p class="diff del" data-i18n="c1.d6">- “部署模型就是 docker run 一下”的天真想法</p>
           </div></div>
         </li>
         <li class="cm">
-          <button class="cm-h"><i class="dot"></i><span class="sha">7e2b4d1</span><span class="ref">(intern/vlm)</span><span class="when">2025.02 – 2025.07</span><span class="msg">feat: 头部互联网大厂 · VLM 数据与策略实习</span></button>
+          <button class="cm-h"><i class="dot"></i><span class="sha">7e2b4d1</span><span class="ref">(intern/vlm)</span><span class="when">2025.02 – 2025.07</span><span class="msg" data-i18n="c2.m">feat: 头部互联网大厂 · VLM 数据与策略实习</span></button>
           <div class="cm-b"><div>
-            <p class="diff add">+ 负责社交产品资料场景端到端多模态审核大模型（图片 + 文本，3 条业务线）的数据与效果迭代</p>
-            <p class="diff add">+ 以人审 / 质检不一致为信号挖掘 badcase，定向采集并加权；个人产出 3.5W+ 训练样本，支撑按日迭代</p>
-            <p class="diff add">+ 模型准确率 75% → 98%；推动“模型全量质检人审”，大盘准确率 92% → 97%</p>
+            <p class="diff add" data-i18n="c2.d1">+ 负责社交产品资料场景端到端多模态审核大模型（图片 + 文本，3 条业务线）的数据与效果迭代</p>
+            <p class="diff add" data-i18n="c2.d2">+ 以人审 / 质检不一致为信号挖掘 badcase，定向采集并加权；个人产出 3.5W+ 训练样本，支撑按日迭代</p>
+            <p class="diff add" data-i18n="c2.d3">+ 模型准确率 75% → 98%；推动“模型全量质检人审”，大盘准确率 92% → 97%</p>
           </div></div>
         </li>
         <li class="cm">
-          <button class="cm-h"><i class="dot"></i><span class="sha">3c91a5f</span><span class="ref">(proj/agent)</span><span class="when">2024.05 – 2024.12</span><span class="msg">feat: LLM 智能体网络安全主动防御系统 · 3 人团队</span></button>
+          <button class="cm-h"><i class="dot"></i><span class="sha">3c91a5f</span><span class="ref">(proj/agent)</span><span class="when">2024.05 – 2024.12</span><span class="msg" data-i18n="c3.m">feat: LLM 智能体网络安全主动防御系统 · 3 人团队</span></button>
           <div class="cm-b"><div>
-            <p class="diff add">+ Graph + Vector 混合 RAG：自然语言 → Cypher 查询威胁图谱，再经向量检索生成；后演进为 ReAct 多数据源路由</p>
-            <p class="diff add">+ 智能体长短期记忆：对话缓冲 + 语义召回；长期记忆由 LLM 摘要固化为文档跨会话加载</p>
-            <p class="diff add">+ 威胁情报 API 封装、公有云资源接入、Docker 化 + GitHub Actions 自动构建</p>
-            <p class="diff add">+ 全国软件设计大赛总决赛一等奖 · 发明专利（共同第一发明人）· 软件著作权</p>
+            <p class="diff add" data-i18n="c3.d1">+ Graph + Vector 混合 RAG：自然语言 → Cypher 查询威胁图谱，再经向量检索生成；后演进为 ReAct 多数据源路由</p>
+            <p class="diff add" data-i18n="c3.d2">+ 智能体长短期记忆：对话缓冲 + 语义召回；长期记忆由 LLM 摘要固化为文档跨会话加载</p>
+            <p class="diff add" data-i18n="c3.d3">+ 威胁情报 API 封装、公有云资源接入、Docker 化 + GitHub Actions 自动构建</p>
+            <p class="diff add" data-i18n="c3.d4">+ 全国软件设计大赛总决赛一等奖 · 发明专利（共同第一发明人）· 软件著作权</p>
           </div></div>
         </li>
         <li class="cm">
-          <button class="cm-h"><i class="dot"></i><span class="sha">0000001</span><span class="ref">(tag: v0.1)</span><span class="when">2021.09 – 2025.06</span><span class="msg">init: 计算机科学与技术 · 本科</span></button>
+          <button class="cm-h"><i class="dot"></i><span class="sha">0000001</span><span class="ref">(tag: v0.1)</span><span class="when">2021.09 – 2025.06</span><span class="msg" data-i18n="c4.m">init: 计算机科学与技术 · 本科</span></button>
           <div class="cm-b"><div>
-            <p class="diff add">+ 全国软件设计大赛一等奖 · 创新创业大赛省级银奖 · 省级工科竞赛三等奖</p>
-            <p class="diff add">+ 一等奖学金 · CET-6</p>
+            <p class="diff add" data-i18n="c4.d1">+ 全国软件设计大赛一等奖 · 创新创业大赛省级银奖 · 省级工科竞赛三等奖</p>
+            <p class="diff add" data-i18n="c4.d2">+ 一等奖学金 · CET-6</p>
           </div></div>
         </li>
       </ol>
@@ -433,9 +434,9 @@
       <div class="oss">
         <div class="ghcard mono"><span class="d">$ gh api users/dreaming66</span><span id="ghLive">fetching…</span></div>
         <div class="prs mono">
-          <a class="pr" href="https://github.com/kubernetes-sigs/kueue/pull/17528" target="_blank" rel="noopener"><span class="st merged">MERGED</span><span class="repo">kubernetes-sigs/kueue#17528</span><span class="tt">docs: v1alpha1 API reference，已上线官网</span><span class="go">↗</span></a>
-          <a class="pr" href="https://github.com/kubernetes-sigs/kueue/pull/17527" target="_blank" rel="noopener"><span class="st open">OPEN</span><span class="repo">kubernetes-sigs/kueue#17527</span><span class="tt">test: TAS 调度库测试门控</span><span class="go">↗</span></a>
-          <a class="pr" href="https://github.com/kubernetes-sigs/reference-docs/pull/476" target="_blank" rel="noopener"><span class="st open">OPEN</span><span class="repo">kubernetes-sigs/reference-docs#476</span><span class="tt">genref: 支持 json tag options</span><span class="go">↗</span></a>
+          <a class="pr" href="https://github.com/kubernetes-sigs/kueue/pull/17528" target="_blank" rel="noopener"><span class="st merged">MERGED</span><span class="repo">kubernetes-sigs/kueue#17528</span><span class="tt" data-i18n="pr1">docs: v1alpha1 API reference，已上线官网</span><span class="go">↗</span></a>
+          <a class="pr" href="https://github.com/kubernetes-sigs/kueue/pull/17527" target="_blank" rel="noopener"><span class="st open">OPEN</span><span class="repo">kubernetes-sigs/kueue#17527</span><span class="tt" data-i18n="pr2">test: TAS 调度库测试门控</span><span class="go">↗</span></a>
+          <a class="pr" href="https://github.com/kubernetes-sigs/reference-docs/pull/476" target="_blank" rel="noopener"><span class="st open">OPEN</span><span class="repo">kubernetes-sigs/reference-docs#476</span><span class="tt" data-i18n="pr3">genref: 支持 json tag options</span><span class="go">↗</span></a>
         </div>
       </div>
     </section>
@@ -451,11 +452,11 @@
         <pre class="pinglog mono" id="pinglog">PING dreaming66 (github.com): 56 data bytes</pre>
       </div>
       <div class="ping-act">
-        <button class="pill big magnetic" id="pingBtn" data-cursor="ping"><span>发送一个 ping</span><span>◎</span></button>
+        <button class="pill big magnetic" id="pingBtn" data-cursor="ping"><span data-i18n="ping.btn">发送一个 ping</span><span>◎</span></button>
         <a class="pill ink-pill big magnetic" href="https://github.com/dreaming66" target="_blank" rel="noopener" data-cursor="open"><span>github.com/dreaming66</span><span>↗</span></a>
-        <button class="pill big magnetic" id="cardBtn" data-cursor="make"><span>生成一张名片</span><span>↓</span></button>
+        <button class="pill big magnetic" id="cardBtn" data-cursor="make"><span data-i18n="card.btn">生成一张名片</span><span>↓</span></button>
       </div>
-      <p class="mono ping-note">联系方式不在此公开 · 去 GitHub 找我，或在终端里输入 <kbd>sudo hire-me</kbd></p>
+      <p class="mono ping-note" data-i18n="ping.note">联系方式不在此公开 · 去 GitHub 找我，或在终端里输入 <kbd>sudo hire-me</kbd></p>
     </section>
   </main>
 
@@ -465,21 +466,21 @@
       <canvas id="cardCanvas" width="1200" height="720"></canvas>
       <div class="modal-ctl">
         <input id="cardLine" class="mono" maxlength="28" value="从焊锡到张量，亲手造一切" aria-label="名片上的一句话">
-        <button class="pill sm" id="cardShuffle"><span>换个样式</span><span>↻</span></button>
-        <a class="pill sm ink-pill" id="cardDl" download="dreaming66-card.png"><span>下载 PNG</span><span>↓</span></a>
-        <button class="pill sm" id="cardClose"><span>关闭</span><span>×</span></button>
+        <button class="pill sm" id="cardShuffle"><span data-i18n="card.shuffle">换个样式</span><span>↻</span></button>
+        <a class="pill sm ink-pill" id="cardDl" download="dreaming66-card.png"><span data-i18n="card.dl">下载 PNG</span><span>↓</span></a>
+        <button class="pill sm" id="cardClose"><span data-i18n="card.close">关闭</span><span>×</span></button>
       </div>
     </div>
   </div>
 
   <footer class="foot mono">
     <canvas id="scope" aria-hidden="true"></canvas>
-    <div class="foot-row"><span>© 2026 dreaming66 · DRM-66 datasheet rev 2026.10</span><span>Canvas2D + WebAudio · zero frameworks · zero samples</span><span><kbd>X</kbd> 透视 · <kbd>`</kbd> 终端 · <kbd>S</kbd> 声音</span></div>
+    <div class="foot-row"><span>© 2026 dreaming66 · DRM-66 datasheet rev 2026.10</span><span>Canvas2D + WebAudio · zero frameworks · zero samples</span><span data-i18n="foot.keys"><kbd>X</kbd> 透视 · <kbd>`</kbd> 终端 · <kbd>S</kbd> 声音</span></div>
   </footer>
 
   <!-- X-RAY annotations -->
-  <div class="xnote mono" style="top:22vh;left:46vw">&lt;!-- 这里本来想放一张照片。隐私优先，换成了芯片。 --&gt;</div>
-  <div class="xnote mono" style="top:70vh;left:6vw">&lt;!-- 数字来自真实工作；接口、IP、图谱与仿真均为虚构演示 --&gt;</div>
+  <div class="xnote mono" style="top:22vh;left:46vw" data-i18n="x1">&lt;!-- 这里本来想放一张照片。隐私优先，换成了芯片。 --&gt;</div>
+  <div class="xnote mono" style="top:70vh;left:6vw" data-i18n="x2">&lt;!-- 数字来自真实工作；接口、IP、图谱与仿真均为虚构演示 --&gt;</div>
   <div class="xnote mono" style="top:46vh;right:4vw">&lt;!-- easter egg: ↑↑↓↓←→←→BA --&gt;</div>
 
   <!-- ===== TERMINAL ===== -->
@@ -491,6 +492,7 @@
   </div>
 
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
+  <script src="js/i18n.js"></script>
   <script src="js/core.js"></script>
   <script src="js/labs.js"></script>
   <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js", "three/addons/": "./assets/vendor/jsm/" } }</script>
