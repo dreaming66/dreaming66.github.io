@@ -48,8 +48,16 @@
     for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
     A.noiseBuf = nb;
   }
+  // browsers only allow audio after a user gesture: sound is "armed" until the first click / key / touch
+  let gestured = false;
+  const unlock = () => {
+    if (gestured) return; gestured = true;
+    ["pointerdown", "keydown", "touchstart"].forEach(ev => removeEventListener(ev, unlock, true));
+    if (A.on) { D.setSound(true); S.boot(); }
+  };
+  ["pointerdown", "keydown", "touchstart"].forEach(ev => addEventListener(ev, unlock, true));
   D.setSound = on => {
-    if (on) { ainit(); A.ctx.resume(); }
+    if (on && gestured) { ainit(); A.ctx.resume(); }
     A.on = on;
     if (A.ctx) A.master.gain.setTargetAtTime(on ? .55 : 0, A.ctx.currentTime, .05);
     const b = $("#sndBtn"); b.setAttribute("aria-pressed", on); b.querySelector("b").textContent = on ? "ON" : "OFF";
@@ -180,10 +188,10 @@
     ["ACTUATOR ........ cycloidal 5010 · FOC driver: selecting", "w"],
     ["STRINGS ........ EADGBE · overdrive on", "ok"],
     ["PRIVACY ........ phone / email / employer → REDACTED", "w"],
-    ["AUDIO ........ WebAudio synth ready (awaiting user gesture)", "ok"],
+    ["AUDIO ........ WebAudio synth armed · first click unmutes", "ok"],
   ];
   function runGate() {
-    const el = $("#post"), choice = $("#gateChoice"); let i = 0;
+    const el = $("#post"); let i = 0;
     $("#gateClock").textContent = new Date().toISOString().slice(0, 19).replace("T", " ");
     const step = () => {
       if (i < post.length) {
@@ -191,7 +199,7 @@
         const m = t.match(/^(.*?)(\s\.{4,}\s)(.*)$/);
         el.innerHTML += m ? `${m[1]}<span class="d">${m[2]}</span><span class="${c}">${m[3]}</span>\n` : `<span class="${c}">${t}</span>\n`;
         setTimeout(step, D.still ? 0 : rand(60, 140));
-      } else { el.innerHTML += "\n<span class=\"w\">▶ all systems nominal · press ENTER</span>"; choice.classList.add("show"); $("#enterSound").focus({ preventScroll: true }); }
+      } else { el.innerHTML += "\n<span class=\"w\">▶ all systems nominal · booting…</span>"; setTimeout(() => enter(true), D.still ? 0 : 650); }
     };
     step();
     const enter = snd => {
@@ -204,11 +212,10 @@
       setTimeout(() => { $("#gate").remove(); S.boot(); }, 300);
       document.dispatchEvent(new Event("d66boot"));
     };
-    $("#enterSound").addEventListener("click", () => enter(true));
-    addEventListener("keydown", function k(e) {
-      if (!document.body.classList.contains("gated")) return removeEventListener("keydown", k);
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); enter(true); }
-    });
+    // skip the POST on any click / key
+    const skip = () => { i = post.length; enter(true); };
+    $("#gate").addEventListener("pointerdown", skip);
+    addEventListener("keydown", function k() { removeEventListener("keydown", k); if (document.body.classList.contains("gated")) skip(); });
   }
 
   /* ---------------- cursor + magnetic ---------------- */

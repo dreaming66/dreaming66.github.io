@@ -4,8 +4,9 @@
    · base: six vertical USB-C plugs. U10/U3/U6/U9/U8 in a column at X=47.3,
      U11 beside U10 at X=59.85 (12.55 mm apart)
    · AuraCore: USB2 + USB3 sit on the long side edge, 12.25 mm apart
-   → every board stands on its long side; USB2 goes onto the column plug,
-     and the head board also lands USB3 on U11.
+   → every board stands on its long side, LED end pointing away from the base I/O
+     (RJ45 / DC / USB at low X); USB3 goes onto the column plug, and the head
+     board also lands USB2 on U11.
    ========================================================== */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -21,11 +22,12 @@ const HEAD = 0;
 const LIFT = 60;
 const NAMES = ["auracore-head", "auracore-w1", "auracore-w2", "auracore-w3", "auracore-w4"];
 
-// board CAD → base CAD: x̂→+Z (side edge down), ŷ→−X, ẑ→−Y; USB2 mouth (x 15.2, y 16.45, z 2.7) onto the plug
+// board CAD → base CAD: x̂→+Z (side edge down), ŷ→+X (LEDs away from I/O), ẑ→+Y (components face back)
+// USB3 mouth (x 15.2, y 4.2, z 2.7) lands on the column plug at X 47.3
 const SEAT_Q = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(
-  new THREE.Vector3(0, 0, 1), new THREE.Vector3(-1, 0, 0), new THREE.Vector3(0, -1, 0)));
+  new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 1, 0)));
 const FLAT_Q = new THREE.Quaternion();
-const seatPos = y => new THREE.Vector3(16.45 + 47.3, y + 2.7, 7.3 - 15.2);
+const seatPos = y => new THREE.Vector3(47.3 - 4.2, y - 2.7, 7.3 - 15.2);
 const FLAT_POS = new THREE.Vector3(15.6, 9, 24);
 
 let renderer, scene, camera, controls, cad, base, boards = [], visible = false, ready = false, mode = "assembled", seq = null, lastT = 0, loadStarted = false, pendingAssemble = false;
@@ -68,10 +70,10 @@ function setup() {
   const rim = new THREE.DirectionalLight(0x8fb2ff, 1.3); rim.position.set(-160, 80, -120); scene.add(rim);
   const warm = new THREE.DirectionalLight(0xff4f1f, .7); warm.position.set(0, -60, 100); scene.add(warm);
   cad = new THREE.Group(); cad.rotation.x = -Math.PI / 2; scene.add(cad);
-  const grid = new THREE.GridHelper(260, 52, 0x3a3a34, 0x24241f); grid.position.set(46, -3, -37); scene.add(grid);
-  // cluster centre in CAD ≈ (40, 37, 16) → world (x, z, −y)
-  controls.target.set(40, 16, -37);
-  camera.position.set(40 - 115, 16 + 85, -37 + 140);
+  const grid = new THREE.GridHelper(280, 56, 0x3a3a34, 0x24241f); grid.position.set(55, -3, -37); scene.add(grid);
+  // cluster centre in CAD ≈ (55, 37, 16) → world (x, z, −y); view from the component side (+Y)
+  controls.target.set(55, 16, -37);
+  camera.position.set(55 + 120, 16 + 85, -37 - 140);
   resize();
 }
 
