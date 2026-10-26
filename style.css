@@ -272,7 +272,10 @@ main > section { position: relative; padding-left: var(--g); padding-right: var(
 /* ---------- AuraCore ---------- */
 .aura { padding-top: clamp(60px, 9vw, 120px); padding-bottom: clamp(60px, 9vw, 120px); }
 .aura-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 26px; }
-.aura-stage { min-height: 560px; background: radial-gradient(ellipse at 50% 60%, #2a2a26, var(--ink) 70%); }
+.aura-stage { min-height: 560px; background: url(assets/img/cluster-poster.jpg) center / cover no-repeat, var(--ink); }
+.aura-stage canvas { opacity: 0; transition: opacity .8s var(--ease); }
+.aura-stage.loaded { background: radial-gradient(ellipse at 50% 60%, #2a2a26, var(--ink) 70%); }
+.aura-stage.loaded canvas { opacity: 1; }
 .aura-hud { position: absolute; left: 14px; right: 14px; top: 14px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; z-index: 2; }
 .aura-hud span { margin-left: auto; color: #8d887b; font: 11px var(--mono); }
 .kube { position: absolute; right: 14px; bottom: 14px; margin: 0; z-index: 2; font-size: 10.5px; line-height: 1.55; color: var(--mint); background: #141412d9; border: 1px solid #ffffff1a; border-radius: 12px; padding: 8px 12px; white-space: pre; max-width: calc(100% - 28px); overflow: hidden; pointer-events: none; }

@@ -25,7 +25,7 @@
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; return true; }
     return false;
   };
-  D.onVisible = (el, fn, th = .3) => { const o = new IntersectionObserver(es => { if (es[0].isIntersecting) { o.disconnect(); fn(); } }, { threshold: th }); o.observe(el); };
+  D.onVisible = (el, fn, th = .3) => { const o = new IntersectionObserver(es => { if (es[es.length - 1].isIntersecting) { o.disconnect(); fn(); } }, { threshold: th }); o.observe(el); };
 
   /* =========================================================
      AUDIO ENGINE — everything synthesized, no samples
@@ -191,7 +191,7 @@
         const m = t.match(/^(.*?)(\s\.{4,}\s)(.*)$/);
         el.innerHTML += m ? `${m[1]}<span class="d">${m[2]}</span><span class="${c}">${m[3]}</span>\n` : `<span class="${c}">${t}</span>\n`;
         setTimeout(step, D.still ? 0 : rand(60, 140));
-      } else { el.innerHTML += "\n<span class=\"w\">▶ select boot mode</span>"; choice.classList.add("show"); $("#enterSound").focus({ preventScroll: true }); }
+      } else { el.innerHTML += "\n<span class=\"w\">▶ all systems nominal · press ENTER</span>"; choice.classList.add("show"); $("#enterSound").focus({ preventScroll: true }); }
     };
     step();
     const enter = snd => {
@@ -205,11 +205,9 @@
       document.dispatchEvent(new Event("d66boot"));
     };
     $("#enterSound").addEventListener("click", () => enter(true));
-    $("#enterMute").addEventListener("click", () => enter(false));
     addEventListener("keydown", function k(e) {
       if (!document.body.classList.contains("gated")) return removeEventListener("keydown", k);
-      if (e.key === "Enter") { e.preventDefault(); enter(true); }
-      if (e.key.toLowerCase() === "m") enter(false);
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); enter(true); }
     });
   }
 

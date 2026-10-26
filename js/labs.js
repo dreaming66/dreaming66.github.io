@@ -7,6 +7,14 @@
   const ctx2d = cv => cv.getContext("2d");
   const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, r) : g.rect(x, y, w, h); };
   const visible = el => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; };
+  // auto-demo: fire when the element scrolls into view, then every `every` ms while it stays there
+  const auto = (el, fn, every = 0, th = .35) => {
+    let t = null;
+    new IntersectionObserver(es => {
+      if (es[es.length - 1].isIntersecting) { if (t === null) { fn(); if (every) t = setInterval(() => { if (!document.hidden && !D.still) fn(); }, every); else t = 0; } }
+      else { if (t) clearInterval(t); if (every) t = null; }
+    }, { threshold: th }).observe(el);
+  };
 
   /* =========================================================
      HERO · topographic ink field (WebGL2), click to drop ink
@@ -120,8 +128,8 @@
      ========================================================= */
   function initGen() {
     const el = $("#genOut"), stat = $("#genStat");
-    const text = "你好，我是 dreaming66。白天，我在国产算力集群上部署和调优大模型，盯着 TTFT 和 TPOT；晚上，我画自己的 Linux 开发板：全志 H616 的 AuraCore 已经插成了一个 k3s 集群，RK3576 正在布线。周末在家手搓人形机器人的关节，画 ZYNQ 的 SDR 板子，呼号 BH3FWY。累了就插上电吉他，弹一段日式摇滚。我相信：理解一个系统最好的方式，是亲手把它从零搭起来。";
-    const keys = ["大模型", "TTFT", "TPOT", "AuraCore", "k3s", "RK3576", "人形机器人", "SDR", "BH3FWY", "电吉他", "从零搭起来"];
+    const text = "你好，我是 dreaming66。白天和大模型推理打交道，晚上画自己的开发板，周末手搓机器人、折腾无线电，累了就插上电吉他。我相信：理解一个系统最好的方式，是亲手把它从零搭起来。";
+    const keys = ["大模型推理", "开发板", "机器人", "无线电", "电吉他", "从零搭起来"];
     const toks = []; let i = 0;
     while (i < text.length) {
       const m = text.slice(i).match(/^[A-Za-z0-9]+/);
@@ -240,7 +248,7 @@
         if (i >= boot.length) {
           setFlow(7); S.chord([392, 523, 659, 784], .08, "sine", .08);
           outEl.insertAdjacentHTML("beforeend", `auracore login: <input aria-label="login" autocomplete="off" spellcheck="false">`);
-          const inp = outEl.lastElementChild; inp.focus({ preventScroll: true }); login(inp); return;
+          const inp = outEl.lastElementChild; login(inp); if (autoMode) autoShell(inp); else inp.focus({ preventScroll: true }); return;
         }
         const [d, c, t] = boot[i]; setFlow(stageAt(i)); i++;
         setTimeout(() => { pr(c, t); S.tone(rand(1500, 2200), .01, "square", .02); nx(); }, D.still ? 0 : d);
@@ -253,7 +261,7 @@
       "cat /proc/cpuinfo": "processor\t: 0-3\nBogoMIPS\t: 48.00\nFeatures\t: fp asimd evtstrm aes pmull sha1 sha2 crc32 cpuid\nCPU part\t: 0xd03  (Cortex-A53)\nHardware\t: Allwinner H616 · AuraCore V2.0",
       "free -m": "        total   used   free\nMem:      474    118    356",
       "ip a": "1: lo: <LOOPBACK,UP> mtu 65536\n2: usb0: <BROADCAST,MULTICAST,UP> mtu 1500\n    inet 10.66.0.2/24 scope global usb0\n3: wlan0: <BROADCAST,MULTICAST> mtu 1500",
-      "kubectl get nodes": "NAME            STATUS   ROLES\nauracore-head   Ready    control-plane,master\nauracore-w1     Ready    <none>\nauracore-w2     Ready    <none>\nauracore-w3     Ready    <none>\nauracore-w4     Ready    <none>",
+      "kubectl get nodes": "NAME            STATUS   ROLES\nauracore-head   Ready    control-plane,master\nauracore-w1     Ready    &lt;none&gt;\nauracore-w2     Ready    &lt;none&gt;\nauracore-w3     Ready    &lt;none&gt;\nauracore-w4     Ready    &lt;none&gt;",
       whoami: "root (but really: dreaming66)",
     };
     function login(inp) { hook(inp, v => { pr("", v === "root" ? "" : "(any user is root on this board)"); pr("w", "# 输入 help 试试"); }); }
@@ -275,6 +283,31 @@
       });
     }
     pr("", "<span class=\"y\">[ board unpowered ]</span>\n先把焊盘焊好（或 AUTO-SOLDER），再按 POWER ON。");
+    // auto demo when scrolled into view: solder → power on → log in → run a few commands
+    let autoMode = false, userTouched = false;
+    cv.addEventListener("pointerdown", () => userTouched = true, { capture: true });
+    const typeInto = (inp, text, done) => {
+      let i = 0;
+      const step = () => {
+        if (!inp.isConnected) return;
+        if (i < text.length) { inp.value += text[i++]; S.tone(rand(1800, 2400), .01, "square", .02); setTimeout(step, D.still ? 0 : rand(45, 110)); }
+        else setTimeout(() => { inp.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" })); done && setTimeout(done, 350); }, 250);
+      };
+      step();
+    };
+    function autoShell(inp) {
+      const q = ["uname -a", "kubectl get nodes"];
+      typeInto(inp, "root", function next() {
+        const cur = outEl.lastElementChild; if (!q.length || !cur || cur.tagName !== "INPUT") return;
+        typeInto(cur, q.shift(), next);
+      });
+    }
+    auto(cv, () => {
+      if (powered || pads.some(p => p.on) || userTouched) return;
+      autoMode = true;
+      setTimeout(() => $("#autoSolder").click(), 500);
+      const wait = setInterval(() => { if (!pwr.disabled) { clearInterval(wait); setTimeout(() => pwr.click(), 700); } }, 200);
+    }, 0, .3);
 
     D.loop(cv, (dt, T) => {
       if (D.fit(cv) || !built) build();
@@ -478,6 +511,7 @@
     const cells = Array.from({ length: COLS * ROWS }, (_, i) => ({ i, u: rand(.2, .6), seed: rand(0, 100), hbm: rand(18, 50), temp: rand(48, 66) }));
     const hist = Array(120).fill(.4); let W = 0, H = 0, ring = -1, lastCol = -1, storm = 0, hover = -1, ha = 0;
     $("#npuRing").addEventListener("click", () => { ring = 0; lastCol = -1; });
+    auto(cv, () => { if (ring < 0) { ring = 0; lastCol = -1; } }, 7000);
     $("#npuStorm").addEventListener("click", () => { storm = 1; S.zap(); });
     const geo = () => { const pad = 22, top = 30, bot = 70; return { ox: pad, oy: top, cw: (W - pad * 2) / COLS, ch: (H - top - bot) / ROWS }; };
     cv.addEventListener("pointermove", e => { const r = cv.getBoundingClientRect(), L = geo(), c = Math.floor((e.clientX - r.left - L.ox) / L.cw), w = Math.floor((e.clientY - r.top - L.oy) / L.ch); const nh = c >= 0 && c < COLS && w >= 0 && w < ROWS ? w * COLS + c : -1; if (nh !== hover && nh >= 0) S.tone(200 + cells[nh].u * 600, .03, "sine", .04); hover = nh; });
@@ -554,6 +588,7 @@
     const adj = new Map(N.map(n => [n, []])); E.forEach(e => { adj.get(e.a).push(e.b); adj.get(e.b).push(e.a); });
     const hop = new Map([[atk, 0]]), q = [atk]; while (q.length) { const n = q.shift(); for (const m of adj.get(n)) if (!hop.has(m)) { hop.set(m, hop.get(n) + 1); q.push(m); } }
     $("#gExpand").addEventListener("click", () => { et = 0; lastWave = -1; });
+    auto(cv, () => { if (et < 0) { et = 0; lastWave = -1; } }, 12000);
     const lp = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left - W / 2, y: e.clientY - r.top - H / 2 }; };
     cv.addEventListener("pointerdown", e => { const p = lp(e); let b = null, bd = 400; for (const n of N) { const d = (n.x - p.x) ** 2 + (n.y - p.y) ** 2; if (d < bd) { bd = d; b = n; } } if (b) { drag = b; cv.setPointerCapture(e.pointerId); S.blip(330); } });
     cv.addEventListener("pointermove", e => { if (drag) { const p = lp(e); drag.x = p.x; drag.y = p.y; drag.vx = drag.vy = 0; } });
@@ -591,7 +626,8 @@
     let W = 0, H = 0, ph = 0, tilt = 0, tv = 0, fallen = 0, falls = 0, scroll = 0, lastContact = [0, 0], noiseS = [0, 0, 0, 0];
     const curve = Array.from({ length: 101 }, (_, i) => { const x = i / 100; return -60 + 380 / (1 + Math.exp(-(x - .38) * 11)) + (Math.random() - .5) * 40 * (1 - x * .7); });
     const q = () => { const e = +sl.value / 1000; return 1 / (1 + Math.exp(-(e - .38) * 11)); };
-    sl.addEventListener("input", () => { S.tone(200 + sl.value * .6, .04, "sine", .04); });
+    let touched = false, epT = 0;
+    sl.addEventListener("input", () => { touched = true; S.tone(200 + sl.value * .6, .04, "sine", .04); });
     cv.addEventListener("pointerdown", () => { tv += rand(2.5, 4) * (Math.random() < .5 ? -1 : 1); S.thud(.18); });
     const ik = (hx, hy, fx, fy, L1, L2) => {
       const dx = fx - hx, dy = fy - hy; let d = Math.hypot(dx, dy); d = Math.min(d, L1 + L2 - .01);
@@ -601,6 +637,7 @@
     D.loop(cv, (dt, T) => {
       if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
       g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
+      if (!touched) { epT += dt; if (epT > 20) epT = 0; sl.value = Math.min(1000, Math.round(epT / 14 * 1000)); }
       const Q = q(), ep = +sl.value, ground = H * .78, S0 = Math.min(W, H) / 380;
       const speed = fallen > 0 ? 0 : (.3 + Q * 1.1);
       // joint noise random walk
@@ -694,8 +731,10 @@
     }
     const tune = v => { target = clamp(v, F0 + .02, F1 - .02); };
     document.addEventListener("d66tune", e => tune(e.detail));
+    let userTuned = false;
+    D.onVisible(cv, () => { [144.38, 144.64, 145.35, 145.66].forEach((f, i) => setTimeout(() => { if (!userTuned) { tune(f); S.whoosh(); } }, 600 + i * 2200)); }, .35);
     $("#sdrScan").addEventListener("click", () => { const s = sigs[(sigs.findIndex(s => Math.abs(s.f - target) < .01) + 1) % sigs.length]; tune(s.f); S.whoosh(); });
-    cv.addEventListener("pointerdown", e => { drag = true; lx = e.clientX; cv.setPointerCapture(e.pointerId); const r = cv.getBoundingClientRect(); if (e.clientY - r.top < 70) tune(F0 + (e.clientX - r.left) / W * (F1 - F0)); });
+    cv.addEventListener("pointerdown", e => { userTuned = true; drag = true; lx = e.clientX; cv.setPointerCapture(e.pointerId); const r = cv.getBoundingClientRect(); if (e.clientY - r.top < 70) tune(F0 + (e.clientX - r.left) / W * (F1 - F0)); });
     cv.addEventListener("pointermove", e => { if (!drag) return; tune(target + (e.clientX - lx) / W * (F1 - F0)); lx = e.clientX; });
     cv.addEventListener("pointerup", () => drag = false);
     cv.addEventListener("wheel", e => { if (!visible(cv)) return; e.preventDefault(); tune(target + Math.sign(e.deltaY) * .005); }, { passive: false });
@@ -760,7 +799,10 @@
     const cfg = { 8: { tau: 260, inf: .92, pct: "0.06%", mem: "18 GB" }, 16: { tau: 235, inf: .86, pct: "0.12%", mem: "19 GB" }, 64: { tau: 210, inf: .80, pct: "0.49%", mem: "22 GB" }, 0: { tau: 175, inf: .70, pct: "100%", mem: "4 × 80 GB" } };
     let r = 8, run = null, ghosts = [], W = 0, H = 0;
     $$("#loraTog button").forEach(b => b.addEventListener("click", () => { $$("#loraTog button").forEach(x => x.classList.toggle("on", x === b)); r = +b.dataset.r; }));
-    $("#ftRun").addEventListener("click", () => { if (run && run.step < 1000) return; if (run) ghosts.push(run); if (ghosts.length > 3) ghosts.shift(); run = { r, step: 0, tr: [], ev: [], c: cfg[r] }; S.blip(440); });
+    const start = rr => { if (run && run.step < 1000) return; if (run) ghosts.push(run); if (ghosts.length > 3) ghosts.shift(); r = rr; $$("#loraTog button").forEach(x => x.classList.toggle("on", +x.dataset.r === rr)); run = { r, step: 0, tr: [], ev: [], c: cfg[r] }; S.blip(440); };
+    let autoQ = [8, 64, 0], userRan = false;
+    $("#ftRun").addEventListener("click", () => { userRan = true; start(r); });
+    auto(cv, () => { if (!userRan && autoQ.length && (!run || run.step >= 1000)) start(autoQ.shift()); }, 5500);
     const lr = s => s < 60 ? s / 60 : .5 * (1 + Math.cos(Math.PI * (s - 60) / 940));
     const colr = { 8: C.sig, 16: C.ok, 64: C.amb, 0: C.hot };
     D.loop(cv, (dt, T) => {
@@ -806,7 +848,10 @@
      ========================================================= */
   function initRK() {
     const cv = $("#rkCanvas"), g = ctx2d(cv), read = $("#rkRead"); let W = 0, H = 0, view = "size", t0 = 0;
-    $$("#rkTog button").forEach(b => b.addEventListener("click", () => { $$("#rkTog button").forEach(x => x.classList.toggle("on", x === b)); view = b.dataset.v; t0 = D.T; S.blip(view === "size" ? 523 : 784); }));
+    let rkUser = false;
+    const setView = v => { view = v; t0 = D.T; $$("#rkTog button").forEach(x => x.classList.toggle("on", x.dataset.v === v)); S.blip(v === "size" ? 523 : 784); };
+    $$("#rkTog button").forEach(b => b.addEventListener("click", () => { rkUser = true; setView(b.dataset.v); }));
+    auto(cv, () => { if (!rkUser) setView(view === "size" ? "fanout" : "size"); }, 6000);
     const dim = (x1, y1, x2, y2, txt, col) => { g.strokeStyle = col; g.fillStyle = col; g.lineWidth = 1; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); g.font = "500 10px IBM Plex Mono, monospace"; g.fillText(txt, (x1 + x2) / 2 + 4, (y1 + y2) / 2 - 4); };
     D.loop(cv, (dt, T) => {
       if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
@@ -871,9 +916,11 @@
     const cv = $("#cyc"), g = ctx2d(cv), sl = $("#cycRpm"), read = $("#cycRead");
     const N = 12, LOBES = N - 1, HOLES = 6;
     let W = 0, H = 0, th = 0, osc = null, og = null;
-    sl.addEventListener("input", () => S.tone(120 + +sl.value * .2, .03, "sine", .03));
+    let cTouched = false;
+    sl.addEventListener("input", () => { cTouched = true; S.tone(120 + +sl.value * .2, .03, "sine", .03); });
     D.loop(cv, (dt, T) => {
       if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
+      if (!cTouched && dt) sl.value = Math.round(1300 + 1100 * Math.sin(T * .35));
       const rpm = +sl.value; th += rpm / 60 * Math.PI * 2 * dt * .12;
       g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
       const R = Math.min(W, H) * .36, Rr = R * .075, e = R * .055, cx = W > 600 ? W * .46 : W / 2, cy = H / 2;
@@ -959,7 +1006,6 @@
     cv.addEventListener("pointerup", () => last = null);
     // an original riff: Em–C–G–D, palm-muted root pulses + 8th-note arpeggio on top, then a power-chord tag
     const riff = () => {
-      if (!D.audio.on) { D.setSound(true); }
       const bar = [["Em", 0], ["C", 1], ["G", 0], ["D", 2]], step = .17, pat = [-1, 3, 4, 5, 4, 3, 4, 5];
       let t = 0;
       bar.forEach(([c, root]) => {
@@ -969,10 +1015,13 @@
         t += pat.length * step;
       });
       [["E5", 0], ["G5", 2], ["A5", 3], ["C5", 4.5], ["D5", 5.5], ["E5", 6.5]].forEach(([c, b]) => setTimeout(() => { setChord(c); strum(true); }, (t + b * step) * 1000));
-      $("#music").scrollIntoView({ behavior: "smooth", block: "start" });
+      if (!riff.auto) $("#music").scrollIntoView({ behavior: "smooth", block: "start" });
+      riff.auto = false;
+      setTimeout(() => document.dispatchEvent(new Event("d66twinkle")), (t + 8 * step) * 1000);
     };
     $("#riffBtn").addEventListener("click", riff);
     document.addEventListener("d66riff", riff);
+    D.onVisible(cv, () => setTimeout(() => { riff.auto = true; riff(); }, 700), .45);
     D.loop(cv, (dt, T) => {
       if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
       g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
@@ -1025,6 +1074,12 @@
       seq.push(n); if (seq.length > 7) seq.shift();
       if (seq.join() === twinkle.join()) { D.print && D.print(`<span class="p">★</span> 小星星解锁 · keep practicing!`); S.chord([1047, 1319, 1568, 2093], .05, "sine", .06); el.animate([{ filter: "drop-shadow(0 0 0 #ffb21a)" }, { filter: "drop-shadow(0 0 30px #ffb21a)" }, { filter: "none" }], 1200); }
     };
+    // after the riff: play the opening of Twinkle Twinkle (traditional) once
+    let twinkled = false;
+    document.addEventListener("d66twinkle", () => {
+      if (twinkled || !visible(el)) return; twinkled = true;
+      [60, 60, 67, 67, 69, 69, 67].forEach((n, i) => setTimeout(() => press(n), i * 420 + (i === 6 ? 120 : 0)));
+    });
     let dn = false;
     el.addEventListener("pointerdown", e => { const k = e.target.closest(".wk,.bk"); if (k) { dn = true; press(+k.dataset.n); } });
     el.addEventListener("pointerover", e => { if (!dn) return; const k = e.target.closest(".wk,.bk"); if (k) press(+k.dataset.n); });
@@ -1061,7 +1116,7 @@
       setTimeout(() => { log.textContent += `\n64 bytes from github.com: icmp_seq=${seq++} ttl=56 time=${ms.toFixed(1)} ms`; log.scrollTop = log.scrollHeight; }, ms * 6);
     };
     $("#pingBtn").addEventListener("click", ping);
-    D.onVisible(cv, () => setTimeout(ping, 400));
+    auto(cv, ping, 6000, .4);
     D.loop(cv, (dt, T) => {
       if (D.fit(cv) || !W) W = cv.width / DPR;
       const R = W / 2 - 10; g.setTransform(DPR, 0, 0, DPR, W / 2 * DPR, W / 2 * DPR); g.clearRect(-W / 2, -W / 2, W, W);

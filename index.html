@@ -11,7 +11,9 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23141412'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-size='34' text-anchor='middle' fill='%23ff4f1f'%3E66%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&family=Noto+Serif+SC:wght@500;900&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&family=Noto+Serif+SC:wght@500;900&display=swap" as="style">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&family=Noto+Serif+SC:wght@500;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&family=Noto+Serif+SC:wght@500;900&display=swap" rel="stylesheet"></noscript>
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="gated">
@@ -21,9 +23,8 @@
   <div class="gate" id="gate">
     <pre class="post mono" id="post"></pre>
     <div class="gate-choice" id="gateChoice">
-      <button class="pill ink-pill big" id="enterSound"><span>带声音进入</span><span>♪</span></button>
-      <button class="pill big" id="enterMute"><span>静音进入</span><span>→</span></button>
-      <span class="gate-hint mono">ENTER = 带声音 · M = 静音 · 所有声音由 WebAudio 实时合成</span>
+      <button class="pill ink-pill big" id="enterSound"><span>进入</span><span>→</span></button>
+      <span class="gate-hint mono">按 ENTER 进入 · 页面有声音，随时按 S 或右上角 ♪ 关闭</span>
     </div>
     <div class="gate-word">READY&nbsp;TO&nbsp;<em>build</em></div>
     <span id="gateClock" hidden></span>
@@ -114,7 +115,7 @@
             <li>在研：RK3576 SBC，38 × 38 mm，冲 6 TOPS NPU 端侧推理</li>
             <li>STM32 · ESP32 · Arduino 等各类微控制器</li>
             <li>服务器部署 · 虚拟化 · Docker · K8s · 软路由</li>
-            <li>大模型推理 · AI Infra · PD 分离 · 国产算力</li>
+            <li>大模型推理 · AI Infra · PD 分离</li>
             <li>Agent · MCP · Graph-RAG</li>
             <li>电吉他（日式摇滚）；钢琴学习中</li>
           </ul>
@@ -216,7 +217,7 @@
       <div class="sec-h">
         <div class="sec-tag mono"><span>04</span> INFERENCE LAB</div>
         <h2 class="sec-t" data-glitch>推理实验室</h2>
-        <p class="sec-s">本职工作：在国产算力上部署、调优大模型。四个小实验。</p>
+        <p class="sec-s">本职工作：部署、调优大模型推理。四个小实验，滚到哪里就自动演示到哪里。</p>
       </div>
 
       <article class="exp" data-exp id="exp-pd">
@@ -500,7 +501,7 @@
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
   <script src="js/core.js"></script>
   <script src="js/labs.js"></script>
-  <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/" } }</script>
+  <script type="importmap">{ "imports": { "three": "./assets/vendor/three.module.min.js", "three/addons/": "./assets/vendor/jsm/" } }</script>
   <script type="module" src="js/aura.js"></script>
 </body>
 </html>
