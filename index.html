@@ -3,324 +3,379 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f1ede3">
-  <title>dreaming66 — Inference Atelier</title>
-  <meta name="description" content="dreaming66 的个人主页：AI Infra / 大模型推理工程。把大模型稳稳地跑在国产算力上。">
-  <meta property="og:title" content="dreaming66 — Inference Atelier">
-  <meta property="og:description" content="AI Infra · LLM Inference · Agent Systems">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-size='34' text-anchor='middle' fill='%23ff4f1f'%3E66%3C/text%3E%3C/svg%3E">
+  <meta name="theme-color" content="#0a0b0a">
+  <title>DRM-66 · dreaming66</title>
+  <meta name="description" content="dreaming66 的个人主页：手搓 Linux 开发板、AI Infra 与大模型推理、双足机器人、SDR、吉他与钢琴。">
+  <meta property="og:title" content="DRM-66 · dreaming66">
+  <meta property="og:description" content="Datasheet of a human: silicon, inference, robots, radio and strings.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230a0b0a'/%3E%3Crect x='16' y='16' width='32' height='32' fill='none' stroke='%23ffb21a' stroke-width='4'/%3E%3Cpath d='M24 8v8M32 8v8M40 8v8M24 48v8M32 48v8M40 48v8M8 24h8M8 32h8M8 40h8M48 24h8M48 32h8M48 40h8' stroke='%23ffb21a' stroke-width='3'/%3E%3Crect x='26' y='26' width='12' height='12' fill='%2336e2ff'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600;800&family=Space+Grotesk:wght@400;500;700&family=Noto+Serif+SC:wght@500;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;500;800&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="gated">
   <a class="skip" href="#main">跳到正文</a>
 
-  <!-- ============ LOADER ============ -->
-  <div class="loader" id="loader" aria-hidden="true">
-    <pre class="boot" id="boot"></pre>
-    <div class="loader-bar"><i id="loaderBar"></i></div>
-    <div class="loader-word">READY&nbsp;TO&nbsp;<em>infer</em></div>
-  </div>
-
-  <div class="grain" aria-hidden="true"></div>
-  <div class="progress" aria-hidden="true"><i id="progress"></i></div>
-  <div class="cursor" aria-hidden="true"><i class="c-dot"></i><i class="c-ring"><span class="c-label"></span></i></div>
-
-  <!-- ============ HEADER ============ -->
-  <header class="hdr">
-    <a class="brand magnetic" href="#top" data-cursor="home"><span class="brand-mark">66</span><span>dreaming<b>.</b></span></a>
-    <div class="hdr-mid mono"><span class="pulse"></span><span id="clock">BJT --:--:--</span><span class="sep">/</span><span id="fps">— fps</span></div>
-    <div class="hdr-act">
-      <button class="chip mono magnetic" id="termBtn" aria-label="打开终端" data-cursor="shell">&gt;_</button>
-      <button class="chip mono magnetic" id="motionBtn" aria-pressed="false" aria-label="暂停动态效果" data-cursor="pause">Ⅱ</button>
-      <button class="menu-btn magnetic" id="menuBtn" aria-haspopup="dialog" aria-controls="menu" data-cursor="menu"><span>菜单</span><i><b></b><b></b></i></button>
+  <!-- ===== POWER-ON GATE ===== -->
+  <div class="gate" id="gate">
+    <div class="gate-in">
+      <div class="gate-top mono"><span>DRM-66</span><span>POWER-ON SELF TEST</span><span id="gateClock">--</span></div>
+      <pre class="post mono" id="post"></pre>
+      <div class="gate-choice" id="gateChoice">
+        <button class="gbtn" id="enterSound"><span class="mono">[ ENTER ]</span><b>带声音启动</b><i class="mono">推荐 · 所有声音由 WebAudio 实时合成，零音频文件</i></button>
+        <button class="gbtn ghost" id="enterMute"><span class="mono">[ M ]</span><b>静音启动</b><i class="mono">随时按 S 打开</i></button>
+      </div>
     </div>
+  </div>
+  <div class="crt" id="crt" aria-hidden="true"></div>
+
+  <div class="scan" aria-hidden="true"></div>
+  <div class="probe" aria-hidden="true"><i class="ph"></i><i class="pv"></i><span class="pbr"></span><span class="pread mono" id="pread">x0000 y0000</span></div>
+
+  <!-- ===== TOP BAR ===== -->
+  <header class="bar mono">
+    <a class="logo" href="#top" aria-label="回到顶部">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="10" y="10" width="20" height="20"/><path d="M15 4v6M20 4v6M25 4v6M15 30v6M20 30v6M25 30v6M4 15h6M4 20h6M4 25h6M30 15h6M30 20h6M30 25h6"/><rect class="core" x="16" y="16" width="8" height="8"/></svg>
+      <span>DRM-66</span>
+    </a>
+    <div class="bar-mid"><span>REV 2026.10</span><span class="d">·</span><span id="clock">UTC+8 --:--:--</span><span class="d">·</span><span id="fps">--FPS</span></div>
+    <nav class="bar-act" aria-label="控制">
+      <button id="sndBtn" aria-pressed="false" title="声音 (S)">SND <b>OFF</b></button>
+      <button id="xrayBtn" aria-pressed="false" title="X 光模式 (X)">X-RAY</button>
+      <button id="motBtn" aria-pressed="false" title="暂停动效">MOT <b>ON</b></button>
+      <button id="termBtn" title="终端 (`)">&gt;_</button>
+    </nav>
   </header>
 
-  <!-- ============ MENU ============ -->
-  <nav class="menu" id="menu" role="dialog" aria-label="站点导航" aria-hidden="true">
-    <div class="menu-inner">
-      <a href="#lab" data-i="01"><span>实验室</span><em>The Lab</em></a>
-      <a href="#morph" data-i="02"><span>秩序与感受</span><em>Order ⇄ Feel</em></a>
-      <a href="#work" data-i="03"><span>经历</span><em>Trajectory</em></a>
-      <a href="#oss" data-i="04"><span>开源</span><em>Upstream</em></a>
-      <a href="#contact" data-i="05"><span>来找我</span><em>Say hi</em></a>
-    </div>
-    <p class="menu-foot mono">按 <kbd>`</kbd> 打开终端 · 输入 <kbd>help</kbd></p>
+  <!-- ===== SIDE RAIL ===== -->
+  <nav class="rail mono" aria-label="章节">
+    <a href="#top" data-k="00">DIE</a>
+    <a href="#spec" data-k="01">SPEC</a>
+    <a href="#build" data-k="02">BUILD</a>
+    <a href="#lab" data-k="03">INFER</a>
+    <a href="#wip" data-k="04">WIP</a>
+    <a href="#music" data-k="05">STRINGS</a>
+    <a href="#log" data-k="06">LOG</a>
+    <a href="#ping" data-k="07">PING</a>
   </nav>
 
   <main id="main">
-    <!-- ============ HERO ============ -->
-    <section class="hero" id="top">
-      <canvas id="ink" class="ink" aria-hidden="true"></canvas>
-      <div class="hero-meta mono">
-        <span>N 39°54′ · E 116°23′</span>
-        <span>AI INFRA / LLM INFERENCE / AGENT SYSTEMS</span>
-        <span>EST. 2021 → ∞</span>
+    <!-- ===== HERO / DIE SHOT ===== -->
+    <section class="hero" id="top" data-sec>
+      <canvas id="die" class="die" aria-label="生成式芯片版图，点击注入脉冲"></canvas>
+      <div class="hero-corner tl mono">PART NO. <b>DRM-66</b><br>CLASS · MAKER / AI INFRA / MUSICIAN</div>
+      <div class="hero-corner tr mono">DE BH3FWY · DIE 26.6 × 26.6 mm<br>PROBE · CLICK TO INJECT</div>
+      <div class="hero-title">
+        <p class="hero-pre mono"><span class="led"></span> datasheet of a human · 一份人类规格书</p>
+        <h1 class="name" id="name" aria-label="dreaming66">DREAMING<span>66</span></h1>
+        <p class="hero-sub">从焊锡到张量。<b>画 PCB、编内核、跑大模型</b>，<br>下班后在家手搓机器人、听无线电、弹吉他。</p>
       </div>
-      <div class="hero-copy">
-        <p class="hero-kicker reveal-up"><span class="star">✳</span> 你好，我是 Ruimin —— 一个把大模型<span class="hl">跑在国产算力上</span>的人。</p>
-        <h1 class="hero-name" aria-label="dreaming66">
-          <span class="hn-row"><span class="split" data-text="dream">dream</span><span class="hn-serif split" data-text="ing">ing</span></span>
-          <span class="hn-row hn-row2"><span class="hn-num split" data-text="66">66</span><span class="hn-tag mono">/ ˈdriːmɪŋ /<br>n. 让推理更快的执念</span></span>
-        </h1>
-        <div class="hero-bottom reveal-up">
-          <p class="hero-desc">从 <b>HCCL</b> 组网到 <b>PD 分离</b>，从 <b>W8A8 量化</b>到 <b>MCP 协议</b>。<br>我关心每一个 token 是怎么被生成出来的。</p>
-          <div class="hero-cta">
-            <a class="pill ink-pill magnetic" href="#lab" data-cursor="go"><span>进入实验室</span><span>↘</span></a>
-            <a class="pill magnetic" href="https://github.com/dreaming66" target="_blank" rel="noopener" data-cursor="open"><span>GitHub</span><span>↗</span></a>
-          </div>
+      <table class="hero-spec mono" aria-label="引脚定义">
+        <tr><th>PIN</th><th>NAME</th><th>FUNCTION</th></tr>
+        <tr><td>01</td><td class="hot">SOLDER</td><td>原理图 · PCB · 焊接 · 设备树</td></tr>
+        <tr><td>02</td><td class="hot">INFER</td><td>AI Infra · PD 分离 · K8s</td></tr>
+        <tr><td>03</td><td>WALK</td><td>双足机器人 · RL 步态 <i>WIP</i></td></tr>
+        <tr><td>04</td><td>RF</td><td>SDR · 呼号 BH3FWY <i>WIP</i></td></tr>
+        <tr><td>05</td><td>STRUM</td><td>吉他 · 钢琴 <i>WIP</i></td></tr>
+      </table>
+      <div class="hero-scroll mono"><i></i>SCROLL TO DECAP</div>
+    </section>
+
+    <canvas class="bus" id="bus" aria-hidden="true"></canvas>
+
+    <!-- ===== SPEC ===== -->
+    <section class="spec" id="spec" data-sec>
+      <div class="sec-h">
+        <span class="sec-k mono">§01 / GENERAL DESCRIPTION</span>
+        <h2 class="sec-t" data-glitch>概述</h2>
+      </div>
+      <div class="gen">
+        <div class="gen-meta mono"><span>model: drm-66-self</span><span>temperature: 0.7</span><span>top_p: 0.9</span><span id="genStat">tokens: 0</span></div>
+        <p class="gen-out" id="genOut"></p>
+        <p class="gen-hint mono">↑ 流式生成。悬停任意 token 查看它的（虚构）logprob。</p>
+      </div>
+      <div class="feat">
+        <div class="feat-c"><span class="mono">FEATURES</span>
+          <ul>
+            <li>从零独立研发 Linux 开发板：原理图、PCB、手工焊接、设备树、U-Boot / Kernel / Buildroot</li>
+            <li>STM32 · ESP32 · Arduino 等各类微控制器</li>
+            <li>服务器部署 · 虚拟化 · Docker · K8s · 软路由</li>
+            <li>大模型推理 · AI Infra · PD 分离 · 国产算力</li>
+            <li>Agent · MCP · Graph-RAG</li>
+            <li>吉他；钢琴学习中</li>
+          </ul>
+        </div>
+        <div class="feat-c"><span class="mono">ABSOLUTE MAXIMUM RATINGS</span>
+          <dl class="bars mono">
+            <div><dt>Hardware / Embedded Linux</dt><dd style="--v:.9"></dd></div>
+            <div><dt>AI Infra / Inference</dt><dd style="--v:.93"></dd></div>
+            <div><dt>Homelab / Cloud Native</dt><dd style="--v:.86"></dd></div>
+            <div><dt>Robotics · SDR · Training</dt><dd style="--v:.5" class="wipbar"></dd></div>
+            <div><dt>Guitar</dt><dd style="--v:.72"></dd></div>
+            <div><dt>Sleep</dt><dd style="--v:.28" class="warnbar"></dd></div>
+          </dl>
+          <p class="mono fnote">* 超过绝对最大额定值可能导致永久性熬夜。</p>
         </div>
       </div>
-      <p class="hero-hint mono">点击画面，投下一滴墨 · CLICK TO DROP INK</p>
-      <div class="scroll-cue mono"><span>SCROLL</span><i></i></div>
     </section>
 
-    <!-- ============ MARQUEE ============ -->
-    <div class="marquee" aria-hidden="true">
-      <div class="mq-track"><span>PREFILL ✳ DECODE ✳ KV CACHE ✳ HCCL RING ✳ W8A8 ✳ MOONCAKE ✳ vLLM ✳ MindIE ✳ MCP ✳ GRAPH-RAG ✳ KUBERNETES ✳ </span><span>PREFILL ✳ DECODE ✳ KV CACHE ✳ HCCL RING ✳ W8A8 ✳ MOONCAKE ✳ vLLM ✳ MindIE ✳ MCP ✳ GRAPH-RAG ✳ KUBERNETES ✳ </span></div>
-    </div>
+    <!-- ===== BUILD ===== -->
+    <section class="build" id="build" data-sec>
+      <div class="sec-h">
+        <span class="sec-k mono">§02 / HARDWARE BRING-UP</span>
+        <h2 class="sec-t" data-glitch>手搓，<em>从一块空板开始</em></h2>
+        <p class="sec-s">自己画原理图、画 PCB、手工焊接，再配设备树、编 U-Boot、Kernel、Buildroot，直到串口里出现登录提示符。下面这块板子交给你：<b>把所有焊盘焊上</b>（点击或拖过焊盘），然后上电。</p>
+      </div>
+      <ol class="flow mono" id="flow">
+        <li data-s="0">SCHEMATIC</li><li data-s="1">PCB LAYOUT</li><li data-s="2">SOLDER</li><li data-s="3">DEVICE TREE</li><li data-s="4">U-BOOT</li><li data-s="5">KERNEL</li><li data-s="6">BUILDROOT</li><li data-s="7">LOGIN</li>
+      </ol>
+      <div class="bringup">
+        <div class="stage pcb-stage"><canvas id="pcb" aria-label="可焊接的 PCB"></canvas>
+          <div class="pcb-hud mono"><span id="solderCnt">0 / 0 joints</span><button class="act" id="autoSolder">AUTO-SOLDER</button><button class="act hotbtn" id="powerBtn" disabled>⏻ POWER ON</button></div>
+        </div>
+        <div class="serial">
+          <div class="serial-bar mono"><span>/dev/ttyUSB0 · 115200 8N1</span><span id="serialState" class="d">NO CARRIER</span></div>
+          <pre class="serial-out mono" id="serialOut"></pre>
+        </div>
+      </div>
 
-    <!-- ============ MANIFESTO ============ -->
-    <section class="manifesto" id="about">
-      <div class="sec-tag mono"><span>00</span> MANIFESTO</div>
-      <p class="mf-text" id="mfText">算力不是魔法。它是一张张卡、一条条链路、一次次 AllReduce。我喜欢把复杂系统一层层拆开，直到它落到清楚的规则上——然后再把它拼回去，让它更快、更稳、更省。延迟里藏着的每一毫秒，都值得被找出来。</p>
-      <div class="stats">
-        <div class="stat"><b class="count" data-to="10" data-suffix="+">0</b><span>款大模型私有化生产部署</span></div>
-        <div class="stat"><b class="count" data-to="20" data-prefix="−" data-suffix="%">0</b><span>核心模型并发推理延迟</span></div>
-        <div class="stat"><b class="count" data-to="1000" data-suffix="万+">0</b><span>智能体平台累计服务人次</span></div>
-        <div class="stat"><b class="count" data-to="98" data-suffix="%">0</b><span>多模态审核模型准确率（自 75%）</span></div>
+      <div class="mcu-row">
+        <div class="mcu" data-mcu="stm32"><div class="chip-svg"><canvas class="blink" data-color="#36e2ff" data-rate="1"></canvas></div><b class="mono">STM32</b><span>寄存器 / HAL · 外设驱动 · RTOS</span></div>
+        <div class="mcu" data-mcu="esp32"><div class="chip-svg"><canvas class="blink" data-color="#a4ff5e" data-rate="2.2"></canvas></div><b class="mono">ESP32</b><span>Wi-Fi / BLE · IoT 小玩意</span></div>
+        <div class="mcu" data-mcu="arduino"><div class="chip-svg"><canvas class="blink" data-color="#ffb21a" data-rate=".6"></canvas></div><b class="mono">ARDUINO</b><span>快速原型 · 一切从 blink 开始</span></div>
+      </div>
+
+      <div class="rack-wrap">
+        <div class="rack-txt">
+          <span class="sec-k mono">HOMELAB</span>
+          <h3>家里的那台机柜</h3>
+          <p>服务器部署、虚拟化、Docker、K8s、软路由——工作里用的东西，先在自己家里折腾一遍。悬停设备看状态，点击发一个包看它怎么走。</p>
+        </div>
+        <div class="stage rack-stage"><canvas id="rack" aria-label="homelab 机柜"></canvas></div>
       </div>
     </section>
 
-    <!-- ============ LAB ============ -->
-    <section class="lab" id="lab">
-      <header class="sec-head">
-        <div class="sec-tag mono"><span>01</span> THE LAB · 可交互</div>
-        <h2 class="sec-title"><span class="scramble">让系统</span><br><em>看得见。</em></h2>
-        <p class="sec-sub">四个小实验，对应我每天在做的事。全部原生 Canvas / WebGL 手写，没有框架。</p>
-      </header>
+    <!-- ===== LAB ===== -->
+    <section class="lab" id="lab" data-sec>
+      <div class="sec-h">
+        <span class="sec-k mono">§03 / INFERENCE LAB</span>
+        <h2 class="sec-t" data-glitch>推理实验室</h2>
+        <p class="sec-s">本职工作：在国产算力上部署、调优大模型。四个小实验。</p>
+      </div>
 
-      <!-- PD -->
-      <article class="exp exp-pd" data-exp>
-        <div class="exp-head">
-          <span class="exp-no mono">EXP.01</span>
+      <article class="exp" data-exp id="exp-pd">
+        <header class="exp-h">
+          <span class="mono tag">FIG.1</span>
           <h3>Prefill / Decode 分离</h3>
-          <p>同一张卡既做 Prefill 又做 Decode 时，新请求一来，正在吐字的序列就得停下来等。把两者拆到不同节点、用 KV Cache 池（Mooncake）中转，decode 就能匀速输出。切换看看 TPOT 的变化。</p>
-          <div class="seg mono" role="tablist">
-            <button class="on" data-mode="disagg">PD 分离</button>
-            <button data-mode="coloc">混合部署</button>
+          <p>同一张卡既做 Prefill 又做 Decode 时，新请求一到，正在吐字的序列就得停下来。拆到不同节点、用 KV Cache 池（Mooncake）中转，decode 就能匀速输出。切换模式，看 TPOT 和抖动的变化。</p>
+          <div class="ctl mono">
+            <div class="tog" role="group" aria-label="部署模式"><button class="on" data-mode="disagg">DISAGG</button><button data-mode="coloc">COLOCATED</button></div>
+            <label class="sl">LOAD<input type="range" id="pdLoad" min="1" max="10" value="5"></label>
           </div>
-          <div class="seg mono" role="group" aria-label="负载">
-            <span class="seg-l">LOAD</span>
-            <input type="range" id="pdLoad" min="1" max="10" value="5" aria-label="请求负载">
-          </div>
-          <dl class="metrics mono">
+          <dl class="meter mono">
             <div><dt>TTFT</dt><dd id="mTTFT">—</dd></div>
             <div><dt>TPOT</dt><dd id="mTPOT">—</dd></div>
             <div><dt>JITTER</dt><dd id="mJit">—</dd></div>
             <div><dt>TOK/S</dt><dd id="mTPS">—</dd></div>
           </dl>
-        </div>
-        <div class="exp-stage"><canvas id="pdCanvas" aria-label="PD 分离模拟"></canvas><span class="stage-note mono">simulated · not a benchmark</span></div>
-      </article>
-
-      <!-- NPU -->
-      <article class="exp exp-npu" data-exp>
-        <div class="exp-head">
-          <span class="exp-no mono">EXP.02</span>
-          <h3>NPU 阵列心电图</h3>
-          <p>百卡级国产算力集群的一个抽象切片：每格是一张卡，颜色是利用率。点击「AllReduce」看一次集合通信在环上传递；悬停任意一格读它的状态。</p>
-          <div class="btns">
-            <button class="pill sm magnetic" id="npuRing" data-cursor="run"><span>AllReduce</span><span>⟳</span></button>
-            <button class="pill sm magnetic" id="npuStorm" data-cursor="run"><span>流量洪峰</span><span>⚡</span></button>
-          </div>
-          <p class="readout mono" id="npuRead">hover a card…</p>
-        </div>
-        <div class="exp-stage"><canvas id="npuCanvas" aria-label="NPU 阵列"></canvas></div>
-      </article>
-
-      <!-- MCP -->
-      <article class="exp exp-mcp" data-exp>
-        <div class="exp-head">
-          <span class="exp-no mono">EXP.03</span>
-          <h3>REST → MCP 自动转换</h3>
-          <p>存量业务接口千千万，不该为每个智能体都重写一遍适配。我做的 MCP 工具平台读取接口描述，自动生成 MCP Tool 定义，并统一注册、鉴权与分发。（示例为虚构接口）</p>
-          <div class="btns"><button class="pill sm magnetic" id="mcpNext" data-cursor="next"><span>下一个接口</span><span>→</span></button></div>
-        </div>
-        <div class="exp-stage mcp-stage">
-          <pre class="code" id="mcpIn"></pre>
-          <div class="mcp-arrow" aria-hidden="true"><i></i><span class="mono">compile</span></div>
-          <pre class="code code-out" id="mcpOut"></pre>
-        </div>
-      </article>
-
-      <!-- GRAPH -->
-      <article class="exp exp-graph" data-exp>
-        <div class="exp-head">
-          <span class="exp-no mono">EXP.04</span>
-          <h3>威胁图谱 · Graph-RAG</h3>
-          <p>纯向量检索答不了「这个 IP 背后是谁」。把情报写进图谱，让智能体在图库、向量库、关系库之间路由。拖拽节点；点「六度扩展」从攻击者出发逐层展开。</p>
-          <div class="btns"><button class="pill sm magnetic" id="gExpand" data-cursor="run"><span>六度扩展</span><span>◎</span></button></div>
-          <ul class="legend mono">
-            <li><i style="--c:var(--vermilion)"></i>Attacker</li><li><i style="--c:var(--cobalt)"></i>IP</li><li><i style="--c:var(--ink)"></i>Domain</li><li><i style="--c:var(--moss)"></i>Server</li><li><i style="--c:var(--sun)"></i>Tag</li>
-          </ul>
-        </div>
-        <div class="exp-stage"><canvas id="gCanvas" aria-label="威胁图谱"></canvas></div>
-      </article>
-    </section>
-
-    <!-- ============ MORPH ============ -->
-    <section class="morph" id="morph">
-      <div class="morph-copy">
-        <div class="sec-tag mono"><span>02</span> ORDER ⇄ FEEL</div>
-        <h2 class="sec-title">一组张量，<br><em>很多种形状。</em></h2>
-        <p class="sec-sub">在规整的张量方阵、球面、环面与双螺旋之间变形。拖动画面旋转，滑动改变形态。</p>
-        <div class="morph-ctl mono">
-          <span>TENSOR</span>
-          <input type="range" id="morphR" min="0" max="300" value="0" aria-label="形态">
-          <span>HELIX</span>
-        </div>
-        <p class="mono morph-read" id="morphRead">shape = tensor[12,12,12] · t = 0.00</p>
-      </div>
-      <canvas id="morphCanvas" class="morph-canvas" aria-label="点云变形"></canvas>
-    </section>
-
-    <!-- ============ WORK ============ -->
-    <section class="work" id="work">
-      <div class="work-pin">
-        <header class="work-head">
-          <div class="sec-tag mono"><span>03</span> TRAJECTORY</div>
-          <h2 class="sec-title">从数据，<br><em>到算力。</em></h2>
         </header>
-        <div class="work-track" id="workTrack">
-          <article class="card c-now" data-tilt>
-            <div class="card-top mono"><span>2025.08 — NOW</span><span class="badge live">● LIVE</span></div>
-            <h3>大型航空集团（央企）</h3>
-            <p class="card-role mono">信息技术岗 · AI Infra 方向</p>
-            <ul>
-              <li>百卡级<b>昇腾 910B</b>集群与<b>阿里 PPU</b>一体机的运维调优：HCCL 组网与通信调优、容器化调度，参与扩容网络架构设计。</li>
-              <li>基于 <b>vLLM / MindIE</b> 私有化部署 DeepSeek V3/R1 系列、Qwen 系列、Embedding / Reranker、MinerU 等 10+ 款模型；新模型一周内完成验证与压测准入。</li>
-              <li>定位多机多卡通信瓶颈，引入 <b>Mooncake PD 分离</b>，结合 W8A8 量化与算子优化，核心模型并发延迟 <b>−20%</b>，资源利用率 <b>+25%</b>。</li>
-              <li>集团级智能体平台 K8s 运维与 Prometheus + Grafana 可观测性，累计 <b>1000 万+</b> 人次、无重大事故。</li>
-              <li>主导自研 <b>MCP 工具平台</b>：RESTful → MCP 自动转换，统一注册、鉴权与分发。</li>
-            </ul>
-            <div class="tags mono"><span>Ascend</span><span>vLLM</span><span>MindIE</span><span>K8s</span><span>MCP</span></div>
-          </article>
-          <article class="card c-tx" data-tilt>
-            <div class="card-top mono"><span>2025.02 — 2025.07</span><span class="badge">INTERN</span></div>
-            <h3>腾讯 · PCG</h3>
-            <p class="card-role mono">质量策划实习生 · VLM 数据与策略</p>
-            <ul>
-              <li>负责社交产品资料场景端到端<b>多模态审核大模型</b>的数据与效果迭代，覆盖 3 条业务线的图片 + 文本。</li>
-              <li>以人审 / 质检不一致为信号挖掘 badcase，定向采集并加权；个人产出 <b>3.5W+</b> 训练样本，支撑按日迭代。</li>
-              <li>模型准确率 <b>75% → 98%</b>；推动「模型全量质检人审」，大盘准确率 <b>92% → 97%</b>。</li>
-            </ul>
-            <div class="tags mono"><span>VLM</span><span>Data Flywheel</span><span>Eval</span></div>
-          </article>
-          <article class="card c-proj" data-tilt>
-            <div class="card-top mono"><span>2024.05 — 2024.12</span><span class="badge gold">🏆 国一</span></div>
-            <h3>「智安智策」</h3>
-            <p class="card-role mono">LLM 智能体网络安全主动防御 · 3 人团队</p>
-            <ul>
-              <li><b>Graph + Vector 混合 RAG</b>：自然语言 → Cypher 查询威胁图谱，再经向量检索生成回答；后演进为 ReAct 智能体多数据源路由。</li>
-              <li>智能体长短期记忆：对话缓冲 + 语义召回；长期记忆由 LLM 摘要固化为文档跨会话加载。</li>
-              <li>威胁情报 API 封装、公有云资源接入、Docker 化与 GitHub Actions 自动构建。</li>
-              <li>第十三届「中国软件杯」<b>全国总决赛一等奖</b> · 发明专利（共同第一发明人）· 软著。</li>
-            </ul>
-            <div class="tags mono"><span>LlamaIndex</span><span>Neo4j</span><span>FastAPI</span><span>ReAct</span></div>
-          </article>
-          <article class="card c-edu" data-tilt>
-            <div class="card-top mono"><span>2021.09 — 2025.06</span><span class="badge">B.Eng</span></div>
-            <h3>中国民航大学</h3>
-            <p class="card-role mono">计算机科学与技术 · 本科</p>
-            <ul>
-              <li>「中国软件杯」全国一等奖</li>
-              <li>「互联网+」天津赛区银奖</li>
-              <li>天津市「新工科」竞赛三等奖</li>
-              <li>一等人民奖学金 · CET-6</li>
-            </ul>
-            <div class="tags mono"><span>CS</span><span>Civil Aviation</span></div>
-          </article>
-          <div class="card card-end" aria-hidden="true"><span class="mono">TO BE<br>CONTINUED</span><b>→</b></div>
+        <div class="stage"><canvas id="pdCanvas"></canvas><span class="note mono">SIMULATION · NOT A BENCHMARK</span></div>
+      </article>
+
+      <article class="exp" data-exp id="exp-npu">
+        <header class="exp-h">
+          <span class="mono tag">FIG.2</span>
+          <h3>NPU 阵列示波</h3>
+          <p>百卡级集群的抽象切片：每格一张卡，亮度是利用率。触发 AllReduce，听一次集合通信沿环跑过 12 个节点；悬停读单卡状态。</p>
+          <div class="ctl mono"><button class="act" id="npuRing">▶ ALLREDUCE</button><button class="act" id="npuStorm">⚡ BURST</button></div>
+          <pre class="readout mono" id="npuRead">hover a card…</pre>
+        </header>
+        <div class="stage"><canvas id="npuCanvas"></canvas></div>
+      </article>
+
+      <article class="exp" data-exp id="exp-mcp">
+        <header class="exp-h">
+          <span class="mono tag">FIG.3</span>
+          <h3>REST → MCP 编译器</h3>
+          <p>存量接口千千万，不该为每个智能体重写一遍适配。工具平台读取接口描述，自动生成 MCP Tool 定义，并统一注册、鉴权与分发。（示例接口均为虚构）</p>
+          <div class="ctl mono"><button class="act" id="mcpNext">▶ COMPILE NEXT</button></div>
+        </header>
+        <div class="stage mcp"><pre class="code" id="mcpIn"></pre><div class="arrow mono" aria-hidden="true"><i></i>compile</div><pre class="code out" id="mcpOut"></pre></div>
+      </article>
+
+      <article class="exp" data-exp id="exp-graph">
+        <header class="exp-h">
+          <span class="mono tag">FIG.4</span>
+          <h3>威胁图谱 · Graph-RAG</h3>
+          <p>纯向量检索答不了“这个 IP 背后是谁”。把情报写进图谱，让智能体在图库、向量库、关系库之间路由。拖拽节点；“六度扩展”会从攻击者逐跳展开。</p>
+          <div class="ctl mono"><button class="act" id="gExpand">▶ EXPAND 6 HOPS</button></div>
+          <ul class="legend mono"><li style="--c:var(--hot)">Attacker</li><li style="--c:var(--sig)">IP</li><li style="--c:var(--fg)">Domain</li><li style="--c:var(--ok)">Server</li><li style="--c:var(--amb)">Tag</li></ul>
+        </header>
+        <div class="stage"><canvas id="gCanvas"></canvas></div>
+      </article>
+    </section>
+
+    <!-- ===== WIP ===== -->
+    <section class="wip" id="wip" data-sec>
+      <div class="sec-h">
+        <span class="sec-k mono">§04 / WORK IN PROGRESS</span>
+        <h2 class="sec-t" data-glitch>正在折腾</h2>
+        <p class="sec-s">还没做完、但每周都在推进的三件事。</p>
+      </div>
+
+      <article class="exp" data-exp id="exp-robot">
+        <header class="exp-h">
+          <span class="mono tag">WIP.1</span>
+          <h3>在家手搓双足机器人</h3>
+          <p>用强化学习训练步态。拖动训练进度，看它从摔跤到走路：早期的策略只会乱蹬，奖励曲线爬上去之后，步态才稳下来。点击画面给它一脚。</p>
+          <div class="ctl mono"><label class="sl wide">EPISODE<input type="range" id="rlEp" min="0" max="1000" value="80"></label></div>
+          <dl class="meter mono">
+            <div><dt>EPISODE</dt><dd id="rlE">—</dd></div>
+            <div><dt>REWARD</dt><dd id="rlR">—</dd></div>
+            <div><dt>FALLS</dt><dd id="rlF">0</dd></div>
+            <div><dt>v<sub>x</sub></dt><dd id="rlV">—</dd></div>
+          </dl>
+        </header>
+        <div class="stage"><canvas id="robot" aria-label="双足机器人步态"></canvas><span class="note mono">PROCEDURAL TOY · NOT THE REAL POLICY</span></div>
+      </article>
+
+      <article class="exp" data-exp id="exp-sdr">
+        <header class="exp-h">
+          <span class="mono tag">WIP.2</span>
+          <h3>软件定义无线电</h3>
+          <p>瀑布图里藏着几个信号。拖动或滚轮调台，开着声音能“听”到它们——其中一个是摩尔斯信标，在反复拍发一串呼号。你能解出来吗？</p>
+          <div class="ctl mono"><span class="freq" id="sdrFreq">145.000 MHz</span><button class="act" id="sdrScan">⟳ SCAN</button></div>
+          <pre class="readout mono" id="sdrRead">tuning…</pre>
+        </header>
+        <div class="stage"><canvas id="sdr" aria-label="SDR 瀑布图"></canvas></div>
+      </article>
+
+      <article class="exp" data-exp id="exp-ft">
+        <header class="exp-h">
+          <span class="mono tag">WIP.3</span>
+          <h3>大模型训练与微调</h3>
+          <p>从推理往上游走：学习训练和微调。选一个 LoRA 秩开始训练，看 loss 曲线和学习率调度（warmup + cosine）。</p>
+          <div class="ctl mono"><div class="tog" id="loraTog"><button data-r="8" class="on">r=8</button><button data-r="16">r=16</button><button data-r="64">r=64</button><button data-r="0">FULL</button></div><button class="act" id="ftRun">▶ TRAIN</button></div>
+          <pre class="readout mono" id="ftRead">idle</pre>
+        </header>
+        <div class="stage"><canvas id="ft" aria-label="训练 loss 曲线"></canvas></div>
+      </article>
+    </section>
+
+    <!-- ===== MUSIC ===== -->
+    <section class="music" id="music" data-sec>
+      <div class="sec-h">
+        <span class="sec-k mono">§05 / STRINGS &amp; KEYS</span>
+        <h2 class="sec-t" data-glitch>六根弦，<em>八十八个键</em></h2>
+        <p class="sec-s">会弹吉他，正在学钢琴。下面两件乐器都能弹：吉他用 Karplus-Strong 算法实时合成拨弦，钢琴用加法合成。先打开声音。</p>
+      </div>
+      <div class="guitar">
+        <div class="gt-ctl mono">
+          <span>CHORD</span>
+          <div class="tog" id="chords"></div>
+          <span class="d">拖过琴弦扫弦 · 点击单弦拨奏</span>
+        </div>
+        <div class="stage gt-stage"><canvas id="guitar" aria-label="可弹奏的吉他"></canvas></div>
+      </div>
+      <div class="piano-wrap">
+        <div class="piano-h mono"><span>PIANO · LEARNING</span><span class="prog"><i style="--p:.22"></i></span><span class="d">键盘 A W S E D F T G Y H U J K 也能弹 · 试试弹出 “小星星”</span></div>
+        <div class="piano" id="piano" aria-label="钢琴键盘"></div>
+      </div>
+    </section>
+
+    <!-- ===== LOG ===== -->
+    <section class="log" id="log" data-sec>
+      <div class="sec-h">
+        <span class="sec-k mono">§06 / REVISION HISTORY</span>
+        <h2 class="sec-t" data-glitch>git log --graph</h2>
+        <p class="sec-s">本职那条主线。点击提交展开 diff。</p>
+      </div>
+      <ol class="commits mono" id="commits">
+        <li class="cm open">
+          <button class="cm-h"><i class="dot"></i><span class="sha">a66f0c8</span><span class="ref">(HEAD → main)</span><span class="when">2025.08 – now</span><span class="msg">feat: 某大型集团 · AI Infra 工程</span></button>
+          <div class="cm-b"><div>
+            <p class="diff add">+ 百卡级昇腾 NPU 集群与 PPU 一体机运维调优：HCCL 组网与通信调优、容器化资源调度、扩容网络架构设计</p>
+            <p class="diff add">+ vLLM / MindIE 私有化部署 DeepSeek、Qwen、Embedding / Reranker、MinerU 等 10+ 款模型，新模型一周内完成验证与压测准入</p>
+            <p class="diff add">+ 定位多机多卡通信瓶颈；Mooncake PD 分离 + W8A8 量化 + 算子优化 → 并发延迟 −20%，资源利用率 +25%</p>
+            <p class="diff add">+ 集团级智能体平台 K8s 运维 + Prometheus / Grafana 告警，累计 1000 万+ 人次、零重大事故</p>
+            <p class="diff add">+ 主导自研 MCP 工具平台：REST → MCP 自动转换，统一注册、鉴权与分发</p>
+            <p class="diff del">- “部署模型就是 docker run 一下”的天真想法</p>
+          </div></div>
+        </li>
+        <li class="cm">
+          <button class="cm-h"><i class="dot"></i><span class="sha">7e2b4d1</span><span class="ref">(intern/vlm)</span><span class="when">2025.02 – 2025.07</span><span class="msg">feat: 头部互联网大厂 · VLM 数据与策略实习</span></button>
+          <div class="cm-b"><div>
+            <p class="diff add">+ 负责社交产品资料场景端到端多模态审核大模型（图片 + 文本，3 条业务线）的数据与效果迭代</p>
+            <p class="diff add">+ 以人审 / 质检不一致为信号挖掘 badcase，定向采集并加权；个人产出 3.5W+ 训练样本，支撑按日迭代</p>
+            <p class="diff add">+ 模型准确率 75% → 98%；推动“模型全量质检人审”，大盘准确率 92% → 97%</p>
+          </div></div>
+        </li>
+        <li class="cm">
+          <button class="cm-h"><i class="dot"></i><span class="sha">3c91a5f</span><span class="ref">(proj/agent)</span><span class="when">2024.05 – 2024.12</span><span class="msg">feat: LLM 智能体网络安全主动防御系统 · 3 人团队</span></button>
+          <div class="cm-b"><div>
+            <p class="diff add">+ Graph + Vector 混合 RAG：自然语言 → Cypher 查询威胁图谱，再经向量检索生成；后演进为 ReAct 多数据源路由</p>
+            <p class="diff add">+ 智能体长短期记忆：对话缓冲 + 语义召回；长期记忆由 LLM 摘要固化为文档跨会话加载</p>
+            <p class="diff add">+ 威胁情报 API 封装、公有云资源接入、Docker 化 + GitHub Actions 自动构建</p>
+            <p class="diff add">+ 全国软件设计大赛总决赛一等奖 · 发明专利（共同第一发明人）· 软件著作权</p>
+          </div></div>
+        </li>
+        <li class="cm">
+          <button class="cm-h"><i class="dot"></i><span class="sha">0000001</span><span class="ref">(tag: v0.1)</span><span class="when">2021.09 – 2025.06</span><span class="msg">init: 计算机科学与技术 · 本科</span></button>
+          <div class="cm-b"><div>
+            <p class="diff add">+ 全国软件设计大赛一等奖 · 创新创业大赛省级银奖 · 省级工科竞赛三等奖</p>
+            <p class="diff add">+ 一等奖学金 · CET-6</p>
+          </div></div>
+        </li>
+      </ol>
+
+      <div class="oss">
+        <div class="ghcard mono"><span class="d">$ gh api users/dreaming66</span><span id="ghLive">fetching…</span></div>
+        <div class="prs mono">
+          <a class="pr" href="https://github.com/kubernetes-sigs/kueue/pull/17528" target="_blank" rel="noopener"><span class="st merged">MERGED</span><span class="repo">kubernetes-sigs/kueue#17528</span><span class="tt">docs: v1alpha1 API reference，已上线官网</span><span class="go">↗</span></a>
+          <a class="pr" href="https://github.com/kubernetes-sigs/kueue/pull/17527" target="_blank" rel="noopener"><span class="st open">OPEN</span><span class="repo">kubernetes-sigs/kueue#17527</span><span class="tt">test: TAS 调度库测试门控</span><span class="go">↗</span></a>
+          <a class="pr" href="https://github.com/kubernetes-sigs/reference-docs/pull/476" target="_blank" rel="noopener"><span class="st open">OPEN</span><span class="repo">kubernetes-sigs/reference-docs#476</span><span class="tt">genref: 支持 json tag options</span><span class="go">↗</span></a>
         </div>
       </div>
     </section>
 
-    <!-- ============ OSS ============ -->
-    <section class="oss" id="oss">
-      <header class="sec-head">
-        <div class="sec-tag mono"><span>04</span> UPSTREAM</div>
-        <h2 class="sec-title">把代码，<br><em>还给社区。</em></h2>
-      </header>
-      <div class="pr-list">
-        <a class="pr magnetic-soft" href="https://github.com/kubernetes-sigs/kueue/pull/17528" target="_blank" rel="noopener" data-cursor="open">
-          <span class="pr-state merged mono">MERGED</span>
-          <span class="pr-repo mono">kubernetes-sigs/kueue <i>#17528</i></span>
-          <span class="pr-title">v1alpha1 API reference 文档生成，已上线官网</span>
-          <span class="pr-arrow">↗</span>
-        </a>
-        <a class="pr magnetic-soft" href="https://github.com/kubernetes-sigs/kueue/pull/17527" target="_blank" rel="noopener" data-cursor="open">
-          <span class="pr-state open mono">OPEN</span>
-          <span class="pr-repo mono">kubernetes-sigs/kueue <i>#17527</i></span>
-          <span class="pr-title">TAS 调度库测试门控</span>
-          <span class="pr-arrow">↗</span>
-        </a>
-        <a class="pr magnetic-soft" href="https://github.com/kubernetes-sigs/reference-docs/pull/476" target="_blank" rel="noopener" data-cursor="open">
-          <span class="pr-state open mono">OPEN</span>
-          <span class="pr-repo mono">kubernetes-sigs/reference-docs <i>#476</i></span>
-          <span class="pr-title">genref：支持 json tag options</span>
-          <span class="pr-arrow">↗</span>
-        </a>
+    <!-- ===== PING ===== -->
+    <section class="ping" id="ping" data-sec>
+      <div class="sec-h">
+        <span class="sec-k mono">§07 / CONTACT</span>
+        <h2 class="sec-t big" data-glitch>ping <em>dreaming66</em></h2>
       </div>
-
-      <div class="stack">
-        <div class="stack-row" data-dir="1"><span>Ascend 910B</span><span>Alibaba PPU</span><span>vLLM</span><span>MindIE</span><span>Mooncake</span><span>W8A8</span><span>HCCL</span><span>Kubernetes</span><span>Docker</span><span>Prometheus</span><span>Grafana</span></div>
-        <div class="stack-row" data-dir="-1"><span>MCP</span><span>Agent</span><span>Graph-RAG</span><span>LlamaIndex</span><span>LangChain</span><span>Neo4j</span><span>Python</span><span>Go</span><span>Java</span><span>TypeScript</span><span>Linux</span></div>
+      <div class="sonar">
+        <canvas id="sonar" aria-hidden="true"></canvas>
+        <pre class="pinglog mono" id="pinglog">PING dreaming66 (github.com): 56 data bytes</pre>
       </div>
-    </section>
-
-    <!-- ============ CONTACT ============ -->
-    <section class="contact" id="contact">
-      <div class="sec-tag mono"><span>05</span> LET'S BUILD</div>
-      <h2 class="ct-title">一起把推理层<br>做得<em class="ct-em">更快一点。</em></h2>
-      <div class="ct-row">
-        <a class="pill ink-pill big magnetic" href="https://github.com/dreaming66" target="_blank" rel="noopener" data-cursor="open"><span>github.com/dreaming66</span><span>↗</span></a>
-        <button class="pill big magnetic" id="cardBtn" data-cursor="make"><span>生成一张名片</span><span>↓</span></button>
+      <div class="ping-act">
+        <button class="act big" id="pingBtn">▶ 发送一个 ping</button>
+        <a class="act big solid" href="https://github.com/dreaming66" target="_blank" rel="noopener">github.com/dreaming66 ↗</a>
       </div>
-      <p class="ct-note mono">联系方式不在这里公开 —— 去 GitHub 找我，或者在终端里输入 <kbd>sudo hire-me</kbd>。</p>
+      <p class="mono ping-note">联系方式不在此公开 · 去 GitHub 找我，或在终端里输入 <kbd>sudo hire-me</kbd></p>
     </section>
   </main>
 
-  <footer class="ftr mono">
-    <span>© 2026 dreaming66</span>
-    <span>hand-written WebGL · Canvas2D · zero frameworks</span>
-    <a href="#top" class="magnetic" data-cursor="top">回到顶部 ↑</a>
+  <footer class="foot mono">
+    <canvas id="scope" aria-hidden="true"></canvas>
+    <div class="foot-row"><span>© 2026 dreaming66 · DRM-66 datasheet rev 2026.10</span><span>Canvas2D + WebAudio · zero frameworks · zero samples</span><span><kbd>X</kbd> 透视 · <kbd>`</kbd> 终端 · <kbd>S</kbd> 声音</span></div>
   </footer>
 
-  <!-- ============ TERMINAL ============ -->
-  <div class="term" id="term" role="dialog" aria-label="终端" aria-hidden="true">
-    <div class="term-bar mono"><i></i><i></i><i></i><span>dreaming66@atelier: ~</span><button id="termClose" aria-label="关闭">×</button></div>
-    <div class="term-body mono" id="termBody"></div>
-    <form class="term-in mono" id="termForm"><span>❯</span><input id="termInput" autocomplete="off" spellcheck="false" aria-label="命令"></form>
-  </div>
+  <!-- X-RAY annotations -->
+  <div class="xnote mono" style="top:22vh;left:46vw">&lt;!-- 这里本来想放一张照片。隐私优先，换成了芯片。 --&gt;</div>
+  <div class="xnote mono" style="top:70vh;left:6vw">&lt;!-- 数字来自真实工作；接口、IP、图谱与仿真均为虚构演示 --&gt;</div>
+  <div class="xnote mono" style="top:46vh;right:4vw">&lt;!-- easter egg: ↑↑↓↓←→←→BA --&gt;</div>
 
-  <!-- ============ CARD MODAL ============ -->
-  <div class="modal" id="cardModal" aria-hidden="true" role="dialog" aria-label="名片">
-    <div class="modal-in">
-      <canvas id="cardCanvas" width="1200" height="720"></canvas>
-      <div class="modal-ctl">
-        <input id="cardLine" class="mono" maxlength="28" value="把大模型稳稳地跑在国产算力上" aria-label="名片上的一句话">
-        <button class="pill sm" id="cardShuffle"><span>换个样式</span><span>↻</span></button>
-        <a class="pill sm ink-pill" id="cardDl" download="dreaming66-card.png"><span>下载 PNG</span><span>↓</span></a>
-        <button class="pill sm" id="cardClose"><span>关闭</span><span>×</span></button>
-      </div>
-    </div>
+  <!-- ===== TERMINAL ===== -->
+  <div class="term mono" id="term" role="dialog" aria-label="终端" aria-hidden="true">
+    <div class="term-bar"><span>tty0 · drm-66</span><button id="termClose" aria-label="关闭">[×]</button></div>
+    <div class="term-body" id="termBody"></div>
+    <form class="term-in" id="termForm"><span>drm-66 $</span><input id="termInput" autocomplete="off" spellcheck="false" aria-label="命令"></form>
   </div>
 
   <canvas id="matrix" class="matrix" aria-hidden="true"></canvas>
-  <script src="main.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/labs.js"></script>
 </body>
 </html>
