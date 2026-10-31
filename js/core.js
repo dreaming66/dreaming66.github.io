@@ -25,6 +25,10 @@
     if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; return true; }
     return false;
   };
+  // browser dark mode: CSS swaps paper / ink by itself; canvases drawing on the page (the hero) read D.dark
+  const darkMQ = matchMedia("(prefers-color-scheme: dark)");
+  D.dark = darkMQ.matches;
+  darkMQ.addEventListener?.("change", e => { D.dark = e.matches; document.dispatchEvent(new Event("d66theme")); });
   D.onVisible = (el, fn, th = .3) => { const o = new IntersectionObserver(es => { if (es[es.length - 1].isIntersecting) { o.disconnect(); fn(); } }, { threshold: th }); o.observe(el); };
 
   /* =========================================================
@@ -115,22 +119,7 @@
     boot() { S.chord([261.6, 329.6, 392, 523.3, 784], .09, "sine", .11); S.noise(.4, 200, .7, .05, "lowpass"); },
     // Karplus–Strong plucked string, cached per frequency
     _ks: new Map(),
-    // drive chain: pre-gain → HPF → soft-clip waveshaper → mid boost → cab low-pass
-    _amp() {
-      if (A.amp) return A.amp; const c = A.ctx;
-      const pre = c.createGain(); pre.gain.value = 7;
-      const hp = c.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 110;
-      const ws = c.createWaveShaper(); const n = 2048, cur = new Float32Array(n), k = 55;
-      for (let i = 0; i < n; i++) { const x = i * 2 / n - 1; cur[i] = (1 + k) * x / (1 + k * Math.abs(x)); }
-      ws.curve = cur; ws.oversample = "4x";
-      const mid = c.createBiquadFilter(); mid.type = "peaking"; mid.frequency.value = 850; mid.Q.value = .9; mid.gain.value = 7;
-      const cab = c.createBiquadFilter(); cab.type = "lowpass"; cab.frequency.value = 4200; cab.Q.value = .8;
-      const cab2 = c.createBiquadFilter(); cab2.type = "lowpass"; cab2.frequency.value = 6500;
-      const post = c.createGain(); post.gain.value = .16;
-      pre.connect(hp); hp.connect(ws); ws.connect(mid); mid.connect(cab); cab.connect(cab2); cab2.connect(post); out(post, .3);
-      return A.amp = pre;
-    },
-    pluck(f, v = .3, bright = .5, drive = false) {
+    pluck(f, v = .3, bright = .5) {
       if (!ok()) return; const sr = A.ctx.sampleRate, key = Math.round(f * 10) + ":" + bright;
       let buf = S._ks.get(key);
       if (!buf) {
@@ -147,19 +136,8 @@
       const s = A.ctx.createBufferSource(); s.buffer = buf;
       const g = A.ctx.createGain(); g.gain.value = v;
       const fl = A.ctx.createBiquadFilter(); fl.type = "lowpass"; fl.frequency.value = 2400 + bright * 4000;
-      s.connect(fl); fl.connect(g);
-      if (drive) g.connect(S._amp()); else out(g, .35);
+      s.connect(fl); fl.connect(g); out(g, .35);
       s.start();
-    },
-    piano(f, v = .22) {
-      if (!ok()) return; const t = A.ctx.currentTime;
-      const g = A.ctx.createGain(); env(g, t, .006, v, 2.4); out(g, .4);
-      [[1, 1], [2, .42], [3, .2], [4, .11], [5, .06]].forEach(([h, a]) => {
-        const o = A.ctx.createOscillator(), og = A.ctx.createGain(); o.frequency.value = f * h * (1 + (h - 1) * .0009);
-        og.gain.setValueAtTime(a, t); og.gain.exponentialRampToValueAtTime(.0001, t + 2.4 / h);
-        o.connect(og); og.connect(g); o.start(t); o.stop(t + 2.6);
-      });
-      S.noise(.03, 2500, 1, .04);
     },
     morse(text, wpm = 20, f = 700) {
       if (!ok()) return 0; const u = 1.2 / wpm; let t = 0;
@@ -187,7 +165,6 @@
     ["RF FRONTEND ........ 144–146 MHz · DE BH3FWY", "ok"],
     ["ACTUATOR ........ cycloidal 5010 · screwdriver test OK · motor in transit", "w"],
     ["GAIT POLICY ........ PPO · 192M steps · walking in sim", "ok"],
-    ["STRINGS ........ EADGBE · overdrive on", "ok"],
     ["PRIVACY ........ phone / email / employer → REDACTED", "w"],
     ["AUDIO ........ WebAudio synth armed · first click unmutes", "ok"],
   ];
@@ -359,14 +336,13 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
               Robot: BHL-based · gait policy walking in MJX
               RF: ZYNQ-7010 + AD936x · BH3FWY
               Strings: electric · J-rock · Keys: learning`,
-    ls: () => `auracore/  rk3576/  homelab/  inference/  robot/  sdr/  archive/  guitar.wav  <span class="d">.secrets</span>`,
+    ls: () => `auracore/  rk3576/  homelab/  inference/  robot/  sdr/  archive/  <span class="d">.secrets</span>`,
     "cat .secrets": () => `<span class="r">permission denied</span> · redacted`,
     "uname -a": () => `Linux drm-66 6.6.66-dreaming #1 SMP PREEMPT armv7l GNU/Linux`,
     build: () => { go("#build"); return "→ §02 hardware bring-up"; },
     sdr: () => { go("#exp-sdr"); document.dispatchEvent(new CustomEvent("d66tune", { detail: 145.66 })); return "→ tuning 145.660 MHz…"; },
     infer: () => { go("#lab"); return "→ §03 inference lab"; },
     cq: () => { if (!A.on) return D.t("term.nosound"); const d = S.morse("CQ CQ DE BH3FWY K", 22); return `-.-. --.- / -.-. --.- / -.. . / -... .... ...-- ..-. .-- -.-- / -.-  <span class="d">(${d.toFixed(1)}s)</span>`; },
-    play: () => { if (!A.on) return D.t("term.nosound"); document.dispatchEvent(new Event("d66riff")); return "♪ ♫"; },
     matrix: () => { D.toggleMatrix(); return D.matrixOn ? "wake up, neo…" : "back."; },
     xray: () => { setX(!document.body.classList.contains("xray")); return "x-ray toggled."; },
     sound: () => { D.setSound(!A.on); return A.on ? "sound on." : "sound off."; },
@@ -422,8 +398,8 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
     if (field || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === "`") { e.preventDefault(); setTerm(!term.classList.contains("open")); }
     else if (e.key === "Escape") { setTerm(false); D.setMenu && D.setMenu(false); }
-    else if (e.key.toLowerCase() === "s" && !D.pianoFocus) D.setSound(!A.on);
-    else if (e.key.toLowerCase() === "x" && !D.pianoFocus) setX(!document.body.classList.contains("xray"));
+    else if (e.key.toLowerCase() === "s") D.setSound(!A.on);
+    else if (e.key.toLowerCase() === "x") setX(!document.body.classList.contains("xray"));
   });
 
   D.boot = () => {

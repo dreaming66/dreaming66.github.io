@@ -34,6 +34,27 @@
  "gyro": 0,
  "upvector_z": 11,
  "local_linvel": 3,
+ "foot_contact": [
+  30,
+  31
+ ],
+ "foot_vel": [
+  18,
+  21
+ ],
+ "gear": 15.0,
+ "legs": [
+  [
+   0,
+   1,
+   2
+  ],
+  [
+   3,
+   4,
+   5
+  ]
+ ],
  "sim_q": {
   "l_hip_roll": 7,
   "l_hip_pitch": 8,

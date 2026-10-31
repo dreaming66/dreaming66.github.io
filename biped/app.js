@@ -2,11 +2,14 @@ import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import loadMujoco from "./lib/mujoco.js";
 import { Biped, loadCad, poseCad } from "./core.js";
+import { JointAudio } from "./audio.js";
+import { GROUNDS, groundMaterial, setGroundResolution } from "./ground.js";
 
 const $ = id => document.getElementById(id);
 const EMBED = document.documentElement.dataset.mode === "embed";
 const COARSE = matchMedia("(pointer: coarse)").matches;
 const PARENT = EMBED && window.parent !== window ? window.parent : null;
+const DARK = matchMedia("(prefers-color-scheme: dark)");
 const tell = msg => PARENT && PARENT.postMessage({ d66biped: 1, ...msg }, location.origin);
 
 // ---------------------------------------------------------------- i18n (zh / en / ja; shares the homepage's choice)
@@ -17,7 +20,8 @@ const I18N = {
     h0: "<b>键盘操作</b>（按住）", h1: "前进 · 后退", h2: "左转 · 右转", h3: "左右侧移", h4: "推一下", h5: "重置", h6: "自动驾驶",
     h7: "点一下画面也能推它 · 拖动旋转视角，滚轮缩放",
     s0: "前进", s1: "后退", s2: "左转", s3: "右转", sl: "◀ 侧移", sr: "侧移 ▶",
-    push: "推一下", reset: "重置", follow: "跟随视角", auto: "自动驾驶", full: "全屏操控 ↗",
+    push: "推一下", reset: "重置", follow: "跟随视角", auto: "自动驾驶", full: "全屏操控 ↗", moreLbl: "更多",
+    h8: "音效", sndOn: "音效 开", sndOff: "音效 关", ground: "地面", grounds: { concrete: "混凝土", wood: "木地板", grass: "草地", checker: "棋盘格" },
     tPush: "推！", tFall: "摔倒了，1 秒后重置", tAuto: "自动驾驶", tYou: "你来开",
     you: "YOU", ap: k => `AUTO · ${k}`,
     seg: { stand: "原地踏步", walk: "直行", arc: "边走边转", left: "向左侧移", right: "向右侧移", spin: "原地转身", back: "倒退", fast: "快走", shove: "挨一推" },
@@ -32,7 +36,8 @@ const I18N = {
     h0: "<b>Keyboard</b> (hold)", h1: "forward · back", h2: "turn left · right", h3: "strafe", h4: "push", h5: "reset", h6: "autopilot",
     h7: "click the scene to shove it · drag to orbit, wheel to zoom",
     s0: "fwd", s1: "back", s2: "left", s3: "right", sl: "◀ strafe", sr: "strafe ▶",
-    push: "push", reset: "reset", follow: "follow cam", auto: "autopilot", full: "drive it full screen ↗",
+    push: "push", reset: "reset", follow: "follow cam", auto: "autopilot", full: "drive it full screen ↗", moreLbl: "more",
+    h8: "sound", sndOn: "sound on", sndOff: "sound off", ground: "floor", grounds: { concrete: "concrete", wood: "wood", grass: "grass", checker: "checker" },
     tPush: "shove!", tFall: "down — resetting in 1 s", tAuto: "autopilot", tYou: "you drive",
     you: "YOU", ap: k => `AUTO · ${k}`,
     seg: { stand: "stepping in place", walk: "straight", arc: "walk + turn", left: "strafe left", right: "strafe right", spin: "turn on the spot", back: "backwards", fast: "brisk walk", shove: "taking a shove" },
@@ -47,7 +52,8 @@ const I18N = {
     h0: "<b>キーボード</b>（長押し）", h1: "前進 · 後退", h2: "左旋回 · 右旋回", h3: "左右に横移動", h4: "押す", h5: "リセット", h6: "自動操縦",
     h7: "画面クリックでも押せる · ドラッグで視点回転、ホイールでズーム",
     s0: "前進", s1: "後退", s2: "左", s3: "右", sl: "◀ 横移動", sr: "横移動 ▶",
-    push: "押す", reset: "リセット", follow: "追従カメラ", auto: "自動操縦", full: "全画面で操作 ↗",
+    push: "押す", reset: "リセット", follow: "追従カメラ", auto: "自動操縦", full: "全画面で操作 ↗", moreLbl: "その他",
+    h8: "サウンド", sndOn: "サウンド オン", sndOff: "サウンド オフ", ground: "床", grounds: { concrete: "コンクリート", wood: "フローリング", grass: "芝生", checker: "チェッカー" },
     tPush: "えいっ！", tFall: "転倒、1 秒後にリセット", tAuto: "自動操縦", tYou: "手動操作",
     you: "YOU", ap: k => `AUTO · ${k}`,
     seg: { stand: "足踏み", walk: "直進", arc: "歩きながら旋回", left: "左へ横移動", right: "右へ横移動", spin: "その場で旋回", back: "後退", fast: "早歩き", shove: "押されても耐える" },
@@ -57,14 +63,18 @@ const I18N = {
     foot: "MuJoCo 3.17（WebAssembly）のリアルタイム物理。学習時と同じモデルを使い、MJX で PPO 学習した MLP 方策を 20 ms ごとに推論。録画ではなく、一歩一歩その場で計算しています。",
   },
 };
-let lang = window.__lang || "zh", hudReady = false;
+let lang = window.__lang || "zh", hudReady = false, sfx = null, soundWanted = true;
+for (const k of Object.keys(GROUNDS)) $("ground").add(new Option(k, k));
 const T = (k, ...a) => { const v = I18N[lang][k] ?? I18N.en[k]; return typeof v === "function" ? v(...a) : v; };
 function applyLang() {
   document.documentElement.lang = { zh: "zh-CN", en: "en", ja: "ja" }[lang];
   document.title = T("title");
   document.querySelectorAll("[data-t]").forEach(el => { el.textContent = T(el.dataset.t); });
   document.querySelectorAll("[data-t-html]").forEach(el => { el.innerHTML = T(el.dataset.tHtml); });
+  document.querySelectorAll("[data-t-attr]").forEach(el => { const [a, k] = el.dataset.tAttr.split(":"); el.setAttribute(a, T(k)); });
   if (COARSE) $("hint").textContent = T("hintTouch");
+  for (const o of $("ground").options) o.textContent = T("grounds")[o.value];
+  if (sfx) $("sound").textContent = T(soundWanted ? "sndOn" : "sndOff");
   $("langBtn").textContent = lang.toUpperCase();
   $("home").href = `../?lang=${lang}`;
   if (hudReady) hudMode();
@@ -131,9 +141,13 @@ try {
 }
 
 // ---------------------------------------------------------------- three.js scene (MuJoCo is z-up: keep it)
-const THEME = EMBED
-  ? { bg: 0x141412, a: "#1b1b18", b: "#222220", ground: 0x2a2924, hemi: 1.15, sun: 2.4, fogNear: 4, fogFar: 13 }
-  : { bg: 0xf1ede3, a: "#e9e3d5", b: "#ddd6c6", ground: 0xb3a994, hemi: 1.35, sun: 2.2, fogNear: 6, fogFar: 18 };
+const THEMES = {
+  ink: { bg: 0x141412, ground: 0x2a2924, hemi: 1.15, sun: 2.4, fogNear: 4, fogFar: 13, dark: true },
+  night: { bg: 0x11110f, ground: 0x2a2924, hemi: 1.2, sun: 2.3, fogNear: 6, fogFar: 18, dark: true },
+  paper: { bg: 0xf1ede3, ground: 0xb3a994, hemi: 1.35, sun: 2.2, fogNear: 6, fogFar: 18, dark: false },
+};
+const themeKey = () => EMBED ? "ink" : DARK.matches ? "night" : "paper";
+let THEME = THEMES[themeKey()];
 const canvas = $("view");
 const LITE = EMBED && COARSE;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LITE, powerPreference: "high-performance" });
@@ -148,6 +162,7 @@ const scene = new THREE.Scene();
 const bg = new THREE.Color(THEME.bg);
 scene.background = bg;
 scene.fog = new THREE.Fog(bg, THEME.fogNear, THEME.fogFar);
+setGroundResolution(COARSE ? 512 : 1024);           // the floor textures are generated on the CPU at load
 
 const camera = new THREE.PerspectiveCamera(40, 1, 0.02, 60);
 camera.up.set(0, 0, 1);
@@ -167,7 +182,8 @@ if (EMBED) {
   }
 }
 
-scene.add(new THREE.HemisphereLight(0xffffff, THEME.ground, THEME.hemi));
+const hemi = new THREE.HemisphereLight(0xffffff, THEME.ground, THEME.hemi);
+scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xffffff, THEME.sun);
 sun.position.set(1.5, -1.0, 3.0);
 sun.castShadow = true;
@@ -180,21 +196,26 @@ const fill = new THREE.DirectionalLight(EMBED ? 0xffd9c9 : 0xffffff, 0.6);
 fill.position.set(-1.5, 1.5, 2.0);
 scene.add(fill);
 
-// checker floor
-{
-  const c = document.createElement("canvas");
-  c.width = c.height = 256;
-  const g = c.getContext("2d");
-  for (let i = 0; i < 8; i++) for (let j = 0; j < 8; j++) { g.fillStyle = (i + j) % 2 ? THEME.a : THEME.b; g.fillRect(i * 32, j * 32, 32, 32); }
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(40, 40);
-  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ map: tex, roughness: 0.95 }));
-  floor.receiveShadow = true;
-  scene.add(floor);
+// ground: procedural textured materials (visual only; the physics floor is unchanged), remembered across visits
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial());
+floor.receiveShadow = true;
+scene.add(floor);
+let groundKind = new URLSearchParams(location.search).get("ground");
+try { groundKind = groundKind || localStorage.getItem("biped-ground"); } catch {}
+function setGround(kind) {
+  groundKind = GROUNDS[kind] ? kind : "concrete";
+  floor.material = groundMaterial(groundKind, renderer, THEME.dark);
+  $("ground").value = groundKind;
 }
+setGround(groundKind);
+$("ground").onchange = () => { setGround($("ground").value); try { localStorage.setItem("biped-ground", groundKind); } catch {} };
+function applyTheme() {
+  THEME = THEMES[themeKey()];
+  bg.set(THEME.bg); scene.fog.color.copy(bg); scene.fog.near = THEME.fogNear; scene.fog.far = THEME.fogFar;
+  hemi.groundColor.set(THEME.ground); hemi.intensity = THEME.hemi; sun.intensity = THEME.sun;
+  setGround(groundKind);
+}
+DARK.addEventListener?.("change", applyTheme);
 
 // robot: one Object3D per CAD body, posed from MuJoCo every frame; meshes fixed in their body frames
 const bodies = [];
@@ -262,7 +283,28 @@ const keys = new Set();
 const KEYMAP = { KeyW: "f", ArrowUp: "f", KeyS: "b", ArrowDown: "b", KeyA: "l", ArrowLeft: "l", KeyD: "r", ArrowRight: "r",
                  KeyQ: "sl", KeyE: "sr" };
 let lastInput = -1e9;
+// sound (motor whine per leg, footsteps, push, fall) is synthesised from the sim state in audio.js.
+// Full page: its own on/off (M), remembered. Embedded: follows the homepage's sound switch, and only while on screen.
+sfx = new JointAudio();
+window.__sfx = sfx;                    // handy from the console: __sfx.debug
+if (EMBED) { sfx.volume = 0.45; soundWanted = false; }
+else { try { soundWanted = localStorage.getItem("biped-sound") !== "0"; } catch {} }
+const applySound = () => {
+  const on = soundWanted && running;
+  if (on) sfx.unlock(); else if (sfx.ctx && sfx.ctx.state === "running") sfx.ctx.suspend();
+  sfx.setEnabled(on);
+  $("sound").textContent = T(soundWanted ? "sndOn" : "sndOff");
+  $("sound").classList.toggle("off", !soundWanted);
+};
+function setSound(on) {
+  soundWanted = on;
+  if (!EMBED) try { localStorage.setItem("biped-sound", on ? "1" : "0"); } catch {}
+  applySound();
+}
+for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, () => { if (soundWanted && running) sfx.unlock(); }, { capture: true });
+$("sound").onclick = () => setSound(!soundWanted);
 addEventListener("keydown", e => {
+  if (e.code === "KeyM" && !e.repeat) { setSound(!soundWanted); return; }
   if (KEYMAP[e.code]) { keys.add(KEYMAP[e.code]); lastInput = performance.now(); e.preventDefault(); }
   else if (e.code === "KeyP" && !e.repeat) doPush();
   else if (e.code === "KeyR" && !e.repeat) doReset();
@@ -355,7 +397,7 @@ function toast(text) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => { t.style.opacity = 0; }, 1400);
 }
-function doPush(v = 0.6) { sim.push(v); toast(T("tPush")); tell({ t: "push" }); }
+function doPush(v = 0.6) { sim.push(v); sfx.push(); toast(T("tPush")); tell({ t: "push" }); }
 function doReset() { sim.reset(); sim.cmd = [0, 0, 0]; fellAt = null; snapCamera(); }
 $("push").onclick = () => doPush();
 $("reset").onclick = doReset;
@@ -363,6 +405,12 @@ $("full").onclick = () => window.open(new URL(`./?lang=${lang}`, location.href).
 let follow = true;
 $("follow").onclick = () => { follow = !follow; $("follow").classList.toggle("primary", follow); };
 $("autoBtn").classList.toggle("primary", autoOn);
+{ // phones: everything but "push" folds into the ⋯ popover
+  const box = $("buttons"), btn = $("moreBtn");
+  const open = v => { box.classList.toggle("open", v); btn.setAttribute("aria-expanded", v); };
+  btn.onclick = () => open(!box.classList.contains("open"));
+  addEventListener("pointerdown", e => { if (!box.contains(e.target)) open(false); });
+}
 
 // ---------------------------------------------------------------- main loop: fixed 50 Hz control, render at display rate
 const RAMP = [1.6, 1.0, 3.0];            // command slew, per second (gamepad-like, avoids step changes)
@@ -376,10 +424,6 @@ function snapCamera() {
   lastRoot.set(q[0], q[1], 0.3);
 }
 snapCamera();
-
-// foot touch-down events (contact sensors are the last two sensordata slots) → the homepage plays a footstep
-const FOOT = sim.m.nsensordata === 32 ? [30, 31] : null;
-const touching = [1, 1];
 
 let acc = 0, last = performance.now(), running = false, raf = 0, lastTell = 0;
 function frame(now) {
@@ -397,13 +441,9 @@ function frame(now) {
     }
     if (fellAt !== null && sim.t - fellAt > 1.2) { sim.reset(); fellAt = null; }
     sim.step();
+    sfx.update(sim);
     if (fellAt === null && sim.fallen()) {
-      falls++; fellAt = sim.t; hudMode(); toast(T("tFall")); tell({ t: "fall", falls });
-    }
-    if (FOOT && fellAt === null) for (let k = 0; k < 2; k++) {
-      const c = sim.d.sensordata[FOOT[k]] > 0 ? 1 : 0;
-      if (c && !touching[k]) tell({ t: "step", foot: k });
-      touching[k] = c;
+      sfx.fall(); falls++; fellAt = sim.t; hudMode(); toast(T("tFall")); tell({ t: "fall", falls });
     }
     const v = sim.bodyVel();
     for (let i = 0; i < 3; i++) meas[i] = 0.92 * meas[i] + 0.08 * v[i];
@@ -437,6 +477,7 @@ function run(on) {
   running = on;
   if (on) { last = performance.now(); acc = 0; raf = requestAnimationFrame(frame); }
   else if (raf) { cancelAnimationFrame(raf); raf = 0; }
+  applySound();
 }
 document.addEventListener("visibilitychange", () => { if (!PARENT) run(!document.hidden); });
 
@@ -469,8 +510,10 @@ addEventListener("message", e => {
   if (e.data.d66 === "run") run(!!e.data.on);
   if (e.data.d66 === "lang" && I18N[e.data.lang]) { lang = e.data.lang; applyLang(); }
   if (e.data.d66 === "push") doPush();
+  if (e.data.d66 === "sound" && (!!e.data.on !== soundWanted || (soundWanted && sfx.ctx?.state !== "running"))) setSound(!!e.data.on);
 });
 
+applySound();
 $("loading").classList.add("gone");
 renderer.render(scene, camera);
 if (!PARENT) run(true);                // embedded: the homepage says when the card is on screen

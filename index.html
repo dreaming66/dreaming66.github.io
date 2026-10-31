@@ -3,11 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f1ede3">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f1ede3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#11110f" media="(prefers-color-scheme: dark)">
   <title>dreaming66 · 从焊锡到张量</title>
-  <meta name="description" content="dreaming66 的个人主页：手搓 Linux 开发板、AI Infra 与大模型推理、双足机器人、SDR、吉他与钢琴。">
+  <meta name="description" content="dreaming66 的个人主页：手搓 Linux 开发板、AI Infra 与大模型推理、双足机器人与 SDR。">
   <meta property="og:title" content="DRM-66 · dreaming66">
-  <meta property="og:description" content="Datasheet of a human: silicon, inference, robots, radio and strings.">
+  <meta property="og:description" content="Datasheet of a human: silicon, inference, robots and radio.">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23141412'/%3E%3Ctext x='32' y='44' font-family='Georgia' font-style='italic' font-size='34' text-anchor='middle' fill='%23ff4f1f'%3E66%3C/text%3E%3C/svg%3E">
   <link rel="preload" href="assets/fonts/space-grotesk.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/instrument-serif-italic.woff2" as="font" type="font/woff2" crossorigin>
@@ -50,9 +52,8 @@
       <a href="#lab" data-i="04"><span data-i18n="m.lab">推理实验室</span><em>Inference</em></a>
       <a href="#wip" data-i="05"><span data-i18n="m.wip">正在折腾</span><em>WIP</em></a>
       <a href="#archive" data-i="06"><span data-i18n="m.archive">档案馆</span><em>Archive</em></a>
-      <a href="#music" data-i="07"><span data-i18n="m.music">六根弦</span><em>Strings</em></a>
-      <a href="#log" data-i="08"><span data-i18n="m.log">经历</span><em>git log</em></a>
-      <a href="#ping" data-i="09"><span data-i18n="m.ping">来找我</span><em>Say hi</em></a>
+      <a href="#log" data-i="07"><span data-i18n="m.log">经历</span><em>git log</em></a>
+      <a href="#ping" data-i="08"><span data-i18n="m.ping">来找我</span><em>Say hi</em></a>
     </div>
     <p class="menu-foot mono" data-i18n="menu.foot">按 <kbd>`</kbd> 打开终端 · <kbd>S</kbd> 声音 · <kbd>X</kbd> 透视 · 试试 ↑↑↓↓←→←→BA</p>
   </nav>
@@ -375,33 +376,10 @@
       </div>
     </section>
 
-    <!-- ===== MUSIC ===== -->
-    <section class="music" id="music" data-sec>
-      <div class="sec-h">
-        <div class="sec-tag mono"><span>07</span> STRINGS &amp; KEYS</div>
-        <h2 class="sec-t" data-glitch data-i18n="mu.t">六根弦，<em>八十八个键</em></h2>
-        <p class="sec-s" data-i18n="mu.s">从原声吉他入门，现在玩电吉他、日式摇滚；钢琴还在学。下面两件乐器都能弹：吉他标准调弦（EADGBE），用 Karplus-Strong 算法实时合成拨弦，打开 DRIVE 就是失真音箱；钢琴用加法合成。先打开声音。</p>
-      </div>
-      <div class="guitar">
-        <div class="gt-ctl mono">
-          <span>CHORD</span>
-          <div class="tog" id="chords"></div>
-          <div class="tog" id="ampTog"><button data-a="0">CLEAN</button><button class="on" data-a="1">DRIVE</button></div>
-          <button class="act" id="riffBtn" data-i18n="riff">▶ RIFF（原创）</button>
-          <span class="d" data-i18n="gt.hint">拖过琴弦扫弦 · 点击单弦拨奏</span>
-        </div>
-        <div class="stage gt-stage"><canvas id="guitar" aria-label="可弹奏的吉他"></canvas></div>
-      </div>
-      <div class="piano-wrap">
-        <div class="piano-h mono"><span>PIANO · LEARNING</span><span class="prog"><i style="--p:.22"></i></span><span class="d" data-i18n="pi.hint">键盘 A W S E D F T G Y H U J K 也能弹 · 试试弹出 “小星星”</span></div>
-        <div class="piano" id="piano" aria-label="钢琴键盘"></div>
-      </div>
-    </section>
-
     <!-- ===== LOG ===== -->
     <section class="log" id="log" data-sec>
       <div class="sec-h">
-        <div class="sec-tag mono"><span>08</span> REVISION HISTORY</div>
+        <div class="sec-tag mono"><span>07</span> REVISION HISTORY</div>
         <h2 class="sec-t" data-glitch>git log --graph</h2>
         <p class="sec-s" data-i18n="log.s">本职那条主线。点击提交展开 diff。</p>
       </div>
@@ -456,7 +434,7 @@
     <!-- ===== PING ===== -->
     <section class="ping" id="ping" data-sec>
       <div class="sec-h">
-        <div class="sec-tag mono"><span>09</span> CONTACT</div>
+        <div class="sec-tag mono"><span>08</span> CONTACT</div>
         <h2 class="sec-t big" data-glitch>ping <em>dreaming66</em></h2>
       </div>
       <div class="sonar">
@@ -467,6 +445,10 @@
         <button class="pill big magnetic" id="pingBtn" data-cursor="ping"><span data-i18n="ping.btn">发送一个 ping</span><span>◎</span></button>
         <a class="pill ink-pill big magnetic" href="https://github.com/dreaming66" target="_blank" rel="noopener" data-cursor="open"><span>github.com/dreaming66</span><span>↗</span></a>
         <button class="pill big magnetic" id="cardBtn" data-cursor="make"><span data-i18n="card.btn">生成一张名片</span><span>↓</span></button>
+      </div>
+      <div class="friends">
+        <span class="mono" data-i18n="fr.t">友链</span>
+        <a class="pill sm magnetic" href="https://jokerjevon.top/" target="_blank" rel="noopener" data-cursor="open"><span>JEVON · 造东西，也讲故事</span><span>↗</span></a>
       </div>
       <p class="mono ping-note" data-i18n="ping.note">联系方式不在此公开 · 去 GitHub 找我，或在终端里输入 <kbd>sudo hire-me</kbd></p>
     </section>

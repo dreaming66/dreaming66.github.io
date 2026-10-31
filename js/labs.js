@@ -27,7 +27,7 @@
     in vec2 p; void main(){ gl_Position = vec4(p,0.,1.); }`;
     const fs = `#version 300 es
     precision highp float;
-    uniform vec2 R; uniform float T; uniform vec2 M; uniform vec4 Dr[6];
+    uniform vec2 R; uniform float T; uniform vec2 M; uniform vec4 Dr[6]; uniform float Dk;
     out vec4 o;
     float h(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7))) * 43758.5453); }
     float n(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
@@ -54,14 +54,16 @@
       float bands = f * 22., w = fwidth(bands);
       float line = 1. - smoothstep(w * .3, w * 1.2, .5 - abs(fract(bands) - .5));
       float major = 1. - smoothstep(w * .8, w * 2.2, 2.5 - abs(fract(bands / 5.) - .5) * 5.);
-      vec3 paper = vec3(.945, .929, .89), ink = vec3(.078, .078, .07), ver = vec3(1., .31, .12), cob = vec3(.15, .28, 1.);
+      // Dk: 0 = paper page, 1 = browser dark mode (ink page, paper contour lines)
+      vec3 paper = mix(vec3(.945, .929, .89), vec3(.067, .067, .059), Dk), ink = mix(vec3(.078, .078, .07), vec3(.925, .902, .855), Dk);
+      vec3 ver = vec3(1., .31, .12), cob = vec3(.15, .28, 1.);
       vec3 col = paper;
-      col = mix(col, vec3(.91, .885, .83), smoothstep(.45, .75, f) * .7);
+      col = mix(col, mix(vec3(.91, .885, .83), vec3(.105, .1, .09), Dk), smoothstep(.45, .75, f) * .7);
       col = mix(col, ver, smoothstep(.62, .78, b.x) * .10);
       col = mix(col, cob, smoothstep(.70, .85, a.y) * .06);
       float near = exp(-dm * 4.);
       vec3 lc = mix(ink, ver, clamp(near * 1.4 + wet * .8, 0., 1.));
-      col = mix(col, lc, line * (.20 + near * .45) + major * .28);
+      col = mix(col, lc, (line * (.20 + near * .45) + major * .28) * (1. - .3 * Dk));
       col = mix(col, ver, wet * .10);
       col = mix(paper, col, .35 + .65 * smoothstep(-.55, .35, p.y));
       o = vec4(col, 1.);
@@ -70,7 +72,8 @@
     const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
     gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
     const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    const uR = gl.getUniformLocation(pr, "R"), uT = gl.getUniformLocation(pr, "T"), uM = gl.getUniformLocation(pr, "M"), uD = gl.getUniformLocation(pr, "Dr");
+    const uR = gl.getUniformLocation(pr, "R"), uT = gl.getUniformLocation(pr, "T"), uM = gl.getUniformLocation(pr, "M"), uD = gl.getUniformLocation(pr, "Dr"), uK = gl.getUniformLocation(pr, "Dk");
+    let dk = D.dark ? 1 : 0;
     const drops = new Float32Array(24); let di = 0, pmx = 0, pmy = 0;
     const drop = (x, y) => { const r = cv.getBoundingClientRect(), k = cv.width / r.width; drops.set([(x - r.left) * k, (r.bottom - y) * k, D.T, 1], (di++ % 6) * 4); S.tone(rand(180, 320), .6, "sine", .1, .6); S.noise(.2, 600, .8, .05, "lowpass"); };
     cv.parentElement.addEventListener("pointerdown", e => { if (!e.target.closest("a,button")) drop(e.clientX, e.clientY); });
@@ -79,7 +82,8 @@
       D.fit(cv, .6); gl.viewport(0, 0, cv.width, cv.height);
       const r = cv.getBoundingClientRect(), k = cv.width / r.width;
       pmx = lerp(pmx, (D.mx - r.left) * k, .08); pmy = lerp(pmy, (r.bottom - D.my) * k, .08);
-      gl.uniform2f(uR, cv.width, cv.height); gl.uniform1f(uT, T); gl.uniform2f(uM, pmx, pmy); gl.uniform4fv(uD, drops);
+      dk = lerp(dk, D.dark ? 1 : 0, .08);         // eases across a live light ↔ dark switch
+      gl.uniform2f(uR, cv.width, cv.height); gl.uniform1f(uT, T); gl.uniform2f(uM, pmx, pmy); gl.uniform4fv(uD, drops); gl.uniform1f(uK, dk);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     });
   }
@@ -665,6 +669,8 @@
     const sync = () => {
       const want = !!(ready && vis && mode === "live" && !D.still && !document.hidden);
       if (frame && ready && want !== running) { running = want; post({ d66: "run", on: want }); }
+      // the sim synthesises its own motor / footstep sounds; it follows the header's sound switch
+      if (frame && ready) post({ d66: "sound", on: !!D.audio.on });
       if (vis && !(ready && mode === "live")) playVid(); else v.pause();
     };
     const setMode = (m, user) => {
@@ -696,9 +702,6 @@
       else if (m.t === "state") {
         oC.textContent = m.cmd[0].toFixed(2); oV.textContent = m.meas[0].toFixed(2); oF.textContent = m.falls; oM.textContent = m.auto ? "AUTO" : "YOU";
       }
-      else if (m.t === "step") { if (running) S.thud(.03); }
-      else if (m.t === "fall") { S.thud(.25); S.noise(.15, 400, .7, .1, "lowpass"); }
-      else if (m.t === "push") S.noise(.2, 700, .6, .07, "lowpass");
     });
     document.addEventListener("d66shove", () => { if (ready && mode === "live") post({ d66: "push" }); else setMode("live", true); });
     setMode(mode);
@@ -862,9 +865,6 @@
   }
 
   /* =========================================================
-     §05 guitar (Karplus–Strong) + piano
-     ========================================================= */
-  /* =========================================================
      §05 WIP · RK3576 size + BGA fanout
      ========================================================= */
   function initRK() {
@@ -1025,115 +1025,6 @@
   }
 
   /* =========================================================
-     §07 electric guitar (Karplus–Strong → drive → cab)
-     ========================================================= */
-  function initGuitar() {
-    const cv = $("#guitar"), g = ctx2d(cv);
-    const OPEN = [82.41, 110, 146.83, 196, 246.94, 329.63]; // E2 A2 D3 G3 B3 E4 · standard tuning
-    const CHORDS = { E5: [0, 2, 2, -1, -1, -1], A5: [-1, 0, 2, 2, -1, -1], D5: [-1, -1, 0, 2, 3, -1], G5: [3, 5, 5, -1, -1, -1], C5: [-1, 3, 5, 5, -1, -1], Em: [0, 2, 2, 0, 0, 0], C: [-1, 3, 2, 0, 1, 0], G: [3, 2, 0, 0, 0, 3], D: [-1, -1, 0, 2, 3, 2], Am: [-1, 0, 2, 2, 1, 0], F: [1, 3, 3, 2, 1, 1] };
-    let chord = "E5", drive = true, W = 0, H = 0, amp = Array(6).fill(0), last = null;
-    const box = $("#chords");
-    const setChord = k => { chord = k; $$("button", box).forEach(x => x.classList.toggle("on", x.textContent === k)); };
-    Object.keys(CHORDS).forEach(k => { const b = document.createElement("button"); b.textContent = k; b.addEventListener("click", () => { setChord(k); strum(true); }); box.appendChild(b); });
-    setChord(chord);
-    $$("#ampTog button").forEach(b => b.addEventListener("click", () => { $$("#ampTog button").forEach(x => x.classList.toggle("on", x === b)); drive = b.dataset.a === "1"; strum(true); }));
-    const sy = i => H * .2 + (5 - i) * (H * .6 / 5);
-    const pluck = (i, v = .3, fr = CHORDS[chord][i]) => { if (fr < 0) { S.noise(.03, 800, 2, .04); return; } S.pluck(OPEN[i] * Math.pow(2, fr / 12), drive ? v * .8 : v, drive ? .75 : .55, drive); amp[i] = 1; };
-    const strum = (down = true) => { [0, 1, 2, 3, 4, 5].forEach((i, k) => setTimeout(() => pluck(down ? i : 5 - i, .26), k * (drive ? 10 : 18))); };
-    cv.addEventListener("pointerdown", e => { cv.setPointerCapture(e.pointerId); const r = cv.getBoundingClientRect(), y = e.clientY - r.top; last = y; let best = -1, bd = 14; for (let i = 0; i < 6; i++) { const d = Math.abs(sy(i) - y); if (d < bd) { bd = d; best = i; } } if (best >= 0) pluck(best); });
-    cv.addEventListener("pointermove", e => { if (last == null) return; const r = cv.getBoundingClientRect(), y = e.clientY - r.top; for (let i = 0; i < 6; i++) { const s = sy(i); if ((last - s) * (y - s) < 0) pluck(i, .25); } last = y; });
-    cv.addEventListener("pointerup", () => last = null);
-    // an original riff: Em–C–G–D, palm-muted root pulses + 8th-note arpeggio on top, then a power-chord tag
-    const riff = () => {
-      const bar = [["Em", 0], ["C", 1], ["G", 0], ["D", 2]], step = .17, pat = [-1, 3, 4, 5, 4, 3, 4, 5];
-      let t = 0;
-      bar.forEach(([c, root]) => {
-        pat.forEach((sIdx, k) => {
-          setTimeout(() => { setChord(c); const st = sIdx < 0 ? (CHORDS[c][0] >= 0 ? 0 : CHORDS[c][1] >= 0 ? 1 : 2) : sIdx; pluck(st, sIdx < 0 ? .34 : .22); }, (t + k * step) * 1000);
-        });
-        t += pat.length * step;
-      });
-      [["E5", 0], ["G5", 2], ["A5", 3], ["C5", 4.5], ["D5", 5.5], ["E5", 6.5]].forEach(([c, b]) => setTimeout(() => { setChord(c); strum(true); }, (t + b * step) * 1000));
-      if (!riff.auto) $("#music").scrollIntoView({ behavior: "smooth", block: "start" });
-      riff.auto = false;
-      setTimeout(() => document.dispatchEvent(new Event("d66twinkle")), (t + 8 * step) * 1000);
-    };
-    $("#riffBtn").addEventListener("click", riff);
-    document.addEventListener("d66riff", riff);
-    D.onVisible(cv, () => setTimeout(() => { riff.auto = true; riff(); }, 700), .45);
-    D.loop(cv, (dt, T) => {
-      if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
-      g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
-      const nx0 = 30, nx1 = W * (W < 600 ? .9 : .7), top = H * .14, bot = H * .86;
-      // body + pickups (electric)
-      if (W >= 600) {
-        g.fillStyle = drive ? "#2a0d08" : "#1c140c"; g.beginPath(); g.ellipse(W * .9, H / 2, W * .16, H * .48, 0, 0, 7); g.fill();
-        [W * .8, W * .88].forEach(x => { g.fillStyle = "#0d0d0d"; rr(g, x - 14, H * .2, 28, H * .6, 6); g.fill(); g.strokeStyle = "#555"; g.stroke(); for (let i = 0; i < 6; i++) { g.fillStyle = "#9a9a9a"; g.beginPath(); g.arc(x, sy(i), 3, 0, 7); g.fill(); } });
-      }
-      g.fillStyle = "#2a1a0e"; g.fillRect(nx0, top, nx1 - nx0, bot - top);
-      const fx = n => nx0 + (nx1 - nx0) * (1 - Math.pow(2, -n / 12)) / (1 - Math.pow(2, -12 / 12));
-      for (let n = 0; n <= 12; n++) { g.fillStyle = n === 0 ? "#e8e4d8" : "#9a958a"; g.fillRect(fx(n) - (n ? 1 : 3), top, n ? 2 : 6, bot - top); }
-      [3, 5, 7, 9].forEach(n => { g.fillStyle = "#e8e4d822"; g.beginPath(); g.arc((fx(n - 1) + fx(n)) / 2, (top + bot) / 2, 6, 0, 7); g.fill(); });
-      [-1, 1].forEach(sg => { g.fillStyle = "#e8e4d822"; g.beginPath(); g.arc((fx(11) + fx(12)) / 2, (top + bot) / 2 + sg * 24, 6, 0, 7); g.fill(); });
-      for (let i = 0; i < 6; i++) {
-        const y = sy(i), a = amp[i]; amp[i] *= Math.pow(drive ? .3 : .18, dt);
-        g.strokeStyle = i < 3 ? "#d8c39a" : "#e8e4d8"; g.lineWidth = 2.6 - i * .32;
-        g.beginPath();
-        for (let x = nx0; x <= W - 10; x += 6) { const k = (x - nx0) / (W - 10 - nx0); const off = a * Math.sin(k * Math.PI) * Math.sin(T * (60 + i * 14) + k * 4) * (drive ? 8 : 6); x === nx0 ? g.moveTo(x, y + off) : g.lineTo(x, y + off); }
-        g.stroke();
-        const fr = CHORDS[chord][i];
-        g.font = "600 11px IBM Plex Mono, monospace";
-        if (fr < 0) { g.fillStyle = C.hot; g.fillText("×", 12, y + 4); }
-        else if (fr === 0) { g.strokeStyle = C.ok; g.lineWidth = 1.5; g.beginPath(); g.arc(16, y, 5, 0, 7); g.stroke(); }
-        else { g.fillStyle = C.amb; g.shadowColor = C.amb; g.shadowBlur = a * 20; g.beginPath(); g.arc((fx(fr - 1) + fx(fr)) / 2, y, 8, 0, 7); g.fill(); g.shadowBlur = 0; }
-      }
-      g.fillStyle = drive ? C.hot : C.dim; g.font = "500 10px IBM Plex Mono, monospace";
-      g.fillText(`${chord} · standard EADGBE · ${drive ? "DRIVE: waveshaper → mid boost → cab sim" : "CLEAN"} · Karplus-Strong`, nx0, H - 10);
-    });
-  }
-
-  function initPiano() {
-    const el = $("#piano"), keys = [];
-    const map = "awsedftgyhujkolp;'".split("");
-    const start = 60; // C4
-    const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    let wi = 0;
-    for (let n = start; n < start + 25; n++) {
-      const black = [1, 3, 6, 8, 10].includes(n % 12);
-      const k = document.createElement("div"); k.className = black ? "bk" : "wk"; k.dataset.n = n;
-      const kb = map[n - start]; k.innerHTML = `<span class="lbl">${kb ? kb.toUpperCase() : ""}${!black && n % 12 === 0 ? "<br>C" + (n / 12 - 1) : ""}</span>`;
-      if (black) k.style.left = `calc(${wi} * (100% / 15))`; else wi++;
-      el.appendChild(k); keys.push(k);
-    }
-    const hz = n => 440 * Math.pow(2, (n - 69) / 12);
-    const seq = []; const twinkle = [60, 60, 67, 67, 69, 69, 67];
-    const press = n => {
-      const k = keys[n - start]; if (!k) return;
-      S.piano(hz(n)); k.classList.add("dn"); setTimeout(() => k.classList.remove("dn"), 180);
-      seq.push(n); if (seq.length > 7) seq.shift();
-      if (seq.join() === twinkle.join()) { D.print && D.print(`<span class="p">★</span> ${D.t("pi.twinkle")}`); S.chord([1047, 1319, 1568, 2093], .05, "sine", .06); el.animate([{ filter: "drop-shadow(0 0 0 #ffb21a)" }, { filter: "drop-shadow(0 0 30px #ffb21a)" }, { filter: "none" }], 1200); }
-    };
-    // after the riff: play the opening of Twinkle Twinkle (traditional) once
-    let twinkled = false;
-    document.addEventListener("d66twinkle", () => {
-      if (twinkled || !visible(el)) return; twinkled = true;
-      [60, 60, 67, 67, 69, 69, 67].forEach((n, i) => setTimeout(() => press(n), i * 420 + (i === 6 ? 120 : 0)));
-    });
-    let dn = false;
-    el.addEventListener("pointerdown", e => { const k = e.target.closest(".wk,.bk"); if (k) { dn = true; press(+k.dataset.n); } });
-    el.addEventListener("pointerover", e => { if (!dn) return; const k = e.target.closest(".wk,.bk"); if (k) press(+k.dataset.n); });
-    addEventListener("pointerup", () => dn = false);
-    const mus = $("#music"); let inView = false;
-    new IntersectionObserver(es => { inView = es[0].isIntersecting; D.pianoFocus = inView; }, { threshold: .25 }).observe(mus);
-    const held = new Set();
-    addEventListener("keydown", e => {
-      if (!inView || e.target.matches("input") || e.metaKey || e.ctrlKey) return;
-      const i = map.indexOf(e.key.toLowerCase()); if (i < 0 || held.has(i)) return; held.add(i); press(start + i);
-    });
-    addEventListener("keyup", e => held.delete(map.indexOf(e.key.toLowerCase())));
-  }
-
-  /* =========================================================
      §06 / §07 log, github, ping, scope
      ========================================================= */
   function initLog() {
@@ -1188,6 +1079,6 @@
   initInk(); initCard(); initGen(); initPCB(); initMCU(); initRack();
   initPD(); initNPU(); initMCP(); initGraph();
   initRK(); initBiped(); initCyc(); initSDR(); initFT(); initArchive();
-  initGuitar(); initPiano(); initLog(); initPing(); initScope();
+  initLog(); initPing(); initScope();
   D.boot();
 })();
