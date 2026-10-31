@@ -9,11 +9,15 @@ Hand-written Canvas2D + WebAudio. Zero frameworks, zero build step, zero audio s
 - Solder a PCB pad by pad, power it on, watch U-Boot → Kernel → Buildroot boot over serial, log in
 - Homelab rack, MCU blink
 - Inference lab: PD-disaggregation simulator, NPU mesh AllReduce, REST → MCP compiler, threat graph
-- WIP: RL biped gait toy, SDR waterfall with an audible CW beacon (decode the callsign), LoRA fine-tune curves
+- WIP: the real RL gait policy walking live in the browser (MuJoCo WASM, on autopilot; full-screen controls at [`/biped/`](https://me.dustinz.de/biped/)), cycloidal joint bench test, SDR waterfall with an audible CW beacon (decode the callsign), LoRA fine-tune curves
 - Playable guitar (Karplus–Strong) and piano (additive synth)
 - `` ` `` terminal · `X` x-ray · `S` sound · ↑↑↓↓←→←→BA
 
-All APIs, IPs, graph data and simulations are fictional demos.
+All APIs, IPs, graph data and simulations are fictional demos — except `/biped/`, which runs the actual trained policy.
+
+## /biped/
+
+`biped/` is a self-contained static page: MuJoCo 3.17 (WebAssembly, Apache-2.0, see `biped/lib/LICENSE.mujoco`) steps the same physics model the policy was trained on, and the policy MLP (PPO in MJX) runs in plain JS every 20 ms. The binaries ship pre-gzipped and are inflated with `DecompressionStream`; three.js is shared with the homepage (`assets/vendor`). `?embed=1` is the compact autopilot view the homepage puts in an iframe; it reports state and footsteps back with `postMessage`.
 
 ## Languages
 

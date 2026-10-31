@@ -633,79 +633,85 @@
   }
 
   /* =========================================================
-     §04 WIP · biped RL toy
+     §04 WIP · biped: the real policy running live (MuJoCo WASM in biped/), over its recorded rollout
      ========================================================= */
-  function initRobot() {
-    const cv = $("#robot"), g = ctx2d(cv), sl = $("#rlEp");
-    const oE = $("#rlE"), oR = $("#rlR"), oF = $("#rlF"), oV = $("#rlV");
-    let W = 0, H = 0, ph = 0, tilt = 0, tv = 0, fallen = 0, falls = 0, scroll = 0, lastContact = [0, 0], noiseS = [0, 0, 0, 0];
-    const curve = Array.from({ length: 101 }, (_, i) => { const x = i / 100; return -60 + 380 / (1 + Math.exp(-(x - .38) * 11)) + (Math.random() - .5) * 40 * (1 - x * .7); });
-    const q = () => { const e = +sl.value / 1000; return 1 / (1 + Math.exp(-(e - .38) * 11)); };
-    let touched = false, epT = 0;
-    sl.addEventListener("input", () => { touched = true; S.tone(200 + sl.value * .6, .04, "sine", .04); });
-    cv.addEventListener("pointerdown", () => { tv += rand(2.5, 4) * (Math.random() < .5 ? -1 : 1); S.thud(.18); });
-    const ik = (hx, hy, fx, fy, L1, L2) => {
-      const dx = fx - hx, dy = fy - hy; let d = Math.hypot(dx, dy); d = Math.min(d, L1 + L2 - .01);
-      const a = Math.atan2(dy, dx), b = Math.acos(clamp((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d), -1, 1));
-      const kx = hx + Math.cos(a - b) * L1, ky = hy + Math.sin(a - b) * L1; return [kx, ky];
+  function initBiped() {
+    const st = $("#bipedStage"), go = $("#bipedGo"), full = $("#bipedFull"), bar = $("#bipedBar"), pct = $("#bipedPct");
+    const oC = $("#rlC"), oV = $("#rlV"), oF = $("#rlF"), oM = $("#rlM");
+    const MOBILE = matchMedia("(pointer: coarse)").matches || innerWidth < 820;
+    const lang = () => window.I18N ? I18N.lang : "zh";
+    // the recorded rollout: protected inline video, shown while the sim loads (and on phones until asked)
+    const v = document.createElement("video");
+    v.muted = true; v.loop = true; v.playsInline = true; v.preload = "none"; v.poster = "assets/video/biped-rollout.jpg";
+    v.disablePictureInPicture = true; v.disableRemotePlayback = true; v.setAttribute("draggable", "false");
+    v.setAttribute("controlslist", "nodownload nofullscreen noremoteplayback noplaybackrate");
+    st.prepend(v);
+    st.insertAdjacentHTML("beforeend", '<div class="shield"></div>');
+    let src = null;
+    const playVid = async () => {
+      if (!src) { src = "assets/video/biped-rollout.mp4"; try { src = URL.createObjectURL(await (await fetch(src)).blob()); } catch {} v.src = src; }
+      if (!D.still) v.play().catch(() => {});
     };
-    D.loop(cv, (dt, T) => {
-      if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
-      g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
-      if (!touched) { epT += dt; if (epT > 20) epT = 0; sl.value = Math.min(1000, Math.round(epT / 14 * 1000)); }
-      const Q = q(), ep = +sl.value, ground = H * .78, S0 = Math.min(W, H) / 380;
-      const speed = fallen > 0 ? 0 : (.3 + Q * 1.1);
-      // joint noise random walk
-      for (let i = 0; i < 4; i++) noiseS[i] = lerp(noiseS[i], rand(-1, 1), dt * 6);
-      // balance dynamics
-      if (fallen > 0) { fallen -= dt; tilt = lerp(tilt, Math.sign(tilt || 1) * 1.45, dt * 6); if (fallen <= 0) { tilt = 0; tv = 0; } }
-      else {
-        tv += (rand(-1, 1) * (1 - Q) * 9 + Math.sin(ph * 2) * (1 - Q) * 3) * dt;
-        tv -= tilt * (4 + Q * 30) * dt; tv *= Math.pow(.15 + (1 - Q) * .6, dt);
-        tilt += tv * dt;
-        if (Math.abs(tilt) > .75) { fallen = 1.3; falls++; oF.textContent = falls; S.thud(.25); S.noise(.15, 400, .7, .1, "lowpass"); }
+    let frame = null, ready = false, vis = false, running = null, mode = MOBILE ? "video" : "live";
+    const post = m => frame && frame.contentWindow && frame.contentWindow.postMessage(m, location.origin);
+    const load = () => {
+      if (frame) return;
+      frame = document.createElement("iframe");
+      frame.src = `biped/?embed=1&lang=${lang()}`;
+      frame.title = "biped · live MuJoCo simulation";
+      st.classList.add("loading");
+      st.insertBefore(frame, v.nextSibling);
+    };
+    const sync = () => {
+      const want = !!(ready && vis && mode === "live" && !D.still && !document.hidden);
+      if (frame && ready && want !== running) { running = want; post({ d66: "run", on: want }); }
+      if (vis && !(ready && mode === "live")) playVid(); else v.pause();
+    };
+    const setMode = (m, user) => {
+      mode = m;
+      $$("#bipedTog button").forEach(b => b.classList.toggle("on", b.dataset.v === m));
+      if (m === "live" && (user || (vis && !MOBILE))) load();
+      st.classList.toggle("live", m === "live" && ready);
+      st.classList.toggle("ask", m === "video" && MOBILE && !frame);
+      sync();
+    };
+    $$("#bipedTog button").forEach(b => b.addEventListener("click", () => { setMode(b.dataset.v, true); S.blip(b.dataset.v === "live" ? 660 : 440); }));
+    go.addEventListener("click", () => { setMode("live", true); S.blip(660); });
+    new IntersectionObserver(es => {
+      vis = es[es.length - 1].isIntersecting;
+      if (vis && mode === "live" && !MOBILE) load();
+      sync();
+    }, { rootMargin: "200px 0px" }).observe(st);
+    setInterval(sync, 700);                                  // motion toggle / tab switches
+    document.addEventListener("visibilitychange", sync);
+    const setFull = () => { full.href = `biped/?lang=${lang()}`; };
+    setFull();
+    document.addEventListener("d66lang", () => { setFull(); post({ d66: "lang", lang: lang() }); });
+    addEventListener("message", e => {
+      const m = e.data;
+      if (e.origin !== location.origin || !m || !m.d66biped || !frame || e.source !== frame.contentWindow) return;
+      if (m.t === "progress") { bar.style.width = (m.f * 100).toFixed(0) + "%"; pct.textContent = `MuJoCo WASM · ${(m.f * 100).toFixed(0)}%`; }
+      else if (m.t === "ready") { ready = true; running = null; st.classList.remove("loading"); setMode(mode); }
+      else if (m.t === "error") { st.classList.remove("loading"); frame.remove(); frame = null; setMode("video"); }
+      else if (m.t === "state") {
+        oC.textContent = m.cmd[0].toFixed(2); oV.textContent = m.meas[0].toFixed(2); oF.textContent = m.falls; oM.textContent = m.auto ? "AUTO" : "YOU";
       }
-      ph += dt * speed * 5.2; scroll += dt * speed * 120 * S0;
-      // ground
-      g.strokeStyle = C.line; g.beginPath(); g.moveTo(0, ground); g.lineTo(W, ground); g.stroke();
-      g.fillStyle = C.dim2; for (let x = -(scroll % 40); x < W; x += 40) g.fillRect(x, ground + 6, 14, 1);
-      // body
-      const cx = W * .42, hipH = 120 * S0, L1 = 62 * S0, L2 = 62 * S0, bob = Math.abs(Math.sin(ph)) * 5 * S0 * Q;
-      g.save(); g.translate(cx, ground); g.rotate(tilt); g.translate(-cx, -ground);
-      const hx = cx, hy = ground - hipH - bob + (fallen > 0 ? 0 : 0);
-      const stride = (22 + 18 * Q) * S0, lift = (8 + 16 * Q) * S0;
-      const legs = [0, Math.PI].map((o, i) => {
-        const p = ph + o, fx = hx + Math.cos(p) * stride + noiseS[i] * (1 - Q) * 22 * S0, fy = ground - Math.max(0, Math.sin(p)) * lift + noiseS[i + 2] * (1 - Q) * 6 * S0;
-        const contact = Math.sin(p) <= 0 ? 1 : 0;
-        if (contact && !lastContact[i] && fallen <= 0) S.thud(.05 + Q * .03);
-        lastContact[i] = contact;
-        return { fx, fy: Math.min(fy, ground), k: ik(hx, hy, fx, Math.min(fy, ground), L1, L2), back: i === 1 };
-      });
-      const drawLeg = (l, a) => { g.globalAlpha = a; g.strokeStyle = l.back ? C.dim : C.fg; g.lineWidth = 7 * S0; g.lineCap = "round"; g.beginPath(); g.moveTo(hx, hy); g.lineTo(...l.k); g.lineTo(l.fx, l.fy); g.stroke(); g.fillStyle = C.amb; g.beginPath(); g.arc(...l.k, 4.5 * S0, 0, 7); g.fill(); g.fillStyle = l.back ? C.dim : C.fg; g.fillRect(l.fx - 12 * S0, l.fy - 4 * S0, 24 * S0, 5 * S0); g.globalAlpha = 1; };
-      drawLeg(legs[1], .55);
-      // torso
-      const th = 70 * S0, tw = 48 * S0;
-      g.fillStyle = "#1c1f1c"; g.strokeStyle = C.fg; g.lineWidth = 2; rr(g, hx - tw / 2, hy - th, tw, th, 6 * S0); g.fill(); g.stroke();
-      g.fillStyle = C.sig; for (let i = 0; i < 3; i++) g.fillRect(hx - tw / 2 + 8 * S0, hy - th + 12 * S0 + i * 9 * S0, (Math.sin(T * 4 + i) * .5 + .5) * 20 * S0, 3 * S0);
-      // head
-      const hy2 = hy - th - 30 * S0; g.fillStyle = "#1c1f1c"; rr(g, hx - 22 * S0, hy2, 44 * S0, 28 * S0, 8 * S0); g.fill(); g.stroke();
-      g.fillStyle = fallen > 0 ? C.hot : C.amb; g.shadowColor = g.fillStyle; g.shadowBlur = 12; g.fillRect(hx - 14 * S0, hy2 + 10 * S0, 28 * S0, 6 * S0); g.shadowBlur = 0;
-      g.strokeStyle = C.dim; g.beginPath(); g.moveTo(hx, hy2); g.lineTo(hx + 6 * S0, hy2 - 12 * S0); g.stroke(); g.fillStyle = Math.sin(T * 6) > 0 ? C.hot : C.dim2; g.beginPath(); g.arc(hx + 6 * S0, hy2 - 13 * S0, 3 * S0, 0, 7); g.fill();
-      // arms
-      const sw = Math.sin(ph) * (.5 + .3 * Q) + noiseS[0] * (1 - Q);
-      [[-1, C.dim], [1, C.fg]].forEach(([s, c]) => { g.strokeStyle = c; g.lineWidth = 5 * S0; g.beginPath(); g.moveTo(hx, hy - th + 10 * S0); const ax = hx + Math.sin(sw * s) * 40 * S0, ay = hy - th + 10 * S0 + Math.cos(sw * s) * 40 * S0; g.lineTo(ax, ay); g.lineTo(ax + Math.sin(sw * s + .5) * 26 * S0, ay + 26 * S0); g.stroke(); });
-      drawLeg(legs[0], 1);
-      g.restore();
-      // reward curve inset
-      const ix = W - 190, iy = 24, iw = 170, ih = 80;
-      g.strokeStyle = C.line; g.strokeRect(ix + .5, iy + .5, iw, ih);
-      g.strokeStyle = C.ok; g.lineWidth = 1.4; g.beginPath(); curve.forEach((v, i) => { const x = ix + i / 100 * iw, y = iy + ih - (v + 80) / 440 * ih; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
-      const cxp = ix + ep / 1000 * iw; g.strokeStyle = C.amb; g.beginPath(); g.moveTo(cxp, iy); g.lineTo(cxp, iy + ih); g.stroke();
-      g.font = "500 9px IBM Plex Mono, monospace"; g.fillStyle = C.dim; g.fillText("episode reward", ix + 4, iy + 12);
-      const R = curve[Math.round(ep / 10)];
-      oE.textContent = ep; oR.textContent = R.toFixed(0); oV.textContent = (speed * .4 * (fallen > 0 ? 0 : 1)).toFixed(2) + "m/s";
-      g.fillStyle = C.dim; g.fillText(Q < .3 ? "policy: flailing" : Q < .7 ? "policy: shuffling" : "policy: walking ✓", 14, 20);
+      else if (m.t === "step") { if (running) S.thud(.03); }
+      else if (m.t === "fall") { S.thud(.25); S.noise(.15, 400, .7, .1, "lowpass"); }
+      else if (m.t === "push") S.noise(.2, 700, .6, .07, "lowpass");
     });
+    document.addEventListener("d66shove", () => { if (ready && mode === "live") post({ d66: "push" }); else setMode("live", true); });
+    setMode(mode);
+
+    // the real training curve: eval episode reward vs env steps (M), from the run's progress log
+    const PTS = [[0, .6], [4.9, 1.2], [9.8, 1.4], [14.7, 2.2], [19.7, 4.9], [24.6, 9.4], [29.5, 15.3], [34.4, 21.6], [39.3, 22.7], [44.2, 22], [49.2, 24.1], [54.1, 26.1], [59, 26.2], [63.9, 26.6], [68.8, 29.8], [73.7, 26.1], [78.6, 27.1], [83.6, 27.7], [88.5, 29.3], [93.4, 30.7], [98.3, 33.3], [103.2, 33.1], [108.1, 33.9], [113, 34.5], [118, 31.3], [122.9, 34.8], [127.8, 35.8], [132.7, 30.7], [137.6, 33.2], [142.5, 36.6], [147.5, 35.6], [152.4, 37], [157.3, 32.2], [162.2, 30.2], [167.1, 36.2], [172, 34.1], [176.9, 35.2], [181.9, 39.2], [186.8, 37.7], [191.7, 36.5]];
+    const CK = 37, svg = $("#rlCurve svg"), W = 320, H = 90, X = s => s / 192 * (W - 6), Y = r => H - 4 - r / 44 * (H - 12);
+    const d = PTS.map(([s, r], i) => (i ? "L" : "M") + X(s).toFixed(1) + " " + Y(r).toFixed(1)).join("");
+    const [cs, cr] = PTS[CK];
+    svg.innerHTML = [10, 20, 30, 40].map(r => `<line class="gd" x1="0" x2="${W}" y1="${Y(r)}" y2="${Y(r)}"/><text class="ax" x="${W}" y="${Y(r) - 2}">${r}</text>`).join("") +
+      `<path class="ar" d="${d}L${X(191.7)} ${H}L0 ${H}Z"/><path class="ln" d="${d}" pathLength="1"/>` +
+      `<g class="ck"><line x1="${X(cs)}" x2="${X(cs)}" y1="${Y(cr)}" y2="${H}"/><circle cx="${X(cs)}" cy="${Y(cr)}" r="4"/><text x="${X(cs) - 6}" y="${Y(cr) - 7}">ckpt ${cs}M · ${cr}</text></g>`;
+    D.onVisible(svg, () => { svg.closest(".curve").classList.add("drawn"); setTimeout(() => S.blip(880), 2000); }, .6);
   }
 
   /* =========================================================
@@ -935,7 +941,8 @@
     sl.addEventListener("input", () => { cTouched = true; S.tone(120 + +sl.value * .2, .03, "sine", .03); });
     D.loop(cv, (dt, T) => {
       if (D.fit(cv) || !W) { W = cv.width / DPR; H = cv.height / DPR; }
-      if (!cTouched && dt) sl.value = Math.round(1300 + 1100 * Math.sin(T * .35));
+      // untouched: replay the bench test, an electric screwdriver on the input shaft pulled in bursts
+      if (!cTouched && dt) { const p = T % 7.5; sl.value = Math.round(p < .35 ? p / .35 * 820 : p < 3.6 ? 820 + 25 * Math.sin(T * 23) : p < 4 ? 820 * (4 - p) / .4 : p < 4.8 ? 0 : p < 6.8 ? 300 + 40 * Math.sin(T * 11) : 0); }
       const rpm = +sl.value; th += rpm / 60 * Math.PI * 2 * dt * .12;
       g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
       const R = Math.min(W, H) * .36, Rr = R * .075, e = R * .055, cx = W > 600 ? W * .46 : W / 2, cy = H / 2;
@@ -1002,7 +1009,7 @@
       v.setAttribute("controlslist", "nodownload nofullscreen noremoteplayback noplaybackrate");
       v.setAttribute("aria-label", n); v.setAttribute("draggable", "false");
       fig.appendChild(v);
-      fig.insertAdjacentHTML("beforeend", `<div class="shield" data-cursor="pause"></div><span class="rec">${n.toUpperCase()}</span><span class="wm">dreaming66</span><span class="bar"><i></i></span>`);
+      fig.insertAdjacentHTML("beforeend", `<div class="shield" data-cursor="pause"></div><span class="rec">${fig.dataset.label || n.toUpperCase()}</span><span class="wm">dreaming66</span><span class="bar"><i></i></span>`);
       const bar = fig.querySelector(".bar i"), shield = fig.querySelector(".shield");
       v.addEventListener("timeupdate", () => { if (v.duration) bar.style.width = (v.currentTime / v.duration * 100) + "%"; });
       shield.addEventListener("click", () => {
@@ -1013,7 +1020,7 @@
       vio.observe(v);
     });
     // no context menu / drag on media
-    document.addEventListener("contextmenu", e => { if (e.target.closest(".clip, .photos, video")) e.preventDefault(); });
+    document.addEventListener("contextmenu", e => { if (e.target.closest(".clip, .shot, .photos, .stage.biped, video")) e.preventDefault(); });
     document.addEventListener("dragstart", e => { if (e.target.closest(".clip, .photos, video, img")) e.preventDefault(); });
   }
 
@@ -1180,7 +1187,7 @@
   /* ---------------- boot ---------------- */
   initInk(); initCard(); initGen(); initPCB(); initMCU(); initRack();
   initPD(); initNPU(); initMCP(); initGraph();
-  initRK(); initRobot(); initCyc(); initSDR(); initFT(); initArchive();
+  initRK(); initBiped(); initCyc(); initSDR(); initFT(); initArchive();
   initGuitar(); initPiano(); initLog(); initPing(); initScope();
   D.boot();
 })();

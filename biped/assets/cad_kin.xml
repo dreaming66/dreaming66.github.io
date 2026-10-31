@@ -1,0 +1,62 @@
+<mujoco><compiler angle="radian"/>
+  <visual><global offwidth="1280" offheight="720"/><quality shadowsize="4096"/><headlight ambient=".3 .3 .3" diffuse=".15 .15 .15"/></visual>
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".86 .87 .89" rgb2=".80 .81 .84" width="300" height="300"/>
+    <material name="grid" texture="grid" texrepeat="6 6" texuniform="true" reflectance=".08"/>
+    <texture type="skybox" builtin="gradient" rgb1=".97 .97 .99" rgb2=".75 .80 .88" width="512" height="512"/></asset>
+  <worldbody>
+    <!-- symmetric key lights (a single key from -y left the left leg flat-lit) + a top light -->
+    <light pos="1 -1 2.5" dir="-0.4 0.5 -1" directional="true" castshadow="true" diffuse=".45 .45 .45" specular=".25 .25 .25"/>
+    <light pos="1 1 2.5" dir="-0.4 -0.5 -1" directional="true" castshadow="false" diffuse=".45 .45 .45" specular=".25 .25 .25"/>
+    <light pos="0 0 3" dir="0 0 -1" directional="true" castshadow="false" diffuse=".2 .2 .2"/>
+    <geom type="plane" size="40 40 .01" material="grid"/>
+    <body name="torso" pos="0 0 0.5"><freejoint name="root"/>
+      <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 0.0 0.0"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 0.0 0.0"/>
+    <body name="l_hip_yaw" pos="0.00000 0.08000 0.00000"><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 -0.08 0.0"/>
+      <body name="l_hip_roll" pos="0.00000 0.00000 -0.04500"><joint name="l_roll" axis="1 0 0"/>
+        <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 -0.08 0.045"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 -0.08 0.045"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 -0.08 0.045"/>
+        <body name="l_crank" pos="-0.01000 0.00000 -0.08500"><joint name="l_crank" axis="0 1 0"/>
+          <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 -0.08 0.13"/>
+          <body name="l_rod" pos="-0.01769 0.00000 -0.03020"><joint name="l_rod" axis="0 1 0"/>
+            <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.027693666942169643 -0.08 0.16019824746801664"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.027693666942169643 -0.08 0.16019824746801664"/>
+          </body>
+          <body name="l_link1" pos="-0.01694 0.00000 -0.05233"><joint name="l_link1" axis="0 1 0"/><inertial pos="0 0 0" mass="1e-3" diaginertia="1e-7 1e-7 1e-7"/>
+            <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.026942175768718404 -0.08 0.18232554519755959"/>
+          </body>
+        </body>
+        <body name="l_mcrank" pos="-0.08469 0.00000 -0.02233"><joint name="l_mcrank" axis="0 1 0"/><inertial pos="0 0 0" mass="1e-3" diaginertia="1e-7 1e-7 1e-7"/>
+          <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.08468933320410035 -0.08 0.06732820805556242"/>
+        </body>
+        <body name="l_thigh" pos="-0.01000 0.00000 -0.08500"><joint name="l_pitch" axis="0 1 0"/>
+          <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 -0.08 0.13"/>
+          <body name="l_shank" pos="0.00000 0.00000 -0.18000"><joint name="l_knee" axis="0 1 0"/>
+            <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 -0.08 0.31"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 -0.08 0.31"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 -0.08 0.31"/>
+          </body>
+        </body>
+      </body>
+    </body>
+    <body name="r_hip_yaw" pos="0.00000 -0.08000 0.00000"><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 0.08 0.0"/>
+      <body name="r_hip_roll" pos="0.00000 0.00000 -0.04500"><joint name="r_roll" axis="-1 0 0"/>
+        <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 0.08 0.045"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 0.08 0.045"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.0 0.08 0.045"/>
+        <body name="r_crank" pos="-0.01000 0.00000 -0.08500"><joint name="r_crank" axis="0 1 0"/>
+          <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 0.08 0.13"/>
+          <body name="r_rod" pos="-0.01769 0.00000 -0.03020"><joint name="r_rod" axis="0 1 0"/>
+            <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.027693666942169643 0.08 0.16019824746801664"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.027693666942169643 0.08 0.16019824746801664"/>
+          </body>
+          <body name="r_link1" pos="-0.01694 0.00000 -0.05233"><joint name="r_link1" axis="0 1 0"/><inertial pos="0 0 0" mass="1e-3" diaginertia="1e-7 1e-7 1e-7"/>
+            <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.026942175768718404 0.08 0.18232554519755959"/>
+          </body>
+        </body>
+        <body name="r_mcrank" pos="-0.08469 0.00000 -0.02233"><joint name="r_mcrank" axis="0 1 0"/><inertial pos="0 0 0" mass="1e-3" diaginertia="1e-7 1e-7 1e-7"/>
+          <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.08468933320410035 0.08 0.06732820805556242"/>
+        </body>
+        <body name="r_thigh" pos="-0.01000 0.00000 -0.08500"><joint name="r_pitch" axis="0 1 0"/>
+          <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 0.08 0.13"/>
+          <body name="r_shank" pos="0.00000 0.00000 -0.18000"><joint name="r_knee" axis="0 1 0"/>
+            <geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 0.08 0.31"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 0.08 0.31"/><geom type="sphere" size="0.002" contype="0" conaffinity="0" mass="0.001" pos="0.01 0.08 0.31"/>
+          </body>
+        </body>
+      </body>
+    </body>
+    </body>
+  </worldbody></mujoco>

@@ -185,7 +185,8 @@
     ["NPU ........ 96 cards · HCCL ring up", "ok"],
     ["KV-CACHE ........ mooncake pool mounted", "ok"],
     ["RF FRONTEND ........ 144–146 MHz · DE BH3FWY", "ok"],
-    ["ACTUATOR ........ cycloidal 5010 · FOC driver: selecting", "w"],
+    ["ACTUATOR ........ cycloidal 5010 · screwdriver test OK · motor in transit", "w"],
+    ["GAIT POLICY ........ PPO · 192M steps · walking in sim", "ok"],
     ["STRINGS ........ EADGBE · overdrive on", "ok"],
     ["PRIVACY ........ phone / email / employer → REDACTED", "w"],
     ["AUDIO ........ WebAudio synth armed · first click unmutes", "ok"],
@@ -342,6 +343,7 @@
     help: () => D.t("term.help"),
     whoami: () => D.t("term.whoami"),
     aura: () => { go("#aura"); return "→ §03 AuraCore cluster"; },
+    walk: () => { go("#exp-robot"); setTimeout(() => document.dispatchEvent(new Event("d66shove")), 1600); return "→ biped · live MuJoCo · shoving in 1.6 s"; },
     "kubectl get nodes": () => `NAME            STATUS   ROLES                  ARCH
 auracore-head   <span class="g">Ready</span>    control-plane,master   arm64
 auracore-w1     <span class="g">Ready</span>    &lt;none&gt;                 arm64
@@ -354,7 +356,7 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
 <span class="p"> ──┤ ▣▣▣▣ ├── </span>Uptime: since 2021
 <span class="p">   └──────┘   </span>Shell: zsh · Editor: whatever works
               Next: RK3576 · 38×38 mm · 6 TOPS
-              Robot: BHL-based · FOC · MJX
+              Robot: BHL-based · gait policy walking in MJX
               RF: ZYNQ-7010 + AD936x · BH3FWY
               Strings: electric · J-rock · Keys: learning`,
     ls: () => `auracore/  rk3576/  homelab/  inference/  robot/  sdr/  archive/  guitar.wav  <span class="d">.secrets</span>`,

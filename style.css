@@ -357,12 +357,53 @@ main > section { position: relative; padding-left: var(--g); padding-right: var(
 .clip:hover { transform: rotate(0) translateY(-4px); box-shadow: 10px 10px 0 var(--vermilion); }
 .clip video { height: 100%; width: auto; max-width: 100%; display: block; object-fit: cover; pointer-events: none; }
 .clip .shield { position: absolute; inset: 0; z-index: 1; cursor: pointer; }
+.clip .rec, .shot .rec { white-space: nowrap; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; }
 .clip .rec { position: absolute; left: 10px; top: 10px; z-index: 2; font: 700 10px var(--mono); background: var(--paper); color: var(--ink); padding: 3px 9px; border-radius: 99px; pointer-events: none; }
 .clip .rec::before { content: "●"; color: var(--vermilion); margin-right: 5px; animation: blink 1s steps(1) infinite; }
 .clip.paused .rec::before { content: "Ⅱ"; color: var(--ink); animation: none; }
 .clip .wm { position: absolute; right: 10px; bottom: 8px; z-index: 2; font: 600 9.5px var(--mono); color: #ffffffb0; text-shadow: 0 0 4px #000; pointer-events: none; letter-spacing: .06em; }
 .clip .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; z-index: 2; background: #ffffff22; pointer-events: none; }
 .clip .bar i { display: block; height: 100%; width: 0; background: var(--vermilion); }
+/* WIP.1 · live biped: MuJoCo in an iframe over the recorded rollout */
+.curve { margin: 12px 0 0; border: 1.5px solid var(--ink); border-radius: 16px; padding: 10px 12px 8px; background: var(--paper); }
+.curve svg { display: block; width: 100%; height: auto; overflow: visible; }
+.curve .ln { fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 2.2s var(--ease-io); }
+.curve .ar { fill: var(--vermilion); opacity: 0; transition: opacity 1s .8s; }
+.curve .gd { stroke: var(--line); stroke-width: 1; }
+.curve .ax { font: 600 7.5px var(--mono); fill: var(--muted); text-anchor: end; }
+.curve .ck { opacity: 0; transform: translateY(6px); transition: opacity .4s 2s, transform .5s 2s var(--ease); }
+.curve .ck line { stroke: var(--vermilion); stroke-width: 1; stroke-dasharray: 2 2; }
+.curve .ck circle { fill: var(--vermilion); stroke: var(--ink); stroke-width: 1.5; }
+.curve .ck text { font: 700 8.5px var(--mono); fill: var(--ink); text-anchor: end; }
+.curve.drawn .ln { stroke-dashoffset: 0; } .curve.drawn .ar { opacity: .14; } .curve.drawn .ck { opacity: 1; transform: none; }
+body.still .curve .ln, body.still .curve .ar, body.still .curve .ck { transition: none; }
+.curve figcaption { display: flex; justify-content: space-between; gap: 10px; font-size: 10px; font-weight: 700; color: var(--muted); margin-top: 6px; letter-spacing: .04em; }
+.curve figcaption span:first-child { color: var(--vermilion); }
+.stage.biped { min-height: 440px; }
+.stage.biped > video, .stage.biped > iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+.stage.biped > video { object-fit: cover; pointer-events: none; transition: opacity .6s; }
+.stage.biped > iframe { opacity: 0; transition: opacity .6s; background: var(--ink); }
+.stage.biped.live > iframe { opacity: 1; }
+.stage.biped.live > video { opacity: 0; }
+.stage.biped .shield { position: absolute; inset: 0; z-index: 1; }
+.stage.biped.live .shield { display: none; }
+.biped-load { position: absolute; left: 14px; bottom: 14px; z-index: 2; display: none; align-items: center; gap: 10px; font-size: 10.5px; color: var(--paper); background: #141412cc; padding: 6px 10px; border-radius: 99px; }
+.biped-load i { width: 90px; height: 5px; border-radius: 3px; background: #f1ede333; overflow: hidden; }
+.biped-load b { display: block; height: 100%; width: 0; background: var(--vermilion); transition: width .2s; }
+.stage.biped.loading .biped-load { display: inline-flex; }
+.biped-go { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 3; display: none; box-shadow: 4px 4px 0 var(--vermilion); }
+.stage.biped.ask .biped-go { display: inline-flex; }
+.stage.biped.live .note, .stage.biped.ask .note { display: none; }
+/* WIP.2 · photos + clips under the joint card */
+.exp-media { grid-column: 1 / -1; margin-top: 6px; }
+.shot { margin: 0; flex: 0 1 auto; height: clamp(220px, 26vw, 360px); position: relative; border: 1.5px solid var(--ink); border-radius: 18px; overflow: hidden; box-shadow: 6px 6px 0 var(--ink); background: var(--ink); transform: rotate(.8deg); transition: transform .4s var(--ease), box-shadow .3s; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.shot:hover { transform: rotate(0) translateY(-4px); box-shadow: 10px 10px 0 var(--vermilion); }
+.shot img { height: 100%; width: auto; display: block; pointer-events: none; }
+.shot .rec { position: absolute; left: 10px; top: 10px; font: 700 10px var(--mono); background: var(--paper); color: var(--ink); padding: 3px 9px; border-radius: 99px; pointer-events: none; }
+.shot .wm { position: absolute; right: 10px; bottom: 8px; font: 600 9.5px var(--mono); color: #ffffffb0; text-shadow: 0 0 4px #000; pointer-events: none; letter-spacing: .06em; }
+.exp-media .clip:nth-child(even) { transform: rotate(-.8deg); } .exp-media .clip:nth-child(odd) { transform: rotate(.8deg); }
+.exp-media .clip:hover { transform: rotate(0) translateY(-4px); }
+@media (max-width: 900px) { .stage.biped { min-height: 360px; } .shot { height: 260px; flex: 0 0 auto; scroll-snap-align: start; } .exp-media { margin-inline: calc(var(--g) * -1); padding-inline: var(--g); } }
 @media (max-width: 900px) { .reel { grid-template-columns: 1fr; } .clips { flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 14px 14px 4px; } .clip { height: 260px; flex: 0 0 auto; scroll-snap-align: start; } }
 .photos img { -webkit-user-drag: none; -webkit-touch-callout: none; user-select: none; }
 

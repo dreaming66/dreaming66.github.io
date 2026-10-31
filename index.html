@@ -290,27 +290,39 @@
         <header class="exp-h">
           <span class="mono tag">WIP.1</span>
           <h3 data-i18n="robot.t">低成本人形机器人</h3>
-          <p data-i18n="robot.p">基于 Berkeley Humanoid Lite（BHL）在家手搓：关节已打印装好，正在调驱动器；步态用强化学习在 MJX（MuJoCo + JAX）里训练。下面是一个程序化的小玩具：拖动训练进度，看它从摔跤到走路；点击画面给它一脚。</p>
-          <div class="ctl mono"><label class="sl wide">EPISODE<input type="range" id="rlEp" min="0" max="1000" value="80"></label></div>
+          <p data-i18n="robot.p">基于 Berkeley Humanoid Lite（BHL）在家手搓。步态策略已经训出来了：在 MJX（MuJoCo + JAX）里用 PPO，一张免费的 T4 GPU 跑了 2.8 小时、1.9 亿步仿真，能前后走、侧移、转身，被推一把也站得住。右边不是录屏，是同一个策略正在你的浏览器里实时跑物理仿真，它在自动驾驶；点一下画面推它一把。</p>
+          <ol class="steps mono"><li class="done" data-i18n="robot.s1">结构打印</li><li class="done" data-i18n="robot.s2">摆线关节验证</li><li class="done" data-i18n="robot.s3">RL 步态 · 仿真</li><li class="cur" data-i18n="robot.s4">FOC 驱动器</li><li data-i18n="robot.s5">整机装配</li><li>Sim2Real</li></ol>
+          <div class="ctl mono"><div class="tog" id="bipedTog"><button class="on" data-v="live" data-i18n="robot.v1">实时仿真</button><button data-v="video" data-i18n="robot.v2">录屏</button></div><a class="act" id="bipedFull" href="biped/" data-i18n="robot.full">全屏操控</a></div>
           <dl class="meter mono">
-            <div><dt>EPISODE</dt><dd id="rlE">—</dd></div>
-            <div><dt>REWARD</dt><dd id="rlR">—</dd></div>
+            <div><dt>CMD v<sub>x</sub></dt><dd id="rlC">—</dd></div>
+            <div><dt>MEAS v<sub>x</sub></dt><dd id="rlV">—</dd></div>
             <div><dt>FALLS</dt><dd id="rlF">0</dd></div>
-            <div><dt>v<sub>x</sub></dt><dd id="rlV">—</dd></div>
+            <div><dt>MODE</dt><dd id="rlM">—</dd></div>
           </dl>
+          <figure class="curve" id="rlCurve"><svg viewBox="0 0 320 90" aria-hidden="true"></svg><figcaption class="mono"><span>EVAL REWARD</span><span>192M STEPS · 1× T4 · 2.8 h</span></figcaption></figure>
         </header>
-        <div class="stage"><canvas id="robot" aria-label="双足机器人步态"></canvas><span class="note mono">PROCEDURAL TOY · NOT THE REAL POLICY</span></div>
+        <div class="stage biped" id="bipedStage">
+          <div class="biped-load mono"><span id="bipedPct">MuJoCo WASM</span><i><b id="bipedBar"></b></i></div>
+          <button class="act biped-go" id="bipedGo" data-i18n="robot.go">在浏览器里实时运行 · 约 6 MB</button>
+          <span class="note mono" id="bipedNote">REAL POLICY · LIVE IN YOUR BROWSER</span>
+        </div>
       </article>
 
       <article class="exp" data-exp id="exp-act">
         <header class="exp-h">
           <span class="mono tag">WIP.2</span>
           <h3 data-i18n="act.t">摆线减速关节 · 自研 FOC</h3>
-          <p data-i18n="act.p">关节用的是 BHL 的 5010 摆线减速器，3D 打印。我写了 cadquery 脚本，只重建和电机接触的两个件（Motor Shell / Motor Shaft），把它适配到手头的 5010 360KV 电机上，其余打印件不动。驱动器自研 FOC，正在选型画板。拖动转速，看摆线盘怎么“摆”。</p>
+          <p data-i18n="act.p">关节用的是 BHL 的 5010 摆线减速器，3D 打印。我写了 cadquery 脚本，只重建和电机接触的两个件（Motor Shell / Motor Shaft），把它适配到手头的 5010 360KV 电机上，其余打印件不动。现在已经打印、装配完成。电机还在路上，就先把电动螺丝刀插进输入轴当电机：转起来顺滑、没有卡滞，输出扭矩也够大。驱动器自研 FOC，正在选型画板。</p>
+          <ol class="steps mono"><li class="done" data-i18n="act.s1">cadquery 适配</li><li class="done" data-i18n="act.s2">打印 + 装配</li><li class="done" data-i18n="act.s3">电动螺丝刀试转</li><li class="cur" data-i18n="act.s4">等电机到货</li><li data-i18n="act.s5">FOC 闭环</li></ol>
           <div class="ctl mono"><label class="sl wide">INPUT RPM<input type="range" id="cycRpm" min="0" max="3000" value="900"></label></div>
           <pre class="readout mono" id="cycRead"></pre>
         </header>
         <div class="stage"><canvas id="cyc" aria-label="摆线减速器示意"></canvas><span class="note mono">ILLUSTRATIVE GEOMETRY · NOT BHL'S EXACT PARAMETERS</span></div>
+        <div class="clips exp-media">
+          <figure class="shot"><img src="assets/img/cycloid-disc.jpg" alt="3D 打印的摆线盘，六个输出销轴承和中心偏心轴承" data-i18n-attr="alt:act.img" loading="lazy" decoding="async" draggable="false" width="900" height="1200"><span class="rec">CYCLOID DISC · PRINTED</span><span class="wm">dreaming66</span></figure>
+          <figure class="clip" data-v="joint-drill" data-label="DRILL TEST · NO BINDING"></figure>
+          <figure class="clip" data-v="joint-input" data-label="INPUT SIDE · ASSEMBLED"></figure>
+        </div>
       </article>
 
       <article class="exp" data-exp id="exp-sdr">
@@ -480,7 +492,7 @@
 
   <!-- X-RAY annotations -->
   <div class="xnote mono" style="top:22vh;left:46vw" data-i18n="x1">&lt;!-- 这里本来想放一张照片。隐私优先，换成了芯片。 --&gt;</div>
-  <div class="xnote mono" style="top:70vh;left:6vw" data-i18n="x2">&lt;!-- 数字来自真实工作；接口、IP、图谱与仿真均为虚构演示 --&gt;</div>
+  <div class="xnote mono" style="top:70vh;left:6vw" data-i18n="x2">&lt;!-- 数字来自真实工作；接口、IP、图谱与仿真均为虚构演示，双足机器人除外：那是真策略 --&gt;</div>
   <div class="xnote mono" style="top:46vh;right:4vw">&lt;!-- easter egg: ↑↑↓↓←→←→BA --&gt;</div>
 
   <!-- ===== TERMINAL ===== -->
