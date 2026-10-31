@@ -291,7 +291,7 @@ if (EMBED) { sfx.volume = 0.45; soundWanted = false; }
 else { try { soundWanted = localStorage.getItem("biped-sound") !== "0"; } catch {} }
 const applySound = () => {
   const on = soundWanted && running;
-  if (on) sfx.unlock(); else if (sfx.ctx && sfx.ctx.state === "running") sfx.ctx.suspend();
+  if (on) sfx.unlock(); else if (sfx.ctx && sfx.ctx.state !== "closed") sfx.ctx.suspend();   // also cancels a resume still in flight
   sfx.setEnabled(on);
   $("sound").textContent = T(soundWanted ? "sndOn" : "sndOff");
   $("sound").classList.toggle("off", !soundWanted);
