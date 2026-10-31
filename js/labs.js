@@ -68,17 +68,29 @@
       col = mix(paper, col, .35 + .65 * smoothstep(-.55, .35, p.y));
       o = vec4(col, 1.);
     }`;
-    const sh = (t, src) => { const x = gl.createShader(t); gl.shaderSource(x, src); gl.compileShader(x); if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) console.warn(gl.getShaderInfoLog(x)); return x; };
-    const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
-    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    const uR = gl.getUniformLocation(pr, "R"), uT = gl.getUniformLocation(pr, "T"), uM = gl.getUniformLocation(pr, "M"), uD = gl.getUniformLocation(pr, "Dr"), uK = gl.getUniformLocation(pr, "Dk");
+    // compile without blocking: asking for COMPILE_STATUS right away stalls the main thread until the GPU process
+    // has translated the shader (~0.6 s for this fbm, right while the boot screen animates). With
+    // KHR_parallel_shader_compile we poll COMPLETION_STATUS each frame and start drawing once it's linked.
+    const sh = (t, src) => { const x = gl.createShader(t); gl.shaderSource(x, src); gl.compileShader(x); return x; };
+    const fsh = sh(gl.FRAGMENT_SHADER, fs), pr = gl.createProgram();
+    gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, fsh); gl.linkProgram(pr);
+    const par = gl.getExtension("KHR_parallel_shader_compile");
+    let uR, uT, uM, uD, uK, linked = false, broken = false;
+    const finish = () => {
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) { broken = true; console.warn(gl.getShaderInfoLog(fsh) || gl.getProgramInfoLog(pr)); return; }
+      gl.useProgram(pr);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      [uR, uT, uM, uD, uK] = ["R", "T", "M", "Dr", "Dk"].map(n => gl.getUniformLocation(pr, n));
+      linked = true;
+    };
     let dk = D.dark ? 1 : 0;
     const drops = new Float32Array(24); let di = 0, pmx = 0, pmy = 0;
     const drop = (x, y) => { const r = cv.getBoundingClientRect(), k = cv.width / r.width; drops.set([(x - r.left) * k, (r.bottom - y) * k, D.T, 1], (di++ % 6) * 4); S.tone(rand(180, 320), .6, "sine", .1, .6); S.noise(.2, 600, .8, .05, "lowpass"); };
     cv.parentElement.addEventListener("pointerdown", e => { if (!e.target.closest("a,button")) drop(e.clientX, e.clientY); });
     document.addEventListener("d66boot", () => setTimeout(() => drop(innerWidth * .66, innerHeight * .38), 900));
     D.loop(cv, (dt, T) => {
+      if (!linked) { if (broken || (par && !gl.getProgramParameter(pr, par.COMPLETION_STATUS_KHR))) return; finish(); if (!linked) return; }
       D.fit(cv, .6); gl.viewport(0, 0, cv.width, cv.height);
       const r = cv.getBoundingClientRect(), k = cv.width / r.width;
       pmx = lerp(pmx, (D.mx - r.left) * k, .08); pmy = lerp(pmy, (r.bottom - D.my) * k, .08);
@@ -257,7 +269,11 @@
       [300, "w", "\nWelcome to Buildroot · AuraCore V2.0 (H616)"],
     ];
     const stageAt = i => i < 16 ? 4 : i < 27 ? 5 : 6;
-    const pr = (cls, t) => { outEl.insertAdjacentHTML("beforeend", (cls ? `<span class="${cls}">${t}</span>` : t) + "\n"); outEl.scrollTop = outEl.scrollHeight; };
+    let follow = 0;
+    const pr = (cls, t) => {
+      outEl.insertAdjacentHTML("beforeend", (cls ? `<span class="${cls}">${t}</span>` : t) + "\n");
+      if (!follow) follow = requestAnimationFrame(() => { follow = 0; outEl.scrollTop = outEl.scrollHeight; });   // once per frame, not per line
+    };
     pwr.addEventListener("click", () => {
       if (powered) return; powered = true; pwr.disabled = true; outEl.textContent = ""; state.textContent = "CONNECTED"; state.classList.add("live");
       S.thud(.2); S.tone(55, .4, "sine", .1);
@@ -265,8 +281,8 @@
       const nx = () => {
         if (i >= boot.length) {
           setFlow(7); S.chord([392, 523, 659, 784], .08, "sine", .08);
-          outEl.insertAdjacentHTML("beforeend", `auracore login: <input aria-label="login" autocomplete="off" spellcheck="false">`);
-          const inp = outEl.lastElementChild; login(inp); if (autoMode) autoShell(inp); else inp.focus({ preventScroll: true }); return;
+          outEl.insertAdjacentHTML("beforeend", `auracore login: <input aria-label="login" autocomplete="off" spellcheck="false" enterkeyhint="send">`);
+          const inp = outEl.lastElementChild; login(inp); if (autoMode) autoShell(inp); else if (!TOUCH) inp.focus({ preventScroll: true }); return;
         }
         const [d, c, t] = boot[i]; setFlow(stageAt(i)); i++;
         setTimeout(() => { pr(c, t); S.tone(rand(1500, 2200), .01, "square", .02); nx(); }, D.still ? 0 : d);
@@ -290,14 +306,19 @@
         else if (v) pr("", CMDS[v] || `-sh: ${v.replace(/[<>&]/g, "")}: not found`);
       });
     }
+    // focus only follows a person who is typing: the auto demo (and phones, where focus = on-screen keyboard)
+    // never grab it; tapping the console focuses its prompt
+    const TOUCH = matchMedia("(pointer: coarse)").matches;
+    outEl.addEventListener("click", () => { const l = outEl.lastElementChild; if (l && l.tagName === "INPUT" && !getSelection().toString()) l.focus({ preventScroll: true }); });
     function hook(inp, fn) {
       inp.addEventListener("keydown", e => {
         if (e.key.length === 1) S.tone(rand(1800, 2400), .01, "square", .02);
         if (e.key !== "Enter") return;
+        const typing = document.activeElement === inp;
         const v = inp.value.trim(); inp.replaceWith(document.createTextNode(v + "\n"));
         if (fn(v) === true) return;
-        outEl.insertAdjacentHTML("beforeend", `# <input aria-label="shell" autocomplete="off" spellcheck="false">`);
-        const n = outEl.lastElementChild; n.focus({ preventScroll: true }); outEl.scrollTop = outEl.scrollHeight; shell(n);
+        outEl.insertAdjacentHTML("beforeend", `# <input aria-label="shell" autocomplete="off" spellcheck="false" enterkeyhint="send">`);
+        const n = outEl.lastElementChild; if (typing) n.focus({ preventScroll: true }); outEl.scrollTop = outEl.scrollHeight; shell(n);
       });
     }
     pr("", `<span class="y">[ board unpowered ]</span>\n<span class="hint-unpowered">${D.t("pcb.unpowered")}</span>`);
@@ -1036,6 +1057,15 @@
         el.textContent = `public_repos: ${j.public_repos} · followers: ${j.followers} · since ${String(j.created_at).slice(0, 10)}`;
       } catch { el.textContent = D.t("gh.rate"); }
     });
+    // the PR badges in the HTML are a snapshot; refresh them from the GitHub API (keeps the snapshot if that fails)
+    D.onVisible($(".prs"), () => $$(".pr[data-pr]").forEach(async a => {
+      try {
+        const [o, r, n] = a.dataset.pr.split("/"), res = await fetch(`https://api.github.com/repos/${o}/${r}/pulls/${n}`);
+        if (!res.ok) return; const j = await res.json(), st = a.querySelector(".st");
+        const k = j.merged_at ? "merged" : j.state === "closed" ? "closed" : j.draft ? "draft" : "open";
+        st.className = "st " + k; st.textContent = k.toUpperCase();
+      } catch {}
+    }));
   }
 
   function initPing() {

@@ -209,6 +209,10 @@ input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 
 @keyframes mq { to { transform: translateX(-50%); } }
 
 /* ---------- section scaffolding ---------- */
+/* while the boot screen plays, sections below the fold are skipped (no layout / paint): it used to share the
+   main thread with a full layout of every panel on the page. core.js drops .defer at idle after the gate opens,
+   so from then on every section has its real height and anchor jumps land exactly. */
+.defer main > section:not(.hero), .defer .foot { content-visibility: auto; contain-intrinsic-size: auto 1400px; }
 main > section { position: relative; padding-left: var(--g); padding-right: var(--g); }
 .sec-h { max-width: 1240px; margin-bottom: clamp(30px, 5vw, 60px); }
 .sec-tag { display: inline-flex; gap: 10px; align-items: center; font-size: 12px; color: var(--ink-2); text-transform: uppercase; }
@@ -452,7 +456,8 @@ body.still .curve .ln, body.still .curve .ar, body.still .curve .ck { transition
 .pr::before { content: ""; position: absolute; inset: 0; background: var(--ink); transform: scaleY(0); transform-origin: bottom; transition: transform .5s var(--ease); z-index: -1; }
 .pr:hover { color: var(--paper); } .pr:hover::before { transform: scaleY(1); }
 .st { font-size: 10.5px; font-weight: 800; text-align: center; padding: 4px 0; border-radius: 99px; }
-.st.merged { background: #8250df; color: #fff; } .st.open { background: #1f883d; color: #fff; }
+.st.merged { background: #8250df; color: #fff; } .st.open { background: #1f883d; color: #fff; } .st.closed { background: #6e7781; color: #fff; } .st.draft { background: #59636e; color: #fff; }
+.award { font-size: 10.5px; font-weight: 800; color: #141412; background: var(--sun); padding: 2px 9px; border-radius: 99px; letter-spacing: .02em; }
 .tt { font: 500 clamp(15px, 1.6vw, 20px)/1.3 var(--sans); }
 .go { font-size: 22px; transition: transform .4s var(--ease); }
 .pr:hover .go { transform: rotate(45deg); color: var(--vermilion); }

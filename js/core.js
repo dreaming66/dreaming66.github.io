@@ -189,6 +189,8 @@
       document.body.classList.add("booted", "ready");
       setTimeout(() => { $("#gate").remove(); S.boot(); }, 300);
       document.dispatchEvent(new Event("d66boot"));
+      // after the gate's slide-up: lay out the rest of the page in one idle moment
+      setTimeout(() => (window.requestIdleCallback || setTimeout)(() => document.documentElement.classList.remove("defer"), { timeout: 1500 }), 1200);
     };
     // skip the POST on any click / key
     const skip = () => { i = post.length; enter(true); };
@@ -282,11 +284,15 @@
   $$("[data-glitch], [data-exp], .feat, .bars").forEach(el => rio.observe(el));
 
   // scroll velocity skew
-  let lastY = scrollY, skew = 0;
+  // written only when it changes, and only on the headings that use it: setting a custom property on <html>
+  // every frame made the browser restyle the whole page every frame
+  let lastY = scrollY, skew = 0, lastSk = "";
+  const skewed = $$(".sec-t");
   (function sk() {
     const v = scrollY - lastY; lastY = scrollY;
     skew = lerp(skew, clamp(v * -.12, -8, 8), .12);
-    document.documentElement.style.setProperty("--skew", (D.still ? 0 : skew).toFixed(2) + "deg");
+    const s = (D.still || Math.abs(skew) < .005 ? 0 : skew).toFixed(2);
+    if (s !== lastSk) { lastSk = s; skewed.forEach(el => el.style.setProperty("--skew", s + "deg")); }
     requestAnimationFrame(sk);
   })();
 
