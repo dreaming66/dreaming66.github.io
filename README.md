@@ -13,6 +13,7 @@ Hand-written Canvas2D + WebAudio. Zero frameworks, zero build step, zero audio s
 - `` ` `` terminal · `X` x-ray · `S` sound · ↑↑↓↓←→←→BA
 - Follows the browser's light / dark setting (paper ↔ ink; instrument screens stay ink)
 - The cube logo: one SVG sprite in `index.html` (`#d66-mark`, `#d66-lid`, `#d66-body`, `#d66-dustinz`) feeds the header (the lid lifts on hover), the gate (draws itself in yellow), the hero badge, the footer, the PCB silkscreen, the business card and the `logo` command; favicon, touch icon, sticker and social card live in `assets/brand/`
+- `style.css` and the scripts are linked with `?v=…`; bump it in `index.html` whenever they change, so a cached old stylesheet never meets new markup
 
 All APIs, IPs, graph data and simulations are fictional demos — except `/biped/`, which runs the actual trained policy.
 

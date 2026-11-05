@@ -342,7 +342,7 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
               Robot: BHL-based · gait policy walking in MJX
               RF: ZYNQ-7010 + AD936x · BH3FWY
               Strings: electric · J-rock · Keys: learning`,
-    logo: () => `<svg class="t-logo" aria-hidden="true"><use href="#d66-mark"/></svg>  <span class="y">DustinZ</span> · dreaming66\n<span class="d">  isometric box · 30° grid · #FDB913 / #141412</span>`,
+    logo: () => `<svg class="t-logo" width="74" height="81" aria-hidden="true"><use href="#d66-mark"/></svg>  <span class="y">DustinZ</span> · dreaming66\n<span class="d">  isometric box · 30° grid · #FDB913 / #141412</span>`,
     ls: () => `auracore/  rk3576/  homelab/  inference/  robot/  sdr/  archive/  <span class="d">.secrets</span>`,
     "cat .secrets": () => `<span class="r">permission denied</span> · redacted`,
     "uname -a": () => `Linux drm-66 6.6.66-dreaming #1 SMP PREEMPT armv7l GNU/Linux`,
