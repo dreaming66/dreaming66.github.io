@@ -6,6 +6,10 @@
   const D = window.D66, { $, $$, clamp, lerp, rand, DPR, C, sfx: S } = D;
   const ctx2d = cv => cv.getContext("2d");
   const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect ? g.roundRect(x, y, w, h, r) : g.rect(x, y, w, h); };
+  // the cube logo, read once from the page's sprite so canvases draw the very same outline
+  const MARK = (() => { const sym = document.getElementById("d66-mark"); return sym ? { p: new Path2D(sym.querySelector("path").getAttribute("d")), vb: sym.getAttribute("viewBox").split(" ").map(Number) } : null; })();
+  const markW = h => MARK ? h * MARK.vb[2] / MARK.vb[3] : 0;
+  const drawMark = (g, x, y, h, color) => { if (!MARK) return; const [vx, vy, , vh] = MARK.vb, k = h / vh; g.save(); g.translate(x, y); g.scale(k, k); g.translate(-vx, -vy); g.fillStyle = color; g.fill(MARK.p, "evenodd"); g.restore(); };
   const visible = el => { const r = el.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; };
   // auto-demo: fire when the element scrolls into view, then every `every` ms while it stays there
   const auto = (el, fn, every = 0, th = .35) => {
@@ -120,7 +124,8 @@
       else if (motif % 3 === 1) { let x = mx; g.fillStyle = th.ac; for (const ch of "BH3FWY".split("").reverse()) { for (const s of [...D.MORSE[ch]].reverse()) { const w = s === "." ? 12 : 34; x -= w; g.fillRect(x, my + 20, w, 12); x -= 8; } x -= 22; } g.font = "500 18px JetBrains Mono, monospace"; g.fillStyle = th.fg; g.textAlign = "right"; g.fillText("DE BH3FWY", mx, my + 70); g.textAlign = "left"; }
       else { g.strokeStyle = th.ac; g.lineWidth = 3; g.beginPath(); for (let x = 0; x < 330; x += 3) { const y = my + 40 + Math.sin(x * .09 + seed) * 22 * Math.exp(-x / 260) * Math.sin(x * .013); x ? g.lineTo(mx - 330 + x, y) : g.moveTo(mx - 330 + x, y); } g.stroke(); }
       g.globalAlpha = 1;
-      g.fillStyle = th.fg; g.font = "600 22px JetBrains Mono, monospace"; g.fillText("MAKER · AI INFRA · MUSICIAN", 70, 92);
+      drawMark(g, 70, 61, 46, th.fg);
+      g.fillStyle = th.fg; g.font = "600 22px JetBrains Mono, monospace"; g.fillText("MAKER · AI INFRA · MUSICIAN", 70 + markW(46) + 16, 92);
       g.font = "italic 400 190px Instrument Serif, Georgia, serif"; g.fillText("dreaming", 62, 400);
       g.fillStyle = th.ac; g.fillText("66", 62 + g.measureText("dreaming").width + 10, 400);
       g.fillStyle = th.fg; g.font = "900 40px Noto Serif SC, serif"; g.fillText(line.value || " ", 70, 500);
@@ -361,6 +366,7 @@
       const [tx, ty] = L(1.6, 3.4); g.save(); g.translate(tx, ty); g.rotate(-Math.PI / 2); g.fillText("AuraCore", 0, 0); g.restore();
       g.font = `500 ${Math.max(8, 1.2 * s)}px IBM Plex Mono, monospace`; g.fillStyle = "#e8e4d8aa";
       const [dx, dy] = L(3, 37.5); g.save(); g.translate(dx, dy); g.rotate(-Math.PI / 2); g.fillText("Dustin.Z · Engineering Sample", 0, 0); g.restore();
+      { const [mx, my] = L(27.6, 39.4), mh = 4.6 * s; g.save(); g.translate(mx, my); g.rotate(-Math.PI / 2); drawMark(g, -markW(mh) / 2, -mh / 2, mh, "#e8e4d8d0"); g.restore(); }
       for (const p of pads) {
         const [x, y, w, h] = R(p.x, p.y, p.w, p.h);
         if (p.on) {

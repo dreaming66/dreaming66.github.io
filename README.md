@@ -12,6 +12,7 @@ Hand-written Canvas2D + WebAudio. Zero frameworks, zero build step, zero audio s
 - WIP: the real RL gait policy walking live in the browser (MuJoCo WASM, on autopilot; full-screen controls at [`/biped/`](https://me.dustinz.de/biped/)), cycloidal joint bench test, SDR waterfall with an audible CW beacon (decode the callsign), LoRA fine-tune curves
 - `` ` `` terminal · `X` x-ray · `S` sound · ↑↑↓↓←→←→BA
 - Follows the browser's light / dark setting (paper ↔ ink; instrument screens stay ink)
+- The cube logo: one SVG sprite in `index.html` (`#d66-mark`, `#d66-lid`, `#d66-body`, `#d66-dustinz`) feeds the header (the lid lifts on hover), the gate (draws itself in yellow), the hero badge, the footer, the PCB silkscreen, the business card and the `logo` command; favicon, touch icon, sticker and social card live in `assets/brand/`
 
 All APIs, IPs, graph data and simulations are fictional demos — except `/biped/`, which runs the actual trained policy.
 

@@ -342,6 +342,7 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
               Robot: BHL-based · gait policy walking in MJX
               RF: ZYNQ-7010 + AD936x · BH3FWY
               Strings: electric · J-rock · Keys: learning`,
+    logo: () => `<svg class="t-logo" aria-hidden="true"><use href="#d66-mark"/></svg>  <span class="y">DustinZ</span> · dreaming66\n<span class="d">  isometric box · 30° grid · #FDB913 / #141412</span>`,
     ls: () => `auracore/  rk3576/  homelab/  inference/  robot/  sdr/  archive/  <span class="d">.secrets</span>`,
     "cat .secrets": () => `<span class="r">permission denied</span> · redacted`,
     "uname -a": () => `Linux drm-66 6.6.66-dreaming #1 SMP PREEMPT armv7l GNU/Linux`,
@@ -361,6 +362,8 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
     clear: () => { tb.innerHTML = ""; return null; },
     exit: () => { setTerm(false); return null; },
   };
+  const stk = $("#sticker");
+  if (stk) { stk.addEventListener("click", () => { stk.classList.remove("spin"); void stk.offsetWidth; stk.classList.add("spin"); S.blip(rand(700, 1000)); }); stk.addEventListener("animationend", () => stk.classList.remove("spin")); }
   const setTerm = open => { term.classList.toggle("open", open); term.setAttribute("aria-hidden", !open); S.whoosh(open); if (open) setTimeout(() => ti.focus(), 40); };
   print(`<span class="d">${D.t("term.hello")}</span> <span class="p">help</span>`);
   $("#termBtn").addEventListener("click", () => setTerm(!term.classList.contains("open")));
