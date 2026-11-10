@@ -21,15 +21,15 @@
   --vermilion: #ff4f1f;
   --cobalt: #2747ff;
   --moss: #2f7d5b;
-  --sun: #f2c230;
+  --sun: #fdb913;               /* one yellow everywhere: the logo's */
   --mint: #7dff9a;
   /* fixed, theme-independent: instrument screens stay ink, text on them stays paper */
   --night: #141412;
-  --brand: #fdb913;             /* the cube logo's yellow, same in both themes */
+  --brand: var(--sun);          /* the cube logo's yellow, same in both themes */
   --lt: #f1ede3;
   --hard: #141412;              /* the offset "sticker" shadows */
-  --hl: #f2c230;
-  --hl2: #f2c23088;
+  --hl: #fdb913;
+  --hl2: #fdb91388;
   color-scheme: light;
   --serif: "Instrument Serif", "Noto Serif SC", Georgia, serif;
   --cn-serif: "Noto Serif SC", "Songti SC", serif;
@@ -46,7 +46,7 @@
   :root {
     color-scheme: dark;
     --paper: #11110f; --paper-2: #1c1b18; --ink: #ece6da; --ink-2: #bcb7aa; --muted: #8a867b; --line: #ece6da24;
-    --cobalt: #7b8fff; --moss: #3f9c72; --hard: #3a3832; --hl: #f2c23066; --hl2: #f2c23055;
+    --cobalt: #7b8fff; --moss: #3f9c72; --hard: #3a3832; --hl: #fdb91366; --hl2: #fdb91355;
   }
 }
 
@@ -83,6 +83,7 @@ body.has-cursor .cursor { display: block; }
 .cursor.down .c-ring { width: 26px; height: 26px; margin: -13px 0 0 -13px; }
 
 /* ---------- gate (loader) ---------- */
+html.seen .gate { display: none; }
 .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 .gate { position: fixed; inset: 0; z-index: 300; background: var(--night); color: var(--lt); display: flex; flex-direction: column; justify-content: flex-end; padding: var(--g); transition: clip-path 1.1s var(--ease-io); clip-path: inset(0 0 0 0); }
@@ -124,7 +125,7 @@ body.has-cursor .cursor { display: block; }
 .hdr-act { display: flex; gap: 6px; }
 .chip { height: 42px; min-width: 42px; padding: 0 12px; border-radius: 99px; background: var(--paper); border: 1px solid var(--line); font-size: 13px; font-weight: 700; transition: background .25s, color .25s; }
 .chip b { font-size: 9px; font-weight: 800; color: var(--muted); }
-.chip[aria-pressed="true"] { background: var(--vermilion); color: var(--paper); border-color: var(--vermilion); }
+.chip[aria-pressed="true"] { background: var(--vermilion); color: var(--paper); border-color: var(--night); }
 .chip[aria-pressed="true"] b { color: var(--paper); }
 .menu-btn { display: inline-flex; align-items: center; gap: 12px; height: 42px; padding: 0 8px 0 18px; border-radius: 99px; background: var(--ink); color: var(--paper); font-weight: 500; box-shadow: 0 0 0 1px #f1ede340; }
 .menu-btn i { width: 28px; height: 28px; border-radius: 50%; background: var(--vermilion); display: grid; place-content: center; gap: 4px; }
@@ -387,6 +388,7 @@ main > section { position: relative; padding-left: var(--g); padding-right: var(
 .reel a { color: var(--cobalt); border-bottom: 1.5px solid currentColor; }
 .reel.fail h3 { color: var(--vermilion); }
 .clips { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+@media (min-width: 901px) { .reels .clip { height: clamp(200px, 16vw, 270px); } }   /* archive on desktop: two landscape clips per row */
 .clip { margin: 0; flex: 0 1 auto; height: clamp(220px, 26vw, 360px); position: relative; background: var(--night); border: 1.5px solid var(--ink); border-radius: 18px; overflow: hidden; box-shadow: 6px 6px 0 var(--hard); transition: transform .4s var(--ease), box-shadow .3s; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .clip:nth-child(odd) { transform: rotate(-.8deg); } .clip:nth-child(even) { transform: rotate(.8deg); }
 .clip:hover { transform: rotate(0) translateY(-4px); box-shadow: 10px 10px 0 var(--vermilion); }
@@ -480,6 +482,7 @@ body.still .curve .ln, body.still .curve .ar, body.still .curve .ck { transition
 
 /* ---------- ping / contact ---------- */
 .ping { padding-top: clamp(100px, 13vw, 180px); padding-bottom: clamp(70px, 9vw, 130px); background: var(--vermilion); }
+.ping .sec-tag { color: var(--night); }
 .ping .sec-tag span { background: var(--ink); }
 .ping .sec-t em { color: var(--paper); }
 .sonar { display: grid; grid-template-columns: 340px 1fr; gap: 18px; max-width: 1240px; }

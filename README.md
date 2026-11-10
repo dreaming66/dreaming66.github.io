@@ -4,7 +4,7 @@
 
 Hand-written Canvas2D + WebAudio. Zero frameworks, zero build step, zero audio samples — every sound is synthesized live.
 
-- Power-on self test gate with CRT turn-on
+- Power-on self test gate with CRT turn-on (plays once per tab session; reloads go straight in)
 - Generative die-shot hero (click to inject pulses), logic-analyzer bus
 - Solder a PCB pad by pad, power it on, watch U-Boot → Kernel → Buildroot boot over serial, log in
 - Homelab rack, MCU blink

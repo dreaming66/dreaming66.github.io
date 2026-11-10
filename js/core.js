@@ -183,6 +183,7 @@
     const enter = snd => {
       if (!document.body.classList.contains("gated")) return;
       if (snd) D.setSound(true);
+      try { sessionStorage.setItem("d66-booted", "1"); } catch {}
       $("#gate").classList.add("off");
       $("#crt").classList.add("on");
       document.body.classList.remove("gated");
@@ -196,6 +197,8 @@
     const skip = () => { i = post.length; enter(true); };
     $("#gate").addEventListener("pointerdown", skip);
     addEventListener("keydown", function k() { removeEventListener("keydown", k); if (document.body.classList.contains("gated")) skip(); });
+    // seen it already this session: straight in
+    if (document.documentElement.classList.contains("seen")) skip();
   }
 
   /* ---------------- cursor + magnetic ---------------- */
@@ -325,7 +328,8 @@
   const cmds = {
     help: () => D.t("term.help"),
     whoami: () => D.t("term.whoami"),
-    aura: () => { go("#aura"); return "→ §03 AuraCore cluster"; },
+    aura: () => { go("#aura"); return "→ §04 AuraCore cluster"; },
+    "git log": () => { go("#log"); return "→ §02 revision history"; },
     walk: () => { go("#exp-robot"); setTimeout(() => document.dispatchEvent(new Event("d66shove")), 1600); return "→ biped · live MuJoCo · shoving in 1.6 s"; },
     "kubectl get nodes": () => `NAME            STATUS   ROLES                  ARCH
 auracore-head   <span class="g">Ready</span>    control-plane,master   arm64
@@ -341,14 +345,14 @@ auracore-w4     <span class="g">Ready</span>    &lt;none&gt;                 arm
               Next: RK3576 · 38×38 mm · 6 TOPS
               Robot: BHL-based · gait policy walking in MJX
               RF: ZYNQ-7010 + AD936x · BH3FWY
-              Strings: electric · J-rock · Keys: learning`,
+              Joint: cycloidal 5010 · screwdriver-tested`,
     logo: () => `<svg class="t-logo" width="74" height="81" aria-hidden="true"><use href="#d66-mark"/></svg>  <span class="y">DustinZ</span> · dreaming66\n<span class="d">  isometric box · 30° grid · #FDB913 / #141412</span>`,
     ls: () => `auracore/  rk3576/  homelab/  inference/  robot/  sdr/  archive/  <span class="d">.secrets</span>`,
     "cat .secrets": () => `<span class="r">permission denied</span> · redacted`,
     "uname -a": () => `Linux drm-66 6.6.66-dreaming #1 SMP PREEMPT armv7l GNU/Linux`,
-    build: () => { go("#build"); return "→ §02 hardware bring-up"; },
+    build: () => { go("#build"); return "→ §03 hardware bring-up"; },
     sdr: () => { go("#exp-sdr"); document.dispatchEvent(new CustomEvent("d66tune", { detail: 145.66 })); return "→ tuning 145.660 MHz…"; },
-    infer: () => { go("#lab"); return "→ §03 inference lab"; },
+    infer: () => { go("#lab"); return "→ §05 inference lab"; },
     cq: () => { if (!A.on) return D.t("term.nosound"); const d = S.morse("CQ CQ DE BH3FWY K", 22); return `-.-. --.- / -.-. --.- / -.. . / -... .... ...-- ..-. .-- -.-- / -.-  <span class="d">(${d.toFixed(1)}s)</span>`; },
     matrix: () => { D.toggleMatrix(); return D.matrixOn ? "wake up, neo…" : "back."; },
     xray: () => { setX(!document.body.classList.contains("xray")); return "x-ray toggled."; },

@@ -109,7 +109,7 @@
      ========================================================= */
   function initCard() {
     const modal = $("#cardModal"), cv = $("#cardCanvas"), g = ctx2d(cv), line = $("#cardLine"), dl = $("#cardDl");
-    const P = { paper: "#f1ede3", ink: "#141412", ver: "#ff4f1f", cob: "#2747ff", sun: "#f2c230" };
+    const P = { paper: "#f1ede3", ink: "#141412", ver: "#ff4f1f", cob: "#2747ff", sun: "#fdb913" };
     const themes = [{ bg: P.paper, fg: P.ink, ac: P.ver }, { bg: P.ink, fg: P.paper, ac: P.ver }, { bg: P.ver, fg: P.ink, ac: P.paper }, { bg: P.cob, fg: P.paper, ac: P.sun }, { bg: P.sun, fg: P.ink, ac: P.cob }];
     let ti = 0, seed = Math.random() * 1000, motif = 0;
     function draw() {
@@ -125,7 +125,7 @@
       else { g.strokeStyle = th.ac; g.lineWidth = 3; g.beginPath(); for (let x = 0; x < 330; x += 3) { const y = my + 40 + Math.sin(x * .09 + seed) * 22 * Math.exp(-x / 260) * Math.sin(x * .013); x ? g.lineTo(mx - 330 + x, y) : g.moveTo(mx - 330 + x, y); } g.stroke(); }
       g.globalAlpha = 1;
       drawMark(g, 70, 61, 46, th.fg);
-      g.fillStyle = th.fg; g.font = "600 22px JetBrains Mono, monospace"; g.fillText("MAKER · AI INFRA · MUSICIAN", 70 + markW(46) + 16, 92);
+      g.fillStyle = th.fg; g.font = "600 22px JetBrains Mono, monospace"; g.fillText("MAKER · AI INFRA · ROBOTS", 70 + markW(46) + 16, 92);
       g.font = "italic 400 190px Instrument Serif, Georgia, serif"; g.fillText("dreaming", 62, 400);
       g.fillStyle = th.ac; g.fillText("66", 62 + g.measureText("dreaming").width + 10, 400);
       g.fillStyle = th.fg; g.font = "900 40px Noto Serif SC, serif"; g.fillText(line.value || " ", 70, 500);
@@ -190,7 +190,7 @@
   }
 
   /* =========================================================
-     §02 PCB soldering + serial boot
+     §03 PCB soldering + serial boot
      ========================================================= */
   function initPCB() {
     const cv = $("#pcb"), g = ctx2d(cv), cnt = $("#solderCnt"), pwr = $("#powerBtn"), outEl = $("#serialOut"), state = $("#serialState");
@@ -473,7 +473,7 @@
   }
 
   /* =========================================================
-     §03 inference lab (PD / NPU / MCP / Graph)
+     §05 inference lab (PD / NPU / MCP / Graph)
      ========================================================= */
   function initPD() {
     const cv = $("#pdCanvas"), g = ctx2d(cv), load = $("#pdLoad");
@@ -664,7 +664,7 @@
   }
 
   /* =========================================================
-     §04 WIP · biped: the real policy running live (MuJoCo WASM in biped/), over its recorded rollout
+     §06 WIP · biped: the real policy running live (MuJoCo WASM in biped/), over its recorded rollout
      ========================================================= */
   function initBiped() {
     const st = $("#bipedStage"), go = $("#bipedGo"), full = $("#bipedFull"), bar = $("#bipedBar"), pct = $("#bipedPct");
@@ -745,7 +745,7 @@
   }
 
   /* =========================================================
-     §04 WIP · SDR waterfall with audible signals
+     §06 WIP · SDR waterfall with audible signals
      ========================================================= */
   function initSDR() {
     const cv = $("#sdr"), g = ctx2d(cv), fEl = $("#sdrFreq"), read = $("#sdrRead");
@@ -843,7 +843,7 @@
   }
 
   /* =========================================================
-     §04 WIP · fine-tune loss curves
+     §06 WIP · fine-tune loss curves
      ========================================================= */
   function initFT() {
     const cv = $("#ft"), g = ctx2d(cv), read = $("#ftRead");
@@ -892,7 +892,7 @@
   }
 
   /* =========================================================
-     §05 WIP · RK3576 size + BGA fanout
+     §06 WIP · RK3576 size + BGA fanout
      ========================================================= */
   function initRK() {
     const cv = $("#rkCanvas"), g = ctx2d(cv), read = $("#rkRead"); let W = 0, H = 0, view = "size", t0 = 0;
@@ -958,7 +958,7 @@
   }
 
   /* =========================================================
-     §05 WIP · cycloidal reducer
+     §06 WIP · cycloidal reducer
      ========================================================= */
   function initCyc() {
     const cv = $("#cyc"), g = ctx2d(cv), sl = $("#cycRpm"), read = $("#cycRead");
@@ -1012,7 +1012,7 @@
   }
 
   /* =========================================================
-     §06 archive reels
+     §07 archive reels
      ========================================================= */
   function initArchive() {
     // inline, muted, looping; sources are fetched into blob: URLs so there is no plain .mp4 link to save,
@@ -1052,7 +1052,7 @@
   }
 
   /* =========================================================
-     §06 / §07 log, github, ping, scope
+     §02 log, github · §08 ping, scope
      ========================================================= */
   function initLog() {
     $$(".cm-h").forEach(b => b.addEventListener("click", () => { const li = b.parentElement; li.classList.toggle("open"); S.whoosh(li.classList.contains("open")); }));
