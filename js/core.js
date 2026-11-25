@@ -329,6 +329,7 @@
     help: () => D.t("term.help"),
     whoami: () => D.t("term.whoami"),
     aura: () => { go("#aura"); return "→ §04 AuraCore cluster"; },
+    room: () => { setTimeout(() => location.href = "room/", 500); return "→ entering the workshop · 3D"; },
     "git log": () => { go("#log"); return "→ §02 revision history"; },
     walk: () => { go("#exp-robot"); setTimeout(() => document.dispatchEvent(new Event("d66shove")), 1600); return "→ biped · live MuJoCo · shoving in 1.6 s"; },
     "kubectl get nodes": () => `NAME            STATUS   ROLES                  ARCH

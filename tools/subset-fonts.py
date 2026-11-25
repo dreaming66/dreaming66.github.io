@@ -8,6 +8,10 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 site = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repo root
 text = "".join(open(f, encoding="utf-8").read() for f in [site + "/index.html"] + glob.glob(site + "/js/*.js"))
+# the 3D workshop page (room/) carries its own zh / en / ja copy
+room = "".join(open(f, encoding="utf-8").read() for f in glob.glob(site + "/room/*.html") + glob.glob(site + "/room/*.js")).splitlines()
+room_ja = "".join(l for l in room if l.lstrip().startswith("ja:"))            # Japanese lines feed only the JP font
+text += "\n".join(l for l in room if not l.lstrip().startswith("ja:"))
 # per-language glyph sets: the Japanese dictionary block feeds the JP font, everything else feeds the SC font
 i18n = open(site + "/js/i18n.js", encoding="utf-8").read()
 ja_block = i18n[i18n.index("    ja: {"):i18n.index("    zh: {")]
@@ -25,7 +29,7 @@ for src, dst in [("InstrumentSerif-Regular.ttf", "instrument-serif.woff2"), ("In
 punct = "，。、；：？！「」『』（）《》【】——……·"
 kana = "".join(chr(i) for i in range(0x3041, 0x3097)) + "".join(chr(i) for i in range(0x30A1, 0x30FB)) + "ー・"
 sets = {"sc": "".join(sorted({c for c in text_sc if ord(c) > 0x2E7F})) + latin + punct,
-        "jp": "".join(sorted({c for c in ja_block if ord(c) > 0x2E7F})) + kana + latin + punct}
+        "jp": "".join(sorted({c for c in ja_block + room_ja if ord(c) > 0x2E7F})) + kana + latin + punct}
 for fam, src in (("sc", "NotoSerifSC[wght].ttf"), ("jp", "NotoSerifJP[wght].ttf")):
     for w in (500, 900):
         f = instancer.instantiateVariableFont(TTFont(src), {"wght": w})

@@ -17,6 +17,10 @@ Hand-written Canvas2D + WebAudio. Zero frameworks, zero build step, zero audio s
 
 All APIs, IPs, graph data and simulations are fictional demos — except `/biped/`, which runs the actual trained policy.
 
+## /room/
+
+A 3D workshop at night (three.js, no build step, same vendored three as the home page plus `RoomEnvironment` and the bloom post-processing addons). Scroll flies the camera along a rail through seven stations — desk, AuraCore cluster (the real EasyEDA CAD from `assets/models/`), homelab rack, workbench (scope, SDR radio, cycloidal reducer), the biped and the neon cube sign — and each station's card links back into the home page. Click an object to fly to it; hovering draws a yellow bracket. Everything apart from the cluster is procedural geometry and canvas textures (the monitor runs a little DRM-66 OS). Reached from the menu (工作间 · 3D room) or the terminal (`room`). Phones get no bloom and no shadows.
+
 ## /biped/
 
 `biped/` is a self-contained static page: MuJoCo 3.17 (WebAssembly, Apache-2.0, see `biped/lib/LICENSE.mujoco`) steps the same physics model the policy was trained on, and the policy MLP (PPO in MJX) runs in plain JS every 20 ms. Joint / footstep sounds (`audio.js`) are synthesised from the sim state, floors (`ground.js`) are procedural textures. The binaries ship pre-gzipped and are inflated with `DecompressionStream`; three.js is shared with the homepage (`assets/vendor`). `?embed=1` is the compact autopilot view the homepage puts in an iframe; it reports state and footsteps back with `postMessage`.
